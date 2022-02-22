@@ -285,7 +285,7 @@ stages:
 
 - ${{ if eq(parameters.publish_nuget, true) }}:
   - stage: publish
-    displayName: Publish $[ variables['publish_version']
+    displayName: Publish
     dependsOn: assemble
 
     variables:
