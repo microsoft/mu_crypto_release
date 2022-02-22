@@ -37,10 +37,10 @@ parameters:
   displayName: Patch Version (0-65535)
   type: number
   default: 0
-- name: pre_release
-  displayName: Prerelease Only (adds '-rcXX')
-  type: boolean
-  default: false
+- name: version_label
+  displayName: Version Label (e.g. '-rc', '-beta') (Use 'None' for none)
+  type: string
+  default: None
 
 variables:
 - name: build_archs
@@ -50,12 +50,12 @@ variables:
 - name: python_version
   value: '3.9.x'
 - name: publish_version
-  ${{ if parameters.pre_release }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}-rc$[ counter(format('{0}.{1}', parameters.version_major_minor, parameters.version_patch), 1) ]
+  ${{ if startsWith(parameters.version_label, '-') }}:
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
   ${{ else }}:
     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 
-name: CryptoBin_${{ parameters.version_major_minor }}.${{ parameters.version_patch }} Build_$(Date:yyyyMMdd)$(Rev:rr)
+name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
 
 stages:
 - stage: build
