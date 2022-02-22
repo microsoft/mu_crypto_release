@@ -40,6 +40,7 @@ parameters:
 - name: version_label
   displayName: Version Label (-beta, -rc, etc.)
   type: string
+  default: false
 
 variables:
 - name: build_archs
