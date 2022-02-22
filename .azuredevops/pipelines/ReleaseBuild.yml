@@ -59,7 +59,7 @@ name: CryptoBin_${{ parameters.version_major_minor }}.${{ parameters.version_pat
 
 stages:
 - stage: build
-  displayName: Build $(publish_version)
+  displayName: Build
   jobs:
   - job: crypto_build
     # Use Matrix to build multiple versions
@@ -285,7 +285,7 @@ stages:
 
 - ${{ if eq(parameters.publish_nuget, true) }}:
   - stage: publish
-    displayName: Publish
+    displayName: Publish $(publish_version)
     dependsOn: assemble
 
     variables:
