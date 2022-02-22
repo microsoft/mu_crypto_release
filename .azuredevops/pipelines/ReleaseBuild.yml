@@ -38,8 +38,9 @@ parameters:
   type: number
   default: 0
 - name: version_label
-  displayName: Version Label (-beta, -rc, etc.)
+  displayName: Version Label (e.g. '-rc', '-beta') (Use 'None' for none)
   type: string
+  default: None
 
 variables:
 - name: build_archs
@@ -48,8 +49,13 @@ variables:
   value: 'DEBUG,RELEASE'
 - name: python_version
   value: '3.9.x'
+- name: publish_version
+  ${{ if startsWith(parameters.version_label, '-') }}:
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
+  ${{ else }}:
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 
-name: CryptoBin_${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }} Build_$(Date:yyyyMMdd)$(Rev:.r)
+name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
 
 stages:
 - stage: build
@@ -287,8 +293,6 @@ stages:
       value: $(Build.StagingDirectory)/NugetPackage
     - name: nuget_output_log
       value: $(Build.StagingDirectory)/NugetLog.txt
-    - name: publish_version
-      value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
 
     pool:
       vmImage: ${{ parameters.image }}
