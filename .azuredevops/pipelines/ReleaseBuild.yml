@@ -51,7 +51,7 @@ variables:
   value: '3.9.x'
 - name: publish_version
   ${{ if parameters.pre_release }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}-rc${{ counter(format('{0}.{1}', ${{ parameters.version_major_minor }}, ${{ parameters.version_patch }}), 1) }}
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}-rc${{ counter(format('{0}.{1}', parameters.version_major_minor, parameters.version_patch), 1) }}
   ${{ else }}:
     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 
