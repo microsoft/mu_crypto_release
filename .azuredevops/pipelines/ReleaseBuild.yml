@@ -49,13 +49,11 @@ variables:
   value: 'DEBUG,RELEASE'
 - name: python_version
   value: '3.9.x'
-- name: version_base
-  value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 - name: publish_version
   ${{ if parameters.pre_release }}:
-    value: $(version_base)-rc$[ counter(variables['version_base'], 1) ]
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}-rc${{ counter(format('{0}.{1}', ${{ parameters.version_major_minor }}, ${{ parameters.version_patch }}), 1) }}
   ${{ else }}:
-    value: $(version_base)
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 
 name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
 
