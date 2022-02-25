@@ -36,17 +36,35 @@ Should have good support for ``-h`` and print a useful help menu.
 MultiFlavorBuild.py
 -------------------
 
-This script organizes a build 
+This script organizes the build for an entire release by coordinating multiple calls to ``SingleFlavorBuild.py``.
+Multiple targets, flavors, and architectures can be passed into this script to be built in sequence. This is the
+main entry point for the build from the pipeline and is the ideal entry point for any local builds.
+
+Calling this script without any parameters default to all available targets, architectures, and flavors.
+
+Should have good support for ``-h`` and print a useful help menu.
+
+AssembleNugetPackage.py
+-----------------------
+
+This script will take in a directory of build artifacts and reorganize them into the Nuget package layout.
+
+Should have good support for ``-h`` and print a useful help menu.
 
 Building on a Local Dev System
 ==============================
 
-TODO
+Building locally for test consists of two main steps:
+
+1) Run the ``MultiFlavorBuild.py`` script to build the drivers, depexes, and other release collateral.
+2) Run the ``AssembleNugetPackage.py`` script to organize the release collateral into the format for
+   the release package. Just point at the ``Build`` directory as the input directory.
 
 Releasing a Pipeline Build
 ==========================
 
 TODO
+How to support the secure repos?
 
 First Steps (for a new integration)
 -----------------------------------
