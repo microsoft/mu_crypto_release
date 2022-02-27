@@ -6,10 +6,12 @@
 ##
 import os
 import logging
+import sys
 
 from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 
+sys.path.append(os.path.dirname(__file__))
 from CommonBuildSettngs import CommonPlatform, CommonSettingsManager
 
 

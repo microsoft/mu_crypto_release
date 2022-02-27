@@ -6,6 +6,7 @@
 ##
 import os
 import logging
+import sys
 
 from edk2toolext import edk2_logging
 from edk2toolext.environment import shell_environment
@@ -13,6 +14,7 @@ from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 from edk2toollib.utility_functions import RunPythonScript
 
+sys.path.append(os.path.dirname(__file__))
 from CommonBuildSettngs import CommonPlatform, CommonSettingsManager
 
 
