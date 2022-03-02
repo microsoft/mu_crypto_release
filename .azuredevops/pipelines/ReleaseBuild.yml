@@ -123,13 +123,11 @@ stages:
     #       Then we would iterate through and selectively hyrdrate those repos.
     - ${{ if parameters.use_secure }}:
       - template: hydrate_local_resource.yml
-        displayName: Hydrate secure_basecore
         parameters:
           base_dir: $(Pipeline.Workspace)/Extras
           resource_name: secure_basecore
     - ${{ else }}:
       - template: hydrate_local_resource.yml
-        displayName: Hydrate basecore
         parameters:
           base_dir: $(Pipeline.Workspace)/Extras
           resource_name: basecore
