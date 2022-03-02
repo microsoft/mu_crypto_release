@@ -124,12 +124,10 @@ stages:
     - ${{ if parameters.use_secure }}:
       - template: hydrate_local_resource.yml
         parameters:
-          base_dir: $(Pipeline.Workspace)/Extras
           resource_name: secure_basecore
     - ${{ else }}:
       - template: hydrate_local_resource.yml
         parameters:
-          base_dir: $(Pipeline.Workspace)/Extras
           resource_name: basecore
 
     - task: PythonScript@0
