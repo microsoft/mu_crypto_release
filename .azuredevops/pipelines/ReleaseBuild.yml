@@ -140,25 +140,22 @@ stages:
     - task: PythonScript@0
       displayName: Hydrate Workspace Code
       inputs:
-        workingDirectory: $(Agent.BuildDirectory)/primary
         scriptSource: filePath
-        scriptPath: MultiFlavorBuild.py
+        scriptPath: $(Agent.BuildDirectory)/primary/MultiFlavorBuild.py
         arguments: --setup TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
     - task: PythonScript@0
       displayName: Update Workspace Extdeps
       inputs:
-        workingDirectory: $(Agent.BuildDirectory)/primary
         scriptSource: filePath
-        scriptPath: MultiFlavorBuild.py
+        scriptPath: $(Agent.BuildDirectory)/primary/MultiFlavorBuild.py
         arguments: --update TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
     - task: PythonScript@0
       displayName: Build Crypto Drivers
       inputs:
-        workingDirectory: $(Agent.BuildDirectory)/primary
         scriptSource: filePath
-        scriptPath: MultiFlavorBuild.py
+        scriptPath: $(Agent.BuildDirectory)/primary/MultiFlavorBuild.py
         arguments: > # Use this to avoid newline characters in multiline string
           -f $(Build.Flavor)
           -a $(build_archs)
