@@ -18,13 +18,14 @@ steps:
   displayName: "Local Cache: ${{ parameters.resource_name }}"
   # This path is relative to $(Agent.BuildDirectory)
   # See: https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-  path: repos/${{parameters.resource_name }}
+  path: secondaries/${{parameters.resource_name }}
 
 # TODO: Right here is where we would normally save the substitution path to the config file.
 #       Instead, we'll directly update the URL.
 - task: Bash@3
   displayName: "Local Cache: ${{ parameters.resource_name }}"
   inputs:
+    workingDirectory: $(Agent.BuildDirectory)/primary
     targetType: inline
     script: |
-      git -C . submodule set-url -- MU_BASECORE $(Agent.BuildDirectory)/repos/${{parameters.resource_name }}
+      git submodule set-url -- MU_BASECORE $(Agent.BuildDirectory)/secondaries/${{parameters.resource_name }}

@@ -108,6 +108,7 @@ stages:
     steps:
     - checkout: self
       displayName: Hydrate Primary Repo
+      path: primary
       clean: true
 
     - task: UsePythonVersion@0
@@ -119,6 +120,7 @@ stages:
 
     - script: pip install -r pip-requirements.txt --upgrade
       displayName: 'Install/Upgrade pip Modules'
+      workingDirectory: $(Agent.BuildDirectory)/primary
 
     # TODO: Right here we would ask the platform about what repos it needs to hydrate.
     #       Then we would iterate through and selectively hyrdrate those repos.
@@ -134,6 +136,7 @@ stages:
     - task: PythonScript@0
       displayName: Hydrate Workspace Code
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         scriptSource: filePath
         scriptPath: MultiFlavorBuild.py
         arguments: --setup TOOL_CHAIN_TAG=${{ parameters.toolchain }}
@@ -141,6 +144,7 @@ stages:
     - task: PythonScript@0
       displayName: Update Workspace Extdeps
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         scriptSource: filePath
         scriptPath: MultiFlavorBuild.py
         arguments: --update TOOL_CHAIN_TAG=${{ parameters.toolchain }}
@@ -148,6 +152,7 @@ stages:
     - task: PythonScript@0
       displayName: Build Crypto Drivers
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         scriptSource: filePath
         scriptPath: MultiFlavorBuild.py
         arguments: > # Use this to avoid newline characters in multiline string
@@ -160,6 +165,7 @@ stages:
     - task: CopyFiles@2
       displayName: Filter Driver Binaries # To reduce network consumption.
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         sourceFolder: 'Build/CryptoBin_$(Build.Flavor)'
         contents: |
           **/*.efi
@@ -171,6 +177,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: Publish Driver Binaries
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         targetPath: '$(Build.ArtifactStagingDirectory)/Drivers'
         artifactName: CryptoBin_$(Build.Flavor)
 
@@ -178,6 +185,7 @@ stages:
       displayName: Save Configs and License
       condition: eq(variables['Build.CopyExtra'], 'true')
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         contents: |
           MU_BASECORE\CryptoPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
           MU_BASECORE\CryptoPkg\Driver\Packaging\License.txt
@@ -188,6 +196,7 @@ stages:
       displayName: Publish Configs and License
       condition: eq(variables['Build.CopyExtra'], 'true')
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         targetPath: '$(Build.ArtifactStagingDirectory)/Extra'
         artifactName: Package_Extras
 
@@ -195,6 +204,7 @@ stages:
       displayName: Save Job Logs
       condition: succeededOrFailed()
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         sourceFolder: 'Build'
         contents: |
           BUILDLOG_CryptoBin_*.txt
@@ -207,6 +217,7 @@ stages:
       displayName: Publish Job Logs
       condition: succeededOrFailed()
       inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
         pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
         artifactName: $(Build.Flavor)_Logs
 
