@@ -10,6 +10,21 @@
 trigger: none
 pr: none
 
+variables:
+- name: release_base
+  value: '202111'
+- name: build_archs
+  value: 'IA32,X64,AARCH64'
+- name: build_targets
+  value: 'DEBUG,RELEASE'
+- name: python_version
+  value: '3.9.x'
+- name: publish_version
+  ${{ if startsWith(parameters.version_label, '-') }}:
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
+  ${{ else }}:
+    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
+
 parameters:
 - name: publish_nuget
   displayName: Publish as a Nuget Package
@@ -41,19 +56,22 @@ parameters:
   displayName: Version Label (e.g. '-rc', '-beta') (Use 'None' for none)
   type: string
   default: None
+- name: use_secure
+  displayName: Use Security Patch Repos
+  type: boolean
+  default: false
 
-variables:
-- name: build_archs
-  value: 'IA32,X64,AARCH64'
-- name: build_targets
-  value: 'DEBUG,RELEASE'
-- name: python_version
-  value: '3.9.x'
-- name: publish_version
-  ${{ if startsWith(parameters.version_label, '-') }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
-  ${{ else }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
+resources:
+  repositories:
+  - repository: basecore
+    type: github
+    name: Microsoft/mu_basecore
+    ref: refs/heads/release/$(release_base)
+    endpoint: Microsoft
+  - repository: secure_basecore
+    type: git
+    name: Mu_Security_Private_Release/mu_basecore
+    ref: refs/heads/release/$(release_base)
 
 name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
 
@@ -100,6 +118,21 @@ stages:
 
     - script: pip install -r pip-requirements.txt --upgrade
       displayName: 'Install/Upgrade pip Modules'
+
+    # TODO: Right here we would ask the platform about what repos it needs to hydrate.
+    #       Then we would iterate through and selectively hyrdrate those repos.
+    - ${{ if parameters.use_secure }}:
+      - template: hydrate_local_resource.yml
+        displayName: Hydrate secure_basecore
+        parameters:
+          base_dir: $(Pipeline.Workspace)/Extras
+          resource_name: secure_basecore
+    - ${{ else }}:
+      - template: hydrate_local_resource.yml
+        displayName: Hydrate basecore
+        parameters:
+          base_dir: $(Pipeline.Workspace)/Extras
+          resource_name: basecore
 
     - task: PythonScript@0
       displayName: Hydrate Workspace Code
