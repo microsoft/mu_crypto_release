@@ -22,7 +22,7 @@ steps:
 
 # TODO: Right here is where we would normally save the substitution path to the config file.
 #       Instead, we'll directly update the URL.
-- bash:
+- task: Bash@3
   # displayName:
   inputs:
     targetType: inline
