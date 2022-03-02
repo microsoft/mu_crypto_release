@@ -118,9 +118,13 @@ stages:
         addToPath: true
         architecture: 'x64'
 
-    - script: pip install -r pip-requirements.txt --upgrade
+    - task: Bash@3
       displayName: 'Install/Upgrade pip Modules'
-      workingDirectory: $(Agent.BuildDirectory)/primary
+      inputs:
+        workingDirectory: $(Agent.BuildDirectory)/primary
+        targetType: inline
+        script: |
+          pip install -r pip-requirements.txt --upgrade
 
     # TODO: Right here we would ask the platform about what repos it needs to hydrate.
     #       Then we would iterate through and selectively hyrdrate those repos.
