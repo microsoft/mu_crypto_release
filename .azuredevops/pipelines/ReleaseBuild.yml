@@ -107,6 +107,7 @@ stages:
 
     steps:
     - checkout: self
+      displayName: Hydrate Primary Repo
       clean: true
 
     - task: UsePythonVersion@0
