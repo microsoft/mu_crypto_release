@@ -32,7 +32,7 @@ parameters:
 - name: version_major_minor
   displayName: Major and Minor Version
   type: string
-  default: 2021.11
+  default: 2022.02
 - name: version_patch
   displayName: Patch Version (0-65535)
   type: number
@@ -48,7 +48,7 @@ variables:
 - name: build_targets
   value: 'DEBUG,RELEASE'
 - name: python_version
-  value: '3.9.x'
+  value: '3.10.x'
 - name: publish_version
   ${{ if startsWith(parameters.version_label, '-') }}:
     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
