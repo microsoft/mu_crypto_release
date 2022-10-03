@@ -122,6 +122,8 @@
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   HmacSha1Lib|CryptoPkg/Library/HmacSha1Lib/HmacSha1Lib.inf # MU_CHANGE add HmacSha1Lib
+  MmServicesTableLib|MdePkg/Library/MmServicesTableLib/MmServicesTableLib.inf # MU_CHANGE added for ParallelHash256HasHall
+  SynchronizationLib|MdePkg/Library/BaseSynchronizationLib/BaseSynchronizationLib.inf # MU_CHANGE added for ParallelHash256HasHall
 
 [LibraryClasses.ARM]
   ArmSoftFloatLib|ArmPkg/Library/ArmSoftFloatLib/ArmSoftFloatLib.inf
