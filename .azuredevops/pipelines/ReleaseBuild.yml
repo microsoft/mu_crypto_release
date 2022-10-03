@@ -18,7 +18,7 @@ parameters:
 - name: image
   displayName: VM Pool
   type: string
-  default: windows-2019
+  default: windows-2022
   values:
   - windows-2019
   - ubuntu-latest
@@ -32,7 +32,7 @@ parameters:
 - name: version_major_minor
   displayName: Major and Minor Version
   type: string
-  default: 2022.02
+  default: 2022.08
 - name: version_patch
   displayName: Patch Version (0-65535)
   type: number
