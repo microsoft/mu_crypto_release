@@ -20,14 +20,14 @@ parameters:
   type: string
   default: windows-2022
   values:
-  - windows-2019
+  - windows-2022
   - ubuntu-latest
 - name: toolchain
   displayName: toolchain
   type: string
-  default: VS2019
+  default: VS2022
   values:
-  - VS2019
+  - VS2022
   - GCC5
 - name: version_major_minor
   displayName: Major and Minor Version
