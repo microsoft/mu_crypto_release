@@ -333,6 +333,7 @@ stages:
           script: >
             mkdir $(Build.StagingDirectory)/NupackOutput;
             $configFilePath = "$(Pipeline.Workspace)/Extras/edk2-BaseCryptoDriver.config.json";
+            $licenseFile = "$(Pipeline.Workspace)/Extras/License.txt";
 
             Write-Host nuget-publish
             --Operation Pack
@@ -340,7 +341,8 @@ stages:
             --ConfigFilePath "$configFilePath"
             --InputFolderPath "$(Pipeline.Workspace)/Package"
             --Version "$(publish_version)"
-            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput";
+            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
+            --CustomLicensePath "$licenseFile";
 
             nuget-publish
             --Operation Pack
@@ -348,7 +350,8 @@ stages:
             --ConfigFilePath "$configFilePath"
             --InputFolderPath "$(Pipeline.Workspace)/Package"
             --Version "$(publish_version)"
-            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput";
+            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
+            --CustomLicensePath "$licenseFile";
 
             Get-Content $(Build.StagingDirectory)/NugetPackagingLog.txt;
 
