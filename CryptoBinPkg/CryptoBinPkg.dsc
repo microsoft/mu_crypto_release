@@ -118,7 +118,7 @@
   TimerLib|MdePkg/Library/BaseTimerLibNullTemplate/BaseTimerLibNullTemplate.inf
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf  #???
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf                                          #???
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
+  #OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   HmacSha1Lib|CryptoPkg/Library/HmacSha1Lib/HmacSha1Lib.inf # MU_CHANGE add HmacSha1Lib
@@ -127,6 +127,22 @@
 
 [LibraryClasses.ARM]
   ArmSoftFloatLib|ArmPkg/Library/ArmSoftFloatLib/ArmSoftFloatLib.inf
+
+[LibraryClasses.IA32]
+!if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibIa32.inf
+!endif
+!if $(TOOL_CHAIN_TAG) == GCC5
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibIa32Gcc.inf
+!endif
+
+[LibraryClasses.X64]
+!if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibX64.inf
+!endif
+!if $(TOOL_CHAIN_TAG) == GCC5
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibX64Gcc.inf
+!endif
 
 [LibraryClasses.common.PEIM]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
