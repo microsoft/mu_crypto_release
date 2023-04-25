@@ -144,6 +144,9 @@
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibX64Gcc.inf
 !endif
 
+[LibraryClasses.AARCH64]
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
+
 [LibraryClasses.common.PEIM]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/PeiCryptLib.inf
@@ -224,6 +227,8 @@
   GCC:*_*_*_CC_FLAGS = -D ENABLE_MD5_DEPRECATED_INTERFACES
   RVCT:*_*_*_CC_FLAGS = -DENABLE_MD5_DEPRECATED_INTERFACES
 !endif
+[BuildOptions.IA32]
+  MSFT:*_*_*_DLINK_FLAGS = /ALIGN:64
 #MU_CHANGE START
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER, BuildOptions.common.EDKII.DXE_SMM_DRIVER, BuildOptions.common.EDKII.SMM_CORE, BuildOptions.common.EDKII.DXE_DRIVER]
   MSFT:*_*_IA32_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
