@@ -145,12 +145,7 @@
 !endif
 
 [LibraryClasses.AARCH64]
-!if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibX64.inf
-!endif
-!if $(TOOL_CHAIN_TAG) == GCC5
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibX64Gcc.inf
-!endif
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
 
 [LibraryClasses.common.PEIM]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
