@@ -160,7 +160,6 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x0f
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x06
-  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslEcEnabled|TRUE
 
 ## MU_CHANGE Remove PCD definitions
 
