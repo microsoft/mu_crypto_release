@@ -118,7 +118,7 @@
   TimerLib|MdePkg/Library/BaseTimerLibNullTemplate/BaseTimerLibNullTemplate.inf
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf  #???
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf                                          #???
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibFull.inf
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   HmacSha1Lib|CryptoPkg/Library/HmacSha1Lib/HmacSha1Lib.inf # MU_CHANGE add HmacSha1Lib
@@ -144,6 +144,7 @@
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
   TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
   DebugLib|MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf # MU_CHANGE add debug lib
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibFull.inf # MU_CHANGE added to include additional crypto algorithms including ECC
 
 [LibraryClasses.common.DXE_SMM_DRIVER]
   ReportStatusCodeLib|MdeModulePkg/Library/SmmReportStatusCodeLib/SmmReportStatusCodeLib.inf
