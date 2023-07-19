@@ -144,6 +144,7 @@
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
   TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
   DebugLib|MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf # MU_CHANGE add debug lib
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibFull.inf # MU_CHANGE added to include additional crypto algorithms including ECC
 
 [LibraryClasses.common.DXE_SMM_DRIVER]
   ReportStatusCodeLib|MdeModulePkg/Library/SmmReportStatusCodeLib/SmmReportStatusCodeLib.inf
