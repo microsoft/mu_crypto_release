@@ -146,6 +146,8 @@
   DebugLib|MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf # MU_CHANGE add debug lib
 
 [LibraryClasses.IA32.DXE_DRIVER, LibraryClasses.IA32.UEFI_APPLICATION, LibraryClasses.X64.DXE_DRIVER, LibraryClasses.X64.UEFI_APPLICATION]
+  # This change is only for IA32 and X64 because of an error in the openssl submodule with AARCH64
+  # This should be consolidated in the future when a fix exists
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibFull.inf # MU_CHANGE added to include additional crypto algorithms including ECC
 
 [LibraryClasses.common.DXE_SMM_DRIVER]
