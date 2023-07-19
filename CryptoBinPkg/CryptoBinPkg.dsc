@@ -144,6 +144,8 @@
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
   TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
   DebugLib|MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf # MU_CHANGE add debug lib
+
+[LibraryClasses.IA32.DXE_DRIVER, LibraryClasses.IA32.UEFI_APPLICATION, LibraryClasses.X64.DXE_DRIVER, LibraryClasses.X64.UEFI_APPLICATION]
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibFull.inf # MU_CHANGE added to include additional crypto algorithms including ECC
 
 [LibraryClasses.common.DXE_SMM_DRIVER]
