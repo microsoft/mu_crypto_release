@@ -94,7 +94,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
     def Go(self, WorkSpace, PackagesPath, PInHelper, PInManager):
         toolchain = shell_environment.GetBuildVars().GetValue("TOOL_CHAIN_TAG")
         if toolchain is None:
-            toolchain = "VS2019"
+            toolchain = "VS2022"
         overall_success = True
         for flavor in self.flavor:
             for target in self.target:
