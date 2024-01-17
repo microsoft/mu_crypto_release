@@ -143,9 +143,9 @@
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/SmmCryptLib.inf
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
   MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
-  MmServicesTableLib|MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+  MmServicesTableLib|MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
   ReportStatusCodeLib|MdeModulePkg/Library/SmmReportStatusCodeLib/StandaloneMmReportStatusCodeLib.inf
-  StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+  StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
   TlsLib|CryptoPkg/Library/TlsLibNull/TlsLibNull.inf
 
 ################################################################################
@@ -187,6 +187,15 @@
       FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
   }
 
+[Components.IA32, Components.X64, Components.AARCH64]
+  CryptoPkg/Driver/CryptoDxe.inf {
+    <Defines>
+      FILE_GUID = $(DXE_CRYPTO_DRIVER_FILE_GUID)
+  }
+
+[Components.X64]
+  # Note: MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf has instructions
+  #       that are not supported in 32-bit. Only 64-bit is practically needed, so only build for 64-bit here.
   CryptoPkg/Driver/CryptoStandaloneMm.inf {
     <Defines>
       FILE_GUID = $(STANDALONEMM_CRYPTO_DRIVER_FILE_GUID)
@@ -195,12 +204,6 @@
       # The platform should set this to a non-conflicting exception number, otherwise
       # it will be treated as one of the normal types of CPU faults.
       gEfiMdePkgTokenSpaceGuid.PcdStackCookieExceptionVector|0x0F
-  }
-
-[Components.IA32, Components.X64, Components.AARCH64]
-  CryptoPkg/Driver/CryptoDxe.inf {
-    <Defines>
-      FILE_GUID = $(DXE_CRYPTO_DRIVER_FILE_GUID)
   }
 
 [BuildOptions]
