@@ -139,6 +139,15 @@
   TlsLib|CryptoPkg/Library/TlsLibNull/TlsLibNull.inf
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
 
+[LibraryClasses.common.MM_STANDALONE]
+  BaseCryptLib|CryptoPkg/Library/BaseCryptLib/SmmCryptLib.inf
+  DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+  MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
+  MmServicesTableLib|MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+  ReportStatusCodeLib|MdeModulePkg/Library/SmmReportStatusCodeLib/StandaloneMmReportStatusCodeLib.inf
+  StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+  TlsLib|CryptoPkg/Library/TlsLibNull/TlsLibNull.inf
+
 ################################################################################
 #
 # Pcd Section - list of all EDK II PCD Entries defined by this Platform
@@ -173,16 +182,25 @@
       FILE_GUID = $(PEI_CRYPTO_DRIVER_FILE_GUID)
   }
 
+  CryptoPkg/Driver/CryptoSmm.inf {
+    <Defines>
+      FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
+  }
+
+  CryptoPkg/Driver/CryptoStandaloneMm.inf {
+    <Defines>
+      FILE_GUID = $(STANDALONEMM_CRYPTO_DRIVER_FILE_GUID)
+    <PcdsFixedAtBuild>
+      # MM environment only set up the exception handler for the upper 32 entries.
+      # The platform should set this to a non-conflicting exception number, otherwise
+      # it will be treated as one of the normal types of CPU faults.
+      gEfiMdePkgTokenSpaceGuid.PcdStackCookieExceptionVector|0x0F
+  }
+
 [Components.IA32, Components.X64, Components.AARCH64]
   CryptoPkg/Driver/CryptoDxe.inf {
     <Defines>
       FILE_GUID = $(DXE_CRYPTO_DRIVER_FILE_GUID)
-  }
-
-[Components.IA32, Components.X64]
-  CryptoPkg/Driver/CryptoSmm.inf {
-    <Defines>
-      FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
   }
 
 [BuildOptions]
@@ -194,6 +212,6 @@
   RVCT:*_*_*_CC_FLAGS = -DENABLE_MD5_DEPRECATED_INTERFACES
 !endif
 
-[BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER, BuildOptions.common.EDKII.DXE_SMM_DRIVER, BuildOptions.common.EDKII.SMM_CORE, BuildOptions.common.EDKII.DXE_DRIVER]
+[BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER, BuildOptions.common.EDKII.DXE_SMM_DRIVER, BuildOptions.common.EDKII.SMM_CORE, BuildOptions.common.EDKII.DXE_DRIVER, BuildOptions.common.EDKII.MM_STANDALONE]
   MSFT:*_*_IA32_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
   MSFT:*_*_X64_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
