@@ -14,11 +14,11 @@
 #
 ################################################################################
 [Defines]
-  PLATFORM_NAME                  = SourceCryptoPkg
+  PLATFORM_NAME                  = OpensslPkg
   PLATFORM_GUID                  = 9c998ec7-ea1d-48be-bcb7-04e732869340
   PLATFORM_VERSION               = 0.98
   DSC_SPECIFICATION              = 0x00010005
-  OUTPUT_DIRECTORY               = Build/SourceCryptoPkg
+  OUTPUT_DIRECTORY               = Build/OpensslPkg
   SUPPORTED_ARCHITECTURES        = IA32|X64|ARM|AARCH64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT

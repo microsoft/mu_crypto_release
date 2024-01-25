@@ -15,7 +15,7 @@
 ################################################################################
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
-  PACKAGE_NAME                   = SourceCryptoPkg
+  PACKAGE_NAME                   = OpensslPkg
   PACKAGE_GUID                   = 8823c3fc-32ca-4275-990a-8485f87e3c8c
   PACKAGE_VERSION                = 1.0
 
@@ -32,9 +32,3 @@
   ##  @libraryclass  Provides compiler intrinsic functions required to link openssl project.
   #
   InstrinsicLib|Private/Library/IntrinsicLib.h
-
-[Protocols]
-
-[PcdsFixedAtBuild]
-
-[Guids]
