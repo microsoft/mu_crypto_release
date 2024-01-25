@@ -640,6 +640,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
+  OpensslPkg/OpensslPkg.dec
 
 [LibraryClasses]
   BaseLib
