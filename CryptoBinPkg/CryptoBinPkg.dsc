@@ -36,6 +36,7 @@
 #
 ################################################################################
 [LibraryClasses]
+  ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
   ArmTrngLib|MdePkg/Library/BaseArmTrngLibNull/BaseArmTrngLibNull.inf
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
@@ -46,7 +47,6 @@
   FltUsedLib|MdePkg/Library/FltUsedLib/FltUsedLib.inf
   HashApiLib|CryptoPkg/Library/BaseHashApiLib/BaseHashApiLib.inf
   HmacSha1Lib|OpensslPkg/Library/HmacSha1Lib/HmacSha1Lib.inf
-  IntrinsicLib|OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
   MmServicesTableLib|MdePkg/Library/MmServicesTableLib/MmServicesTableLib.inf
@@ -69,6 +69,10 @@
   UnitTestLib|UnitTestFrameworkPkg/Library/UnitTestLib/UnitTestLib.inf
   UnitTestPersistenceLib|UnitTestFrameworkPkg/Library/UnitTestPersistenceLibNull/UnitTestPersistenceLibNull.inf
   UnitTestResultReportLib|UnitTestFrameworkPkg/Library/UnitTestResultReportLib/UnitTestResultReportLibDebugLib.inf
+  NULL|MdePkg/Library/FltUsedLib/FltUsedLib.inf
+
+[LibraryClasses.IA32, LibraryClasses.X64]
+  IntrinsicLib|OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
 
 #
 # For stack protection
@@ -91,6 +95,7 @@
 !endif
 
 [LibraryClasses.ARM, LibraryClasses.AARCH64]
+  IntrinsicLib|MdePkg/Library/CompilerIntrinsicsLib/ArmCompilerIntrinsicsLib.inf
   NULL|MdePkg/Library/CompilerIntrinsicsLib/ArmCompilerIntrinsicsLib.inf
 
   # Add support for stack protector
@@ -145,6 +150,12 @@
   StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
   TlsLib|CryptoPkg/Library/TlsLibNull/TlsLibNull.inf
 
+
+[LibraryClasses.AARCH64.MM_STANDALONE]
+  MmServicesTableLib|MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+  RngLib|MdePkg/Library/BaseRngLibTimerLib/BaseRngLibTimerLib.inf
+  StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+
 [LibraryClasses.ARM.MM_STANDALONE, LibraryClasses.AARCH64.MM_STANDALONE]
   MmServicesTableLib|MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
   StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
@@ -178,23 +189,23 @@
 #
 ###################################################################################################
 [Components.IA32, Components.X64]
-  CryptoPkg/Driver/CryptoPei.inf {
-    <Defines>
-      FILE_GUID = $(PEI_CRYPTO_DRIVER_FILE_GUID)
-  }
-
   CryptoPkg/Driver/CryptoSmm.inf {
     <Defines>
       FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
   }
 
 [Components.IA32, Components.X64, Components.AARCH64]
+  CryptoPkg/Driver/CryptoPei.inf {
+    <Defines>
+      FILE_GUID = $(PEI_CRYPTO_DRIVER_FILE_GUID)
+  }
+
   CryptoPkg/Driver/CryptoDxe.inf {
     <Defines>
       FILE_GUID = $(DXE_CRYPTO_DRIVER_FILE_GUID)
   }
 
-[Components.X64]
+[Components.AARCH64, Components.X64]
   # Note: MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf has instructions
   #       that are not supported in 32-bit. Only 64-bit is practically needed, so only build for 64-bit here.
   CryptoPkg/Driver/CryptoStandaloneMm.inf {
@@ -216,6 +227,18 @@
   RVCT:*_*_*_CC_FLAGS = -DENABLE_MD5_DEPRECATED_INTERFACES
 !endif
 
+[BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
+  MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
+
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER, BuildOptions.common.EDKII.DXE_SMM_DRIVER, BuildOptions.common.EDKII.SMM_CORE, BuildOptions.common.EDKII.DXE_DRIVER, BuildOptions.common.EDKII.MM_STANDALONE]
   MSFT:*_*_IA32_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
   MSFT:*_*_X64_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
+
+[BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
+  MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
+
+[BuildOptions.AARCH64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.DXE_DRIVER, BuildOptions.AARCH64.EDKII.MM_STANDALONE]
+  GCC:*_*_*_DLINK_FLAGS = -z common-page-size=0x1000
+
+[BuildOptions.AARCH64.EDKII.MM_STANDALONE]
+  GCC:*_*_*_CC_FLAGS = -mstrict-align -march=armv8-a
