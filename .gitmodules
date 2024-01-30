@@ -13,3 +13,6 @@
 [submodule "OpensslPkg/Library/OpensslLib/openssl"]
 	path = OpensslPkg/Library/OpensslLib/openssl
 	url = https://github.com/openssl/openssl.git
+[submodule "MbedTlsPkg/Library/MbedTlsLib/mbedtls"]
+	path = MbedTlsPkg/Library/MbedTlsLib/mbedtls
+	url = https://github.com/Mbed-TLS/mbedtls.git

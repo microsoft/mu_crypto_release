@@ -13,7 +13,7 @@
 #
 ################################################################################
 [Defines]
-  PLATFORM_NAME                  = CryptoPkg
+  PLATFORM_NAME                  = MbedTlsPkg
   PLATFORM_GUID                  = E1063286-6C8C-4c25-AEF0-67A9A5B6E6B6
   PLATFORM_VERSION               = 0.98
   DSC_SPECIFICATION              = 0x00010005

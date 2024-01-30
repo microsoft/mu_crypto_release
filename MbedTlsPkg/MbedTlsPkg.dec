@@ -15,7 +15,7 @@
 ################################################################################
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
-  PACKAGE_NAME                   = SourceCryptoPkg
+  PACKAGE_NAME                   = MbedTlsPkgPkg
   PACKAGE_GUID                   = 8823c3fc-32ca-4275-990a-8485f87e3c8c
   PACKAGE_VERSION                = 1.0
 
@@ -24,11 +24,3 @@
   Library/MbedTlsLib/mbedtls/include
   Library/MbedTlsLib/mbedtls/include/mbedtls
   Library/MbedTlsLib/mbedtls/library
-
-[LibraryClasses]
-
-[Protocols]
-
-[PcdsFixedAtBuild]
-
-[Guids]
