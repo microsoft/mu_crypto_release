@@ -98,23 +98,49 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         overall_success = True
         for flavor in self.flavor:
             for target in self.target:
-                params = [flavor]
-                params += [f"TOOL_CHAIN_TAG={toolchain}"]
-                params += ["-t", target]
-                params += ["-a", ",".join(self.arch)]
+                arches = []
+                use_gcc = False
+                for arch in self.arch:
+                    if arch != "AARCH64":
+                        arches.append(arch)
+                    else:
+                        use_gcc = True
+                if (len(arches) > 0):
+                    params = [flavor]
+                    params += [f"TOOL_CHAIN_TAG={toolchain}"]
+                    params += ["-t", target]
+                    params += ["-a", ",".join(arches)]
 
-                current_build = f"{flavor} {target}"
-                logging.log(edk2_logging.SECTION, f"Building {current_build}")
+                    current_build = f"{flavor} {target}"
+                    logging.log(edk2_logging.SECTION, f"Building {current_build}")
 
-                ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
+                    ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
 
-                if ret == 0:
-                    logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
-                else:
-                    logging.error(f"{current_build} FAILED")
-                    overall_success = False
-                    if self.stop:
-                        break
+                    if ret == 0:
+                        logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
+                    else:
+                        logging.error(f"{current_build} FAILED")
+                        overall_success = False
+                        if self.stop:
+                            break
+                if use_gcc:
+                    params = [flavor]
+                    params += [f"TOOL_CHAIN_TAG=GCC5"]
+                    params += ["-t", target]
+                    params += ["-a", "AARCH64"]
+
+                    current_build = f"{flavor} {target}"
+                    logging.log(edk2_logging.SECTION, f"Building {current_build}")
+
+                    ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
+
+                    if ret == 0:
+                        logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
+                    else:
+                        logging.error(f"{current_build} FAILED")
+                        overall_success = False
+                        if self.stop:
+                            break
             else:
                 continue    # Allow the break to exit both loops.
             break           # Allow the break to exit both loops.
