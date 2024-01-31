@@ -10,228 +10,315 @@
 trigger: none
 pr: none
 
-parameters:
-- name: publish_nuget
-  displayName: Publish as a Nuget Package
-  type: boolean
-  default: false
-- name: image
-  displayName: VM Pool
-  type: string
-  default: windows-2022
-  values:
-  - windows-2022
-  - ubuntu-latest
-- name: toolchain
-  displayName: toolchain
-  type: string
-  default: VS2022
-  values:
-  - VS2022
-  - GCC5
-- name: version_major_minor
-  displayName: Major and Minor Version
-  type: string
-  default: 2023.02
-- name: version_patch
-  displayName: Patch Version (0-65535)
-  type: number
-  default: 0
-- name: version_label
-  displayName: Version Label (e.g. '-rc', '-beta') (Use 'None' for none)
-  type: string
-  default: None
+# parameters:
+# - name: publish_nuget
+#   displayName: Publish as a Nuget Package
+#   type: boolean
+#   default: false
+# - name: image
+#   displayName: VM Pool
+#   type: string
+#   default: windows-2022
+#   values:
+#   - windows-2022
+#   - ubuntu-latest
+# - name: toolchain
+#   displayName: toolchain
+#   type: string
+#   default: VS2022
+#   values:
+#   - VS2022
+#   - GCC5
+# - name: version_major_minor
+#   displayName: Major and Minor Version
+#   type: string
+#   default: 2023.02
+# - name: version_patch
+#   displayName: Patch Version (0-65535)
+#   type: number
+#   default: 0
+# - name: version_label
+#   displayName: Version Label (e.g. '-rc', '-beta') (Use 'None' for none)
+#   type: string
+#   default: None
 
-variables:
-- name: build_archs
-  value: 'IA32,X64,AARCH64'
-- name: build_targets
-  value: 'DEBUG,RELEASE'
-- name: python_version
-  value: '3.10.x'
-- name: publish_version
-  ${{ if startsWith(parameters.version_label, '-') }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
-  ${{ else }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
+resources:
+  repositories:
+    - repository: mu_devops
+      type: github
+      endpoint: microsoft
+      name: microsoft/mu_devops
+      ref: refs/tags/v9.1.1
 
-name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
+# variables:
+# - name: build_archs
+#   value: 'IA32,X64,AARCH64'
+# - name: build_targets
+#   value: 'DEBUG,RELEASE'
+# - name: python_version
+#   value: '3.10.x'
+# - name: publish_version
+#   ${{ if startsWith(parameters.version_label, '-') }}:
+#     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
+#   ${{ else }}:
+#     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 
-stages:
-- stage: build
-  displayName: Build
-  jobs:
-  - job: crypto_build
-    # Use Matrix to build multiple versions
-    strategy:
-      matrix:
-        TARGET_ALL:
-          Build.Flavor: 'ALL'
-          Build.CopyExtra: false
-        TARGET_TINY:
-          Build.Flavor: 'TINY_SHA'
-          Build.CopyExtra: true     # Only one job needs to publish the extra files.
-        TARGET_MINIMAL:
-          Build.Flavor: 'MINIMAL_SHA_SM3'
-          Build.CopyExtra: false
-        TARGET_SHA:
-          Build.Flavor: 'SMALL_SHA_RSA'
-          Build.CopyExtra: false
-        TARGET_STANDARD:
-          Build.Flavor: 'STANDARD'
-          Build.CopyExtra: false
-    displayName: Crypto Build
-    pool:
-      vmImage: ${{ parameters.image }}
+# name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
+extends:
+  template: template-build.yml
+  parameters:
+    depends_on:
+      - Build_AARCH64_ALL
+      - Build_AARCH64_TINY_SHA
+      - Build_AARCH64_MINIMAL_SHA_SM3
+      - Build_AARCH64_SMALL_SHA_RSA
+      - Build_AARCH64_STANDARD
+      - Build_IA32_X64_ALL
+      - Build_IA32_X64_TINY_SHA
+      - Build_IA32_X64_MINIMAL_SHA_SM3
+      - Build_IA32_X64_SMALL_SHA_RSA
+      - Build_IA32_X64_STANDARD
+    build_matrix:
+      AARCH64_ALL:
+        ArchList: 'AARCH64'
+        Container: true
+        ContainerImage: 'ghcr.io/microsoft/mu_devops/ubuntu-22-build:1082f35'
+        VmImage: 'ubuntu-latest'
+        ToolChain: 'GCC5'
+        Flavor: 'ALL'
+      AARCH64_TINY_SHA:
+        ArchList: 'AARCH64'
+        Container: true
+        ContainerImage: 'ghcr.io/microsoft/mu_devops/ubuntu-22-build:1082f35'
+        VmImage: 'ubuntu-latest'
+        ToolChain: 'GCC5'
+        Flavor: 'TINY_SHA'
+      AARCH64_MINIMAL_SHA_SM3:
+        ArchList: 'AARCH64'
+        Container: true
+        ContainerImage: 'ghcr.io/microsoft/mu_devops/ubuntu-22-build:1082f35'
+        VmImage: 'ubuntu-latest'
+        ToolChain: 'GCC5'
+        Flavor: 'MINIMAL_SHA_SM3'
+      AARCH64_SMALL_SHA_RSA:
+        ArchList: 'AARCH64'
+        Container: true
+        ContainerImage: 'ghcr.io/microsoft/mu_devops/ubuntu-22-build:1082f35'
+        VmImage: 'ubuntu-latest'
+        ToolChain: 'GCC5'
+        Flavor: 'SMALL_SHA_RSA'
+      AARCH64_STANDARD:
+        ArchList: 'AARCH64'
+        Container: true
+        ContainerImage: 'ghcr.io/microsoft/mu_devops/ubuntu-22-build:1082f35'
+        VmImage: 'ubuntu-latest'
+        ToolChain: 'GCC5'
+        Flavor: 'STANDARD'
+      IA32_X64_ALL:
+        ArchList: 'IA32,X64'
+        Container: false
+        VmImage: 'windows-latest'
+        ToolChain: 'VS2022'
+        Flavor: 'ALL'
+      IA32_X64_TINY_SHA:
+        ArchList: 'IA32,X64'
+        Container: false
+        VmImage: 'windows-latest'
+        ToolChain: 'VS2022'
+        Flavor: 'TINY_SHA'
+      IA32_X64_MINIMAL_SHA_SM3:
+        ArchList: 'IA32,X64'
+        Container: false
+        VmImage: 'windows-latest'
+        ToolChain: 'VS2022'
+        Flavor: 'MINIMAL_SHA_SM3'
+      IA32_X64_SMALL_SHA_RSA:
+        ArchList: 'IA32,X64'
+        Container: false
+        VmImage: 'windows-latest'
+        ToolChain: 'VS2022'
+        Flavor: 'SMALL_SHA_RSA'
+      IA32_X64_STANDARD:
+        ArchList: 'IA32,X64'
+        Container: false
+        VmImage: 'windows-latest'
+        ToolChain: 'VS2022'
+        Flavor: 'STANDARD'
+# stages
+# - stage: build
+#   displayName: Build
+#   jobs:
+#   - job: crypto_build
+#     # Use Matrix to build multiple versions
+#     strategy:
+#       matrix:
+#         TARGET_ALL:
+#           Build.Flavor: 'ALL'
+#           Build.CopyExtra: false
+#         TARGET_TINY:
+#           Build.Flavor: 'TINY_SHA'
+#           Build.CopyExtra: true     # Only one job needs to publish the extra files.
+#         TARGET_MINIMAL:
+#           Build.Flavor: 'MINIMAL_SHA_SM3'
+#           Build.CopyExtra: false
+#         TARGET_SHA:
+#           Build.Flavor: 'SMALL_SHA_RSA'
+#           Build.CopyExtra: false
+#         TARGET_STANDARD:
+#           Build.Flavor: 'STANDARD'
+#           Build.CopyExtra: false
+#     displayName: Crypto Build
+#     pool:
+#       vmImage: ${{ parameters.image }}
 
-    workspace:
-      clean: all
+#     workspace:
+#       clean: all
 
-    steps:
-    - checkout: self
-      clean: true
+#     steps:
+#     - checkout: self
+#       clean: true
 
-    - task: UsePythonVersion@0
-      displayName: Install Python v$(python_version)
-      inputs:
-        versionSpec: $(python_version)
-        addToPath: true
-        architecture: 'x64'
+#     - task: UsePythonVersion@0
+#       displayName: Install Python v$(python_version)
+#       inputs:
+#         versionSpec: $(python_version)
+#         addToPath: true
+#         architecture: 'x64'
 
-    - script: pip install -r pip-requirements.txt --upgrade
-      displayName: 'Install/Upgrade pip Modules'
+#     - script: pip install -r pip-requirements.txt --upgrade
+#       displayName: 'Install/Upgrade pip Modules'
 
-    - task: PythonScript@0
-      displayName: Hydrate Workspace Code
-      inputs:
-        scriptSource: filePath
-        scriptPath: MultiFlavorBuild.py
-        arguments: --setup TOOL_CHAIN_TAG=${{ parameters.toolchain }}
+#     - task: PythonScript@0
+#       displayName: Hydrate Workspace Code
+#       inputs:
+#         scriptSource: filePath
+#         scriptPath: MultiFlavorBuild.py
+#         arguments: --setup TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
-    - task: PythonScript@0
-      displayName: Update Workspace Extdeps
-      inputs:
-        scriptSource: filePath
-        scriptPath: MultiFlavorBuild.py
-        arguments: --update TOOL_CHAIN_TAG=${{ parameters.toolchain }}
+#     - task: PythonScript@0
+#       displayName: Update Workspace Extdeps
+#       inputs:
+#         scriptSource: filePath
+#         scriptPath: MultiFlavorBuild.py
+#         arguments: --update TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
-    - task: PythonScript@0
-      displayName: Build Crypto Drivers
-      inputs:
-        scriptSource: filePath
-        scriptPath: MultiFlavorBuild.py
-        arguments: > # Use this to avoid newline characters in multiline string
-          -f $(Build.Flavor)
-          -a $(build_archs)
-          -t $(build_targets)
-          --stop-on-fail
-          TOOL_CHAIN_TAG=${{ parameters.toolchain }} 
+#     - task: PythonScript@0
+#       displayName: Build Crypto Drivers
+#       inputs:
+#         scriptSource: filePath
+#         scriptPath: MultiFlavorBuild.py
+#         arguments: > # Use this to avoid newline characters in multiline string
+#           -f $(Build.Flavor)
+#           -a $(build_archs)
+#           -t $(build_targets)
+#           --stop-on-fail
+#           TOOL_CHAIN_TAG=${{ parameters.toolchain }} 
 
-    - task: CopyFiles@2
-      displayName: Filter Driver Binaries # To reduce network consumption.
-      inputs:
-        sourceFolder: 'Build/CryptoBin_$(Build.Flavor)'
-        contents: |
-          **/*.efi
-          **/*.depex
-          **/BUILD_REPORT.TXT
-        targetFolder: '$(Build.ArtifactStagingDirectory)/Drivers'
-        flattenFolders: false
+#     - task: CopyFiles@2
+#       displayName: Filter Driver Binaries # To reduce network consumption.
+#       inputs:
+#         sourceFolder: 'Build/CryptoBin_$(Build.Flavor)'
+#         contents: |
+#           **/*.efi
+#           **/*.depex
+#           **/BUILD_REPORT.TXT
+#         targetFolder: '$(Build.ArtifactStagingDirectory)/Drivers'
+#         flattenFolders: false
 
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Driver Binaries
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/Drivers'
-        artifactName: CryptoBin_$(Build.Flavor)
+#     - task: PublishPipelineArtifact@1
+#       displayName: Publish Driver Binaries
+#       inputs:
+#         targetPath: '$(Build.ArtifactStagingDirectory)/Drivers'
+#         artifactName: CryptoBin_$(Build.Flavor)
 
-    - task: CopyFiles@2
-      displayName: Save Configs and License
-      condition: eq(variables['Build.CopyExtra'], 'true')
-      inputs:
-        contents: |
-          MU_BASECORE\CryptoPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
-          MU_BASECORE\CryptoPkg\Driver\Packaging\License.txt
-        targetFolder: '$(Build.ArtifactStagingDirectory)/Extra'
-        flattenFolders: true
+#     - task: CopyFiles@2
+#       displayName: Save Configs and License
+#       condition: eq(variables['Build.CopyExtra'], 'true')
+#       inputs:
+#         contents: |
+#           MU_BASECORE\CryptoPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
+#           MU_BASECORE\CryptoPkg\Driver\Packaging\License.txt
+#         targetFolder: '$(Build.ArtifactStagingDirectory)/Extra'
+#         flattenFolders: true
 
-    - task:  PublishPipelineArtifact@1
-      displayName: Publish Configs and License
-      condition: eq(variables['Build.CopyExtra'], 'true')
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/Extra'
-        artifactName: Package_Extras
+#     - task:  PublishPipelineArtifact@1
+#       displayName: Publish Configs and License
+#       condition: eq(variables['Build.CopyExtra'], 'true')
+#       inputs:
+#         targetPath: '$(Build.ArtifactStagingDirectory)/Extra'
+#         artifactName: Package_Extras
 
-    - task: CopyFiles@2
-      displayName: Save Job Logs
-      condition: succeededOrFailed()
-      inputs:
-        sourceFolder: 'Build'
-        contents: |
-          BUILDLOG_CryptoBin_*.txt
-          SETUPLOG.txt
-          UPDATE_LOG.txt
-        targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
-        flattenFolders: true
+#     - task: CopyFiles@2
+#       displayName: Save Job Logs
+#       condition: succeededOrFailed()
+#       inputs:
+#         sourceFolder: 'Build'
+#         contents: |
+#           BUILDLOG_CryptoBin_*.txt
+#           SETUPLOG.txt
+#           UPDATE_LOG.txt
+#         targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
+#         flattenFolders: true
 
-    - task:  PublishBuildArtifacts@1
-      displayName: Publish Job Logs
-      condition: succeededOrFailed()
-      inputs:
-        pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
-        artifactName: $(Build.Flavor)_Logs
+#     - task:  PublishBuildArtifacts@1
+#       displayName: Publish Job Logs
+#       condition: succeededOrFailed()
+#       inputs:
+#         pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
+#         artifactName: $(Build.Flavor)_Logs
 
 
-- stage: assemble
-  displayName: Assemble
-  dependsOn: build
-  jobs:
-  - job: assemble_package
-    displayName: Assemble Release Package
-    pool:
-      vmImage: ${{ parameters.image }}
+# - stage: assemble
+#   displayName: Assemble
+#   dependsOn: build
+#   jobs:
+#   - job: assemble_package
+#     displayName: Assemble Release Package
+#     pool:
+#       vmImage: ${{ parameters.image }}
 
-    workspace:
-      clean: all
+#     workspace:
+#       clean: all
 
-    steps:
-    - checkout: self
+#     steps:
+#     - checkout: self
 
-    - task: UsePythonVersion@0
-      displayName: Install Python v$(python_version)
-      inputs:
-        versionSpec: $(python_version)
-        addToPath: true
-        architecture: 'x64'
+#     - task: UsePythonVersion@0
+#       displayName: Install Python v$(python_version)
+#       inputs:
+#         versionSpec: $(python_version)
+#         addToPath: true
+#         architecture: 'x64'
 
-    - script: pip install -r pip-requirements.txt --upgrade
-      displayName: 'Install/Upgrade pip Modules'
+#     - script: pip install -r pip-requirements.txt --upgrade
+#       displayName: 'Install/Upgrade pip Modules'
 
-    - task: DownloadPipelineArtifact@2
-      displayName: Download Driver Artifacts
-      inputs:
-        patterns: 'CryptoBin_*/**'
-        path: '$(Pipeline.Workspace)/Staging'
+#     - task: DownloadPipelineArtifact@2
+#       displayName: Download Driver Artifacts
+#       inputs:
+#         patterns: 'CryptoBin_*/**'
+#         path: '$(Pipeline.Workspace)/Staging'
 
-    - task: DownloadPipelineArtifact@2
-      displayName: Download Logs Artifacts
-      inputs:
-        patterns: '*_Logs/**'
-        path: '$(Pipeline.Workspace)/Logs'
+#     - task: DownloadPipelineArtifact@2
+#       displayName: Download Logs Artifacts
+#       inputs:
+#         patterns: '*_Logs/**'
+#         path: '$(Pipeline.Workspace)/Logs'
 
-    - task: DownloadPipelineArtifact@2
-      displayName: Download Extras Artifacts
-      inputs:
-        artifact: Package_Extras
-        path: '$(Pipeline.Workspace)/Extras'
+#     - task: DownloadPipelineArtifact@2
+#       displayName: Download Extras Artifacts
+#       inputs:
+#         artifact: Package_Extras
+#         path: '$(Pipeline.Workspace)/Extras'
 
-    - task: CopyFiles@2
-      displayName: Move Logs into Staging
-      inputs:
-        sourceFolder: '$(Pipeline.Workspace)/Logs'
-        contents: |
-          **/*.txt
-        targetFolder: '$(Pipeline.Workspace)/Staging'
-        flattenFolders: true
+#     - task: CopyFiles@2
+#       displayName: Move Logs into Staging
+#       inputs:
+#         sourceFolder: '$(Pipeline.Workspace)/Logs'
+#         contents: |
+#           **/*.txt
+#         targetFolder: '$(Pipeline.Workspace)/Staging'
+#         flattenFolders: true
 
     # Files in staging exists in this format
     # {FLAVOR}
@@ -263,103 +350,103 @@ stages:
     # License.txt
     # Readme.md
 
-    - task: PythonScript@0
-      displayName: Assemble Release Package
-      inputs:
-        scriptSource: filePath
-        scriptPath: AssembleNugetPackage.py
-        arguments: > # Use this to avoid newline characters in multiline string
-          -v
-          -f
-          -l
-          -e $(Pipeline.Workspace)/Extras/License.txt
-          -o $(Pipeline.Workspace)/FinalPackage
-          $(Pipeline.Workspace)/Staging
+#     - task: PythonScript@0
+#       displayName: Assemble Release Package
+#       inputs:
+#         scriptSource: filePath
+#         scriptPath: AssembleNugetPackage.py
+#         arguments: > # Use this to avoid newline characters in multiline string
+#           -v
+#           -f
+#           -l
+#           -e $(Pipeline.Workspace)/Extras/License.txt
+#           -o $(Pipeline.Workspace)/FinalPackage
+#           $(Pipeline.Workspace)/Staging
 
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Binaries
-      inputs:
-        targetPath: '$(Pipeline.Workspace)/FinalPackage'
-        artifactName: CryptoBin_Nuget_Package
+#     - task: PublishPipelineArtifact@1
+#       displayName: Publish Binaries
+#       inputs:
+#         targetPath: '$(Pipeline.Workspace)/FinalPackage'
+#         artifactName: CryptoBin_Nuget_Package
 
 
-- ${{ if eq(parameters.publish_nuget, true) }}:
-  - stage: publish
-    displayName: Publish
-    dependsOn: assemble
+# - ${{ if eq(parameters.publish_nuget, true) }}:
+#   - stage: publish
+#     displayName: Publish
+#     dependsOn: assemble
 
-    variables:
-    - name: nuget_staging_directory
-      value: $(Build.StagingDirectory)/NugetPackage
-    - name: nuget_output_log
-      value: $(Build.StagingDirectory)/NugetLog.txt
+#     variables:
+#     - name: nuget_staging_directory
+#       value: $(Build.StagingDirectory)/NugetPackage
+#     - name: nuget_output_log
+#       value: $(Build.StagingDirectory)/NugetLog.txt
 
-    pool:
-      vmImage: ${{ parameters.image }}
+#     pool:
+#       vmImage: ${{ parameters.image }}
 
-    jobs:
-    - job: DownloadAndPublish
-      displayName: Download and Publish
+#     jobs:
+#     - job: DownloadAndPublish
+#       displayName: Download and Publish
 
-      steps:
-      - checkout: self
+#       steps:
+#       - checkout: self
 
-      - task: UsePythonVersion@0
-        displayName: Install Python v$(python_version)
-        inputs:
-          versionSpec: $(python_version)
-          addToPath: true
-          architecture: 'x64'
+#       - task: UsePythonVersion@0
+#         displayName: Install Python v$(python_version)
+#         inputs:
+#           versionSpec: $(python_version)
+#           addToPath: true
+#           architecture: 'x64'
 
-      - script: pip install -r pip-requirements.txt --upgrade
-        displayName: 'Install/Upgrade pip Modules'
+#       - script: pip install -r pip-requirements.txt --upgrade
+#         displayName: 'Install/Upgrade pip Modules'
 
-      - task: DownloadPipelineArtifact@2
-        displayName: Download Nuget Package
-        inputs:
-          artifactName: CryptoBin_Nuget_Package
-          path: '$(Pipeline.Workspace)/Package'
+#       - task: DownloadPipelineArtifact@2
+#         displayName: Download Nuget Package
+#         inputs:
+#           artifactName: CryptoBin_Nuget_Package
+#           path: '$(Pipeline.Workspace)/Package'
 
-      - task: DownloadPipelineArtifact@2
-        displayName: Download Extras Package
-        inputs:
-          artifactName: Package_Extras
-          path: '$(Pipeline.Workspace)/Extras'
+#       - task: DownloadPipelineArtifact@2
+#         displayName: Download Extras Package
+#         inputs:
+#           artifactName: Package_Extras
+#           path: '$(Pipeline.Workspace)/Extras'
 
-      - task: PowerShell@2
-        displayName: Compile Nuget Archive
-        inputs:
-          targetType: 'inline'
-          script: >
-            mkdir $(Build.StagingDirectory)/NupackOutput;
-            $configFilePath = "$(Pipeline.Workspace)/Extras/edk2-BaseCryptoDriver.config.json";
-            $licenseFile = "$(Pipeline.Workspace)/Extras/License.txt";
+#       - task: PowerShell@2
+#         displayName: Compile Nuget Archive
+#         inputs:
+#           targetType: 'inline'
+#           script: >
+#             mkdir $(Build.StagingDirectory)/NupackOutput;
+#             $configFilePath = "$(Pipeline.Workspace)/Extras/edk2-BaseCryptoDriver.config.json";
+#             $licenseFile = "$(Pipeline.Workspace)/Extras/License.txt";
 
-            Write-Host nuget-publish
-            --Operation Pack
-            --OutputLog "$(Build.StagingDirectory)/NugetPackagingLog.txt"
-            --ConfigFilePath "$configFilePath"
-            --InputFolderPath "$(Pipeline.Workspace)/Package"
-            --Version "$(publish_version)"
-            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
-            --CustomLicensePath "$licenseFile";
+#             Write-Host nuget-publish
+#             --Operation Pack
+#             --OutputLog "$(Build.StagingDirectory)/NugetPackagingLog.txt"
+#             --ConfigFilePath "$configFilePath"
+#             --InputFolderPath "$(Pipeline.Workspace)/Package"
+#             --Version "$(publish_version)"
+#             --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
+#             --CustomLicensePath "$licenseFile";
 
-            nuget-publish
-            --Operation Pack
-            --OutputLog "$(Build.StagingDirectory)/NugetPackagingLog.txt"
-            --ConfigFilePath "$configFilePath"
-            --InputFolderPath "$(Pipeline.Workspace)/Package"
-            --Version "$(publish_version)"
-            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
-            --CustomLicensePath "$licenseFile";
+#             nuget-publish
+#             --Operation Pack
+#             --OutputLog "$(Build.StagingDirectory)/NugetPackagingLog.txt"
+#             --ConfigFilePath "$configFilePath"
+#             --InputFolderPath "$(Pipeline.Workspace)/Package"
+#             --Version "$(publish_version)"
+#             --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
+#             --CustomLicensePath "$licenseFile";
 
-            Get-Content $(Build.StagingDirectory)/NugetPackagingLog.txt;
+#             Get-Content $(Build.StagingDirectory)/NugetPackagingLog.txt;
 
-      - task: NuGetAuthenticate@0
-        displayName: Authenticate Local Feed
-      - task: NuGetCommand@2
-        displayName: 'DevOps NuGet Push'
-        inputs:
-            command: 'push'
-            packagesToPush: "$(Build.StagingDirectory)/NupackOutput/**/*.nupkg"
-            publishVstsFeed: 'mu/Mu-Public'
+#       - task: NuGetAuthenticate@0
+#         displayName: Authenticate Local Feed
+#       - task: NuGetCommand@2
+#         displayName: 'DevOps NuGet Push'
+#         inputs:
+#             command: 'push'
+#             packagesToPush: "$(Build.StagingDirectory)/NupackOutput/**/*.nupkg"
+#             publishVstsFeed: 'mu/Mu-Public'

@@ -1,0 +1,145 @@
+parameters:
+  - name: linux_container_image
+    displayName: Linux Container Image
+    type: string
+    default: ''
+  - name: linux_container_options
+    displayName: Linux Container Options
+    type: string
+    default: ''
+  - name: vm_image
+    displayName: Virtual Machine Image (e.g. windows-latest)
+    type: string
+    default: 'windows-latest'
+  - name: build_targets
+    displayName: Build Targets
+    type: string
+    default: 'DEBUG,RELEASE'
+  - name: build_matrix
+    type: object
+    displayName: Build matrix for this repository
+  - name: depends_on
+    displayName: Matrix name dependencies
+    type: object
+    # Example
+    # MATRIX_NAME:
+    #  ArchList: 'IA32,X64'
+    #  Container: true
+    #  ContainerImage: ''
+    #  VmImage: ''
+    #  ToolChain: ''
+
+jobs:
+  - ${{ each item in parameters.build_matrix }}:
+    - job: Build_${{ item.Key }}
+      
+      timeoutInMinutes: 120
+      
+      workspace:
+        clean: all
+      
+      pool:
+        vmImage: ${{ item.Value.VmImage }}
+      
+      ${{ if eq(item.Value.Container, true) }}:
+        container:
+          image: ${{ item.Value.ContainerImage }}
+      
+      steps:
+        - checkout: self
+          clean: true
+  
+        - ${{ if eq(item.Value.Container, true) }}:
+          - script: pip install -r pip-requirements.txt --upgrade
+            displayName: Install and Upgrade pip Modules
+        - ${{ else }}:
+          - template: Steps/SetupPythonPreReqs.yml@mu_devops
+
+        - task: PythonScript@0
+          displayName: 'Hydrate Workspace Code'
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: MultiFlavorBuild.py
+            arguments: --setup TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
+        
+        - task: PythonScript@0
+          displayName: Update Workspace Extdeps
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: MultiFlavorBuild.py
+            arguments: --update TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
+        
+        - task: PythonScript@0
+          displayName: 'Build Crypto Drivers'
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: MultiFlavorBuild.py
+            arguments: >
+              -f ${{ item.Value.Flavor }}
+              -a ${{ item.Value.ArchList }}
+              -t ${{ parameters.build_targets }}
+              --stop-on-fail
+              TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
+
+        - task: CopyFiles@2
+          displayName: Filter Driver Binaries # To reduce network consumption.
+          inputs:
+            sourceFolder: 'Build/CryptoBin_${{ item.Value.Flavor }}'
+            contents: |
+              **/*.efi
+              **/*.depex
+              **/BUILD_REPORT.TXT
+            targetFolder: '$(Build.ArtifactStagingDirectory)/Drivers'
+            flattenFolders: false
+        - task: PublishPipelineArtifact@1
+          displayName: Publish Driver Binaries
+          inputs:
+            targetPath: '$(Build.ArtifactStagingDirectory)/Drivers'
+            artifactName: CryptoBin_${{ item.Value.Flavor }}
+
+        - ${{ if eq(item.Value.CopyExtra, true) }}:
+          - task: CopyFiles@2
+            displayName: Save Configs and License
+            inputs:
+              contents: |
+                MU_BASECORE\CryptoPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
+                MU_BASECORE\CryptoPkg\Driver\Packaging\License.txt
+              targetFolder: '$(Build.ArtifactStagingDirectory)/Extra'
+              flattenFolders: true
+          - task:  PublishPipelineArtifact@1
+            displayName: Publish Configs and License
+            condition: eq(variables['Build.CopyExtra'], 'true')
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/Extra'
+              artifactName: Package_Extras
+
+        - task: CopyFiles@2
+          displayName: Save Job Logs
+          condition: succeededOrFailed()
+          inputs:
+            sourceFolder: 'Build'
+            contents: |
+              BUILDLOG_CryptoBin_*.txt
+              SETUPLOG.txt
+              UPDATE_LOG.txt
+            targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
+            flattenFolders: true
+        - task:  PublishBuildArtifacts@1
+          displayName: Publish Job Logs
+          condition: succeededOrFailed()
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
+            artifactName: ${{ Item.Key }}_Logs
+  - job: assemble_package
+    displayName: Assemble Package
+
+    dependsOn: ${{ parameters.depends_on }}
+
+    workspace:
+      clean: all
+
+    pool:
+      vmImage: 'windows-latest'
+    
+    steps:
+    - script: echo 'hello'
