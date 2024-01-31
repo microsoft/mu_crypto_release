@@ -1,0 +1,300 @@
+# File template-build.yml
+#
+# Azure Pipeline to construct the final Nuget package for a binary release
+# of CryptoBin
+#
+# Copyright (C) Microsoft Corporation
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+parameters:
+  - name: build_targets
+    displayName: Build Targets
+    type: string
+    default: 'DEBUG,RELEASE'
+  - name: publish_nuget
+    displayName: Publish Nuget Package
+    type: boolean
+    default: false
+  - name: publish_version
+    displayName: Publish Version
+    type: string
+    default: '0.0.0'
+  - name: linux_container_image
+    displayName: Linux Container Image
+    type: string
+    default: ''
+  - name: build_matrix
+    type: object
+    displayName: Build matrix for this repository
+  - name: depends_on
+    displayName: Matrix name dependencies
+    type: object
+    # Example
+    # MATRIX_NAME:
+    #  ArchList: 'IA32,X64'
+    #  Container: true
+    #  VmImage: ''
+    #  ToolChain: ''
+    #  Flavor: ''
+    #  CopyExtra: true
+
+jobs:
+  - ${{ each item in parameters.build_matrix }}:
+    - job: Build_${{ item.Key }}
+      
+      timeoutInMinutes: 120
+      
+      workspace:
+        clean: all
+      
+      pool:
+        vmImage: ${{ item.Value.VmImage }}
+      
+      ${{ if eq(item.Value.Container, true) }}:
+        container:
+          image: ${{ parameters.linux_container_image }}
+      
+      steps:
+        - checkout: self
+          clean: true
+  
+        - ${{ if eq(item.Value.Container, true) }}:
+          - script: pip install -r pip-requirements.txt --upgrade
+            displayName: Install and Upgrade pip Modules
+        - ${{ else }}:
+          - template: Steps/SetupPythonPreReqs.yml@mu_devops
+
+        - task: PythonScript@0
+          displayName: 'Hydrate Workspace Code'
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: MultiFlavorBuild.py
+            arguments: --setup TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
+        
+        - task: PythonScript@0
+          displayName: Update Workspace Extdeps
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: MultiFlavorBuild.py
+            arguments: --update TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
+        
+        - task: PythonScript@0
+          displayName: 'Build Crypto Drivers'
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: MultiFlavorBuild.py
+            arguments: >
+              -f ${{ item.Value.Flavor }}
+              -a ${{ item.Value.ArchList }}
+              -t ${{ parameters.build_targets }}
+              --stop-on-fail
+              TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
+
+        - task: CopyFiles@2
+          displayName: Filter Driver Binaries # To reduce network consumption.
+          inputs:
+            sourceFolder: 'Build/CryptoBin_${{ item.Value.Flavor }}'
+            contents: |
+              **/*.efi
+              **/*.depex
+              **/BUILD_REPORT.TXT
+            targetFolder: '$(Build.ArtifactStagingDirectory)/Drivers'
+            flattenFolders: false
+        - task: PublishPipelineArtifact@1
+          displayName: Publish Driver Binaries
+          inputs:
+            targetPath: '$(Build.ArtifactStagingDirectory)/Drivers'
+            artifactName: CryptoBin_${{ Item.Value.ArchList }}_${{ item.Value.Flavor }}
+
+        - ${{ if eq(item.Value.CopyExtra, true) }}:
+          - task: CopyFiles@2
+            displayName: Save Configs and License
+            inputs:
+              contents: |
+                MU_BASECORE\CryptoPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
+                MU_BASECORE\CryptoPkg\Driver\Packaging\License.txt
+              targetFolder: '$(Build.ArtifactStagingDirectory)/Extra'
+              flattenFolders: true
+          - task:  PublishPipelineArtifact@1
+            displayName: Publish Configs and License
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/Extra'
+              artifactName: Package_Extras
+
+        - task: CopyFiles@2
+          displayName: Save Job Logs
+          condition: succeededOrFailed()
+          inputs:
+            sourceFolder: 'Build'
+            contents: |
+              BUILDLOG_CryptoBin_*.txt
+              SETUPLOG.txt
+              UPDATE_LOG.txt
+            targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
+            flattenFolders: true
+        - task:  PublishBuildArtifacts@1
+          displayName: Publish Job Logs
+          condition: succeededOrFailed()
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
+            artifactName: ${{ Item.Key }}_Logs
+
+  - job: assemble_package
+    displayName: Assemble CryptoBin_${{parameters.publish_version}}
+
+    dependsOn: ${{ parameters.depends_on }}
+
+    workspace:
+      clean: all
+
+    pool:
+      vmImage: 'windows-latest'
+
+    steps:
+    - checkout: self
+
+    - template: Steps/SetupPythonPreReqs.yml@mu_devops
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Driver Artifacts
+      inputs:
+        patterns: 'CryptoBin_*/**'
+        path: '$(Pipeline.Workspace)/Staging'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Logs Artifacts
+      inputs:
+        patterns: '*_Logs/**'
+        path: '$(Pipeline.Workspace)/Logs'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Extras Artifacts
+      inputs:
+        artifact: Package_Extras
+        path: '$(Pipeline.Workspace)/Extras'
+
+    - task: CopyFiles@2
+      displayName: Move Logs into Staging
+      inputs:
+        sourceFolder: '$(Pipeline.Workspace)/Logs'
+        contents: |
+          **/*.txt
+        targetFolder: '$(Pipeline.Workspace)/Staging'
+        flattenFolders: true
+    
+    # Files in staging exists in this format
+    # {FLAVOR}
+    # -- CryptoPkg
+    # ---- {TARGET}_{TOOLCHAIN}
+    # ------ Crypto(Pei|Dxe|Smm).efi
+    # ------ {GUID}
+    # -------- DEBUG
+    # ---------- Crypto(Pei|Dxe|Smm).efi
+    # -------- OUTPUT
+    # ---------- Crypto(Pei|Dxe|Smm).efi
+    # ---------- Crypto(Pei|Dxe|Smm).depex
+    # -- UPDATE_LOG.txt
+    # -- CI_BUILDLOG.txt
+    # -- edk2-BaseCryptoDriver.config.json
+
+    # {FLAVOR} = ALL, TINY_SHA, ...
+    # {TARGET} = DEBUG, RELEASE
+    # {TOOLCHAIN} = VS2019, VS2017
+    # {ARCH} = IA32, X64, AARCH64
+
+    # We need them laid out like this
+    # {FLAVOR}
+    # -- {TARGET}
+    # ---- {ARCH}
+    # ------- Crypto(Pei|Dxe|Smm).efi
+    # ---- BuildReport.txt
+    # ---- Crypto(Pei|Dxe|Smm).depex
+    # License.txt
+    # Readme.md
+
+    - task: PythonScript@0
+      displayName: Assemble Release Package
+      inputs:
+        scriptSource: filePath
+        scriptPath: AssembleNugetPackage.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          -v
+          -f
+          -l
+          -e $(Pipeline.Workspace)/Extras/License.txt
+          -o $(Pipeline.Workspace)/FinalPackage
+          $(Pipeline.Workspace)/Staging
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Binaries
+      inputs:
+        targetPath: '$(Pipeline.Workspace)/FinalPackage'
+        artifactName: CryptoBin_Nuget_Package
+  
+  - ${{ if eq(parameters.publish_nuget, true) }}:
+    - job: publish_package
+      displayName: Publish CryptoBin_${{parameters.publish_version}}
+
+      dependsOn: assemble_package
+
+      workspace:
+        clean: all
+
+      pool:
+        vmImage: 'windows-latest'
+
+      steps:
+      - checkout: self
+
+      - template: Steps/SetupPythonPreReqs.yml@mu_devops
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Download Nuget Package
+        inputs:
+          artifactName: CryptoBin_Nuget_Package
+          path: '$(Pipeline.Workspace)/Package'
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Download Extras Package
+        inputs:
+          artifactName: Package_Extras
+          path: '$(Pipeline.Workspace)/Extras'
+
+      - task: PowerShell@2
+        displayName: Compile Nuget Archive
+        inputs:
+          targetType: 'inline'
+          script: >
+            mkdir $(Build.StagingDirectory)/NupackOutput;
+            $configFilePath = "$(Pipeline.Workspace)/Extras/edk2-BaseCryptoDriver.config.json";
+            $licenseFile = "$(Pipeline.Workspace)/Extras/License.txt";
+
+            Write-Host nuget-publish
+            --Operation Pack
+            --OutputLog "$(Build.StagingDirectory)/NugetPackagingLog.txt"
+            --ConfigFilePath "$configFilePath"
+            --InputFolderPath "$(Pipeline.Workspace)/Package"
+            --Version "${{ parameters.publish_version }}"
+            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
+            --CustomLicensePath "$licenseFile";
+
+            nuget-publish
+            --Operation Pack
+            --OutputLog "$(Build.StagingDirectory)/NugetPackagingLog.txt"
+            --ConfigFilePath "$configFilePath"
+            --InputFolderPath "$(Pipeline.Workspace)/Package"
+            --Version "${{ parameters.publish_version }}"
+            --OutputFolderPath "$(Build.StagingDirectory)/NupackOutput"
+            --CustomLicensePath "$licenseFile";
+
+            Get-Content $(Build.StagingDirectory)/NugetPackagingLog.txt;
+      
+      - task: NuGetAuthenticate@0
+        displayName: Authenticate Local Feed
+
+      - task: NuGetCommand@2
+        displayName: 'DevOps NuGet Push'
+        inputs:
+            command: 'push'
+            packagesToPush: "$(Build.StagingDirectory)/NupackOutput/**/*.nupkg"
+            publishVstsFeed: 'mu/Mu-Public'
