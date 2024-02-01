@@ -44,6 +44,7 @@ extends:
     ${{ else }}:
       publish_version: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
     linux_container_image: 'ghcr.io/microsoft/mu_devops/ubuntu-22-build:1082f35'
+    publish_nuget: ${{ parameters.publish_nuget }}
     depends_on:
       - Build_AARCH64_ALL
       - Build_AARCH64_TINY_SHA
