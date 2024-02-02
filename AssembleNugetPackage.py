@@ -125,6 +125,27 @@ def main():
                         logging.debug(f"{path} -> {output_path}")
                         shutil.copy(path, output_path)
 
+    # Add additional outgenerated files for the crypto binary
+    autogen_dir_name = f"OpensslPkg/Driver/Bin"
+    autogen_input_dir = os.path.join(args.input_dir, autogen_dir_name)
+    logging.debug(f"AUTOGEN PATH: '{autogen_input_dir}'")
+
+    # Create the Driver/Bin folder
+    target_dest_path = os.path.join(args.output_dir, "Driver", "Bin")
+    if not os.path.exists(target_dest_path):
+        os.makedirs(target_dest_path)
+
+    # Copy all files in the Bin folder
+        
+    for file in os.listdir(autogen_input_dir):
+        filename = os.fsdecode(file)
+        if filename[0:4] == "temp":
+            continue
+        input_path = os.path.join(autogen_input_dir, filename)
+        output_path = os.path.join(target_dest_path, filename)
+        logging.debug(f"OUTPUT PATH: {output_path}")
+        shutil.copy(input_path, output_path) 
+
     # Finally, copy any extra paths to the output.
     for extra_path in args.extra_paths:
         if os.path.isfile(extra_path):
