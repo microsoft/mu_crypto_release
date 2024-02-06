@@ -126,25 +126,48 @@ def main():
                         shutil.copy(path, output_path)
 
     # Add additional outgenerated files for the crypto binary
-    autogen_dir_name = f"OpensslPkg/Driver/Bin"
-    autogen_input_dir = os.path.join(args.input_dir, autogen_dir_name)
+    # Find the Driver folder
+    autogen_dir_name = f"OpensslPkg/Driver/"
+    autogen_input_dir = args.input_dir
+    # Get parent directory
+    while os.path.basename(autogen_input_dir) != "mu_crypto_release":
+        autogen_input_dir = os.path.dirname(autogen_input_dir)
+    autogen_input_dir = os.path.join(autogen_input_dir, autogen_dir_name)
     logging.debug(f"AUTOGEN PATH: '{autogen_input_dir}'")
 
-    # Create the Driver/Bin folder
-    target_dest_path = os.path.join(args.output_dir, "Driver", "Bin")
-    if not os.path.exists(target_dest_path):
-        os.makedirs(target_dest_path)
+    # Create the Driver folder
+    autogen_dest_path = os.path.join(args.output_dir, "Driver")
+    if not os.path.exists(autogen_dest_path):
+        os.makedirs(autogen_dest_path)
+    
+    # Copy the files in the Driver directory
+    for file in os.listdir(autogen_input_dir):
+        fullpath = os.path.join(autogen_input_dir, file)
+        # Skip directories for now
+        if os.path.isdir(fullpath):
+            continue
+        filename = os.fsdecode(file)
+        input_path = os.path.join(autogen_input_dir, filename)
+        output_path = os.path.join(autogen_dest_path, filename)
+        logging.debug(f"OUTPUT PATH: {output_path}")
+        shutil.copy(input_path, output_path)
 
-    # Copy all files in the Bin folder
-        
+    # Create the Driver/Bin folder
+    autogen_input_dir = os.path.join(autogen_input_dir, "Bin")
+    autogen_dest_path = os.path.join(autogen_dest_path, "Bin")
+    if not os.path.exists(autogen_dest_path):
+        os.makedirs(autogen_dest_path)
+
+    # Copy all files in the Bin folder 
     for file in os.listdir(autogen_input_dir):
         filename = os.fsdecode(file)
+        # Skip the temporary files
         if filename[0:4] == "temp":
             continue
         input_path = os.path.join(autogen_input_dir, filename)
-        output_path = os.path.join(target_dest_path, filename)
+        output_path = os.path.join(autogen_dest_path, filename)
         logging.debug(f"OUTPUT PATH: {output_path}")
-        shutil.copy(input_path, output_path) 
+        shutil.copy(input_path, output_path)
 
     # Finally, copy any extra paths to the output.
     for extra_path in args.extra_paths:
