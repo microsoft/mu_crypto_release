@@ -137,10 +137,7 @@ def main():
     # Add additional outgenerated files for the crypto binary
     # Find the Driver folder
     autogen_dir_name = f"OpensslPkg/Driver/"
-    autogen_input_dir = args.input_dir
-    # Get parent directory
-    while os.path.basename(autogen_input_dir) != "mu_crypto_release":
-        autogen_input_dir = os.path.dirname(autogen_input_dir)
+    autogen_input_dir = os.getcwd()
     autogen_input_dir = os.path.join(autogen_input_dir, autogen_dir_name)
     logging.debug(f"AUTOGEN PATH: '{autogen_input_dir}'")
 
