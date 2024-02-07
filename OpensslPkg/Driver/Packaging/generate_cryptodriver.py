@@ -45,7 +45,7 @@ def main():
         if options.copy:
             # TODO: define this somewhere globally
             h_file_path = os.path.join(options.out_dir, "temp_Crypto.h")
-            shutil.copyfile(h_file_path, os.path.join(ROOT_DIR, "MU_BASECORE", "CryptoPkg", "Private", "Protocol", "Crypto.h"))
+            shutil.copyfile(h_file_path, os.path.join(ROOT_DIR, "MU_BASECORE", "CryptoPkg", "Include", "Protocol", "Crypto.h"))
     if options.p_file:
         get_crypto_pcds(options, crypto_functions)
     if options.d_file:
@@ -635,7 +635,7 @@ def get_crypto_dsc(options, functions):
 
         flavor_file = f"Crypto.pcd.{flavor}.inc.dsc"
         generate_file_replacement(flavor_lines, None, flavor_file, options, "#")
-        lines.append(f"!include CryptoPkg/Driver/Bin/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{flavor_file}")
+        lines.append(f"!include CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{flavor_file}")
         lines.append("!endif\n")
 
     generate_file_replacement(lines, None, "Crypto.inc.dsc", options, "#")
@@ -746,10 +746,10 @@ def generate_platform_files():
                           f"  ENTRY_POINT                    = Crypto{phase}Entry"])
         inf_lines.append(f"\n[Binaries.{arch}]")
         inf_lines.append(
-            f"  PE32|edk2-basecrypto-driver-bin_extdep/{flavor}/{target}/{arch}/Crypto{phase}.efi|{target}")
+            f"  PE32|../../{flavor}/{target}/{arch}/Crypto{phase}.efi|{target}")
         depex_phase = phase.upper() if phase != "StandaloneMm" else "SMM"
         inf_lines.append(
-            f"  {depex_phase}_DEPEX|edk2-basecrypto-driver-bin_extdep/{flavor}/{target}/Crypto{phase}.depex|{target}")
+            f"  {depex_phase}_DEPEX|../../{flavor}/{target}/Crypto{phase}.depex|{target}")
         inf_lines.append("\n[Packages]")
         inf_lines.append("  CryptoPkg/CryptoPkg.dec")
         inf_lines.append("")
@@ -758,7 +758,7 @@ def generate_platform_files():
         inf_filename = f"{inf_start}_{flavor}_{phase}_{target}_{arch}.inf"
         # Add to the CI
         dsc_ci_lines.append(f"[Components.{arch}]")
-        dsc_ci_lines.append("  CryptoPkg/Driver/Bin/edk2-basecrypto-driver-bin_extdep/Driver/Bin/" + inf_filename)
+        dsc_ci_lines.append("  CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/" + inf_filename)
         generate_file_replacement(
             inf_lines, None, inf_filename, options(), comment="#")
 
@@ -807,7 +807,7 @@ def generate_platform_files():
                     f" !if $({upper_phase}_CRYPTO_ARCH) == {arch}")
                 dsc_lines.append(f"  [{comp_str}]")
                 dsc_lines.append(
-                    f"    CryptoPkg/Driver/Bin/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
+                    f"    CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
                 dsc_lines.append(" !endif")
             dsc_lines.append("")
             # Add the library as well
@@ -817,7 +817,7 @@ def generate_platform_files():
                 f"   CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase}CryptLib.inf " + "{")
             dsc_lines.append("     <PcdsFixedAtBuild>")
             dsc_lines.append(
-                f"      !include CryptoPkg/Driver/Bin/edk2-basecrypto-driver-bin_extdep/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
+                f"      !include CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
             dsc_lines.append("    }")
             dsc_lines.append("!endif\n")
     dsc_lines.append("")
@@ -858,7 +858,7 @@ def generate_platform_files():
             for target in targets:
                 fdf_bb_lines.append(f" !if $(TARGET) == {target}")
                 fdf_bb_lines.append(
-                    f"    INF  CryptoPkg/Driver/Bin/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
+                    f"    INF  CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
                 fdf_bb_lines.append("  !endif")
             fdf_bb_lines.append("!endif\n")
         generate_file_replacement(
