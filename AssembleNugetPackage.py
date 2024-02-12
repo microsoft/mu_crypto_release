@@ -119,7 +119,7 @@ def main():
                     logging.debug(f"{path} -> {arch_dest_path}")
                     shutil.copy(path, arch_dest_path)
                 # Get Map and PDB files
-                for map_path in glob.iglob(os.path.join(args.input_dir, search_path, "CryptoPkg", "Driver", "*", "Output", "Crypto*.map")):
+                for map_path in glob.iglob(os.path.join(args.input_dir, search_path, "CryptoBinPkg", "Driver", "*", "Output", "Crypto*.map")):
                     pdb_path = map_path[:-3] + 'pdb'
                     shutil.copy(map_path, arch_dest_path)
                     if os.path.exists(pdb_path):
