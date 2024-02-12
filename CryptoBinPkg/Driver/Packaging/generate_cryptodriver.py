@@ -635,7 +635,7 @@ def get_crypto_dsc(options, functions):
 
         flavor_file = f"Crypto.pcd.{flavor}.inc.dsc"
         generate_file_replacement(flavor_lines, None, flavor_file, options, "#")
-        lines.append(f"!include CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{flavor_file}")
+        lines.append(f"!include $(SHARED_CRYPTO_PATH)/Driver/Bin/{flavor_file}")
         lines.append("!endif\n")
 
     generate_file_replacement(lines, None, "Crypto.inc.dsc", options, "#")
@@ -758,7 +758,7 @@ def generate_platform_files():
         inf_filename = f"{inf_start}_{flavor}_{phase}_{target}_{arch}.inf"
         # Add to the CI
         dsc_ci_lines.append(f"[Components.{arch}]")
-        dsc_ci_lines.append("  CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/" + inf_filename)
+        dsc_ci_lines.append("  $(SHARED_CRYPTO_PATH)/Driver/Bin/" + inf_filename)
         generate_file_replacement(
             inf_lines, None, inf_filename, options(), comment="#")
 
@@ -810,7 +810,7 @@ def generate_platform_files():
                     f" !if $({upper_phase}_CRYPTO_ARCH) == {arch}")
                 dsc_lines.append(f"  [{comp_str}]")
                 dsc_lines.append(
-                    f"    CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
+                    f"    $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
                 dsc_lines.append(" !endif")
             dsc_lines.append("")
             # Add the library as well
@@ -820,7 +820,7 @@ def generate_platform_files():
                 f"   CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase}CryptLib.inf " + "{")
             dsc_lines.append("     <PcdsFixedAtBuild>")
             dsc_lines.append(
-                f"      !include CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
+                f"      !include $(SHARED_CRYPTO_PATH)/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
             dsc_lines.append("    }")
             dsc_lines.append("!endif\n")
     dsc_lines.append("")
@@ -861,7 +861,7 @@ def generate_platform_files():
             for target in targets:
                 fdf_bb_lines.append(f" !if $(TARGET) == {target}")
                 fdf_bb_lines.append(
-                    f"    INF  CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
+                    f"    INF  $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
                 fdf_bb_lines.append("  !endif")
             fdf_bb_lines.append("!endif\n")
         generate_file_replacement(

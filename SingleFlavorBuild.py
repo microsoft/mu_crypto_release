@@ -83,6 +83,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.env.SetValue("TARGET_ARCH", " ".join(self.arch), "CLI args")
         self.env.SetValue("TARGET", self.target, "CLI args")
         self.env.SetValue("BLD_*_CRYPTO_SERVICES", self.flavor, "CLI args")
+        self.env.SetValue("BLD_*_SHARED_CRYPTO_PATH", "CryptoBinPkg", "Platform Hardcoded")
 
         # Default turn on build reporting.
         self.env.SetValue("BUILDREPORTING", "TRUE", "Enabling build report")
