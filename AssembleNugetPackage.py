@@ -118,6 +118,12 @@ def main():
                         os.makedirs(arch_dest_path)
                     logging.debug(f"{path} -> {arch_dest_path}")
                     shutil.copy(path, arch_dest_path)
+                # Get Map and PDB files
+                for map_path in glob.iglob(os.path.join(args.input_dir, search_path, "CryptoBinPkg", "Driver", "*", "Output", "Crypto*.map")):
+                    pdb_path = map_path[:-3] + 'pdb'
+                    shutil.copy(map_path, arch_dest_path)
+                    if os.path.exists(pdb_path):
+                      shutil.copy(pdb_path, arch_dest_path)
 
             # [Optional] Copy logs
             if args.copy_logs:
@@ -133,6 +139,47 @@ def main():
                     if not os.path.exists(output_path):
                         logging.debug(f"{path} -> {output_path}")
                         shutil.copy(path, output_path)
+
+    # Add additional outgenerated files for the crypto binary
+    # Find the Driver folder
+    autogen_dir_name = f"CryptoBinPkg/Driver/"
+    autogen_input_dir = os.getcwd()
+    autogen_input_dir = os.path.join(autogen_input_dir, autogen_dir_name)
+    logging.debug(f"AUTOGEN PATH: '{autogen_input_dir}'")
+
+    # Create the Driver folder
+    autogen_dest_path = os.path.join(args.output_dir, "Driver")
+    if not os.path.exists(autogen_dest_path):
+        os.makedirs(autogen_dest_path)
+    
+    # Copy the files in the Driver directory
+    for file in os.listdir(autogen_input_dir):
+        fullpath = os.path.join(autogen_input_dir, file)
+        # Skip directories for now
+        if os.path.isdir(fullpath):
+            continue
+        filename = os.fsdecode(file)
+        input_path = os.path.join(autogen_input_dir, filename)
+        output_path = os.path.join(autogen_dest_path, filename)
+        logging.debug(f"OUTPUT PATH: {output_path}")
+        shutil.copy(input_path, output_path)
+
+    # Create the Driver/Bin folder
+    autogen_input_dir = os.path.join(autogen_input_dir, "Bin")
+    autogen_dest_path = os.path.join(autogen_dest_path, "Bin")
+    if not os.path.exists(autogen_dest_path):
+        os.makedirs(autogen_dest_path)
+
+    # Copy all files in the Bin folder 
+    for file in os.listdir(autogen_input_dir):
+        filename = os.fsdecode(file)
+        # Skip the temporary files
+        if filename[0:4] == "temp":
+            continue
+        input_path = os.path.join(autogen_input_dir, filename)
+        output_path = os.path.join(autogen_dest_path, filename)
+        logging.debug(f"OUTPUT PATH: {output_path}")
+        shutil.copy(input_path, output_path)
 
     # Finally, copy any extra paths to the output.
     for extra_path in args.extra_paths:

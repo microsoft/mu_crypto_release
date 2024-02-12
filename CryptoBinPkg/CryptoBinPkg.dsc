@@ -190,18 +190,18 @@
 #
 ###################################################################################################
 [Components.IA32, Components.X64]
-  CryptoPkg/Driver/CryptoSmm.inf {
+  CryptoBinPkg/Driver/CryptoSmm.inf {
     <Defines>
       FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
   }
 
 [Components.IA32, Components.X64, Components.AARCH64]
-  CryptoPkg/Driver/CryptoPei.inf {
+  CryptoBinPkg/Driver/CryptoPei.inf {
     <Defines>
       FILE_GUID = $(PEI_CRYPTO_DRIVER_FILE_GUID)
   }
 
-  CryptoPkg/Driver/CryptoDxe.inf {
+  CryptoBinPkg/Driver/CryptoDxe.inf {
     <Defines>
       FILE_GUID = $(DXE_CRYPTO_DRIVER_FILE_GUID)
   }
@@ -209,7 +209,7 @@
 [Components.AARCH64, Components.X64]
   # Note: MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf has instructions
   #       that are not supported in 32-bit. Only 64-bit is practically needed, so only build for 64-bit here.
-  CryptoPkg/Driver/CryptoStandaloneMm.inf {
+  CryptoBinPkg/Driver/CryptoStandaloneMm.inf {
     <Defines>
       FILE_GUID = $(STANDALONEMM_CRYPTO_DRIVER_FILE_GUID)
     <PcdsFixedAtBuild>
