@@ -580,6 +580,7 @@ def get_crypto_dsc(options, functions):
     # Set the default file guids
     lines.append("  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = d6f4500f-ad73-4368-9149-842c49f3aa00")
     lines.append("  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = 254e0f83-c675-4578-bc16-d44111c34e01")
+    lines.append("  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = c7ade7a2-3fc9-4762-9c9a-d7ae1ed2e9c3")
     lines.append("  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = be5b74af-e07f-456b-a9e4-296c8fee9502")
     lines.append("  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = 9c6714d5-33da-4488-9a9c-2a7070635140")
     lines.append("")
@@ -591,9 +592,11 @@ def get_crypto_dsc(options, functions):
         dxe_guid = guid[0:-2] + '02'
         smm_guid = guid[0:-2] + '03'
         standalone_mm_guid = guid[0:-2] + '04'
+        runtime_dxe_guid = guid[0:-2] + '05'
         lines.append(f"!if $(CRYPTO_SERVICES) == {flavor}")
         lines.append(f"  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = {pei_guid}")
         lines.append(f"  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = {dxe_guid}")
+        lines.append(f"  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = {runtime_dxe_guid}")
         lines.append(f"  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = {smm_guid}")
         lines.append(f"  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_guid}")
         lines.append(f"!endif\n")
@@ -676,7 +679,7 @@ def generate_platform_files():
         out_dir = DEFAULT_OUTPUT_DIR
         verbose = False
     flavors = get_flavors()
-    phases = ["Pei", "Dxe", "Smm", "StandaloneMm"]
+    phases = ["Pei", "Dxe", "RuntimeDxe", "Smm", "StandaloneMm"]
     # Arm is currently disabled
     arches = ["X64", "AARCH64", "IA32", ]  # "ARM"
     targets = ["DEBUG", "RELEASE"]
@@ -706,6 +709,7 @@ def generate_platform_files():
         guid = flavors[flavor]["guid"]
         module_types = {
             "Dxe": "DXE_DRIVER",
+            "RuntimeDxe": "DXE_RUNTIME_DRIVER",
             "Pei": "PEIM",
             "Smm": "DXE_SMM_DRIVER",
             "StandaloneMm": "MM_STANDALONE"
@@ -732,6 +736,10 @@ def generate_platform_files():
             guid = guid[:-2] + "20"
         elif phase == "Smm":
             guid = guid[:-2] + "30"
+        elif phase == "StandaloneMm":
+            guid = guid[:-2] + "40"
+        elif phase == "RuntimeDxe":
+            guid = guid[:-2] + "50"
         if len(guid) != len(original_guid):
             raise ValueError(
                 f"{guid} is not long enough. {len(guid)} vs {len(original_guid)}")
@@ -747,7 +755,11 @@ def generate_platform_files():
         inf_lines.append(f"\n[Binaries.{arch}]")
         inf_lines.append(
             f"  PE32|../../{flavor}/{target}/{arch}/Crypto{phase}.efi|{target}")
-        depex_phase = phase.upper() if phase != "StandaloneMm" else "SMM"
+        depex_phase = phase.upper()
+        if phase == "StandaloneMm":
+            depex_phase = "SMM"
+        if phase == "RuntimeDxe":
+            depex_phase = "DXE"
         inf_lines.append(
             f"  {depex_phase}_DEPEX|../../{flavor}/{target}/Crypto{phase}.depex|{target}")
         inf_lines.append("\n[Packages]")
@@ -879,6 +891,8 @@ def get_supported_library_types(phase):
         return ["PEIM", "PEI_CORE"]
     elif phase == "DXE":
         return ["DXE_DRIVER", "UEFI_DRIVER", "UEFI_APPLICATION", "DXE_CORE"]
+    elif phase == "RUNTIMEDXE":
+        return ["DXE_RUNTIME_DRIVER"]
     elif phase == "SMM":
         return ["DXE_SMM_DRIVER", "SMM_CORE"]
     elif phase == "STANDALONEMM":

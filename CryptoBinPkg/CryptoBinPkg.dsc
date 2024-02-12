@@ -135,6 +135,14 @@
   ReportStatusCodeLib|MdeModulePkg/Library/DxeReportStatusCodeLib/DxeReportStatusCodeLib.inf
   TlsLib|OpensslPkg/Library/TlsLib/TlsLib.inf
 
+[LibraryClasses.common.DXE_RUNTIME_DRIVER]
+  BaseCryptLib|OpensslPkg/Library/BaseCryptLib/RuntimeCryptLib.inf
+  DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+  MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
+  ReportStatusCodeLib|MdeModulePkg/Library/RuntimeDxeReportStatusCodeLib/RuntimeDxeReportStatusCodeLib.inf
+  TlsLib|OpensslPkg/Library/TlsLib/TlsLib.inf
+  UefiRuntimeLib|MdePkg/Library/UefiRuntimeLib/UefiRuntimeLib.inf
+
 [LibraryClasses.common.DXE_SMM_DRIVER]
   BaseCryptLib|OpensslPkg/Library/BaseCryptLib/SmmCryptLib.inf
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
@@ -193,6 +201,11 @@
   CryptoBinPkg/Driver/CryptoSmm.inf {
     <Defines>
       FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
+  }
+
+  CryptoBinPkg/Driver/CryptoRuntimeDxe.inf {
+    <Defines>
+      FILE_GUID = $(RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID)
   }
 
 [Components.IA32, Components.X64, Components.AARCH64]
