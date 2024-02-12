@@ -24,7 +24,7 @@
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
 
-!include CryptoPkg/Driver/Bin/Crypto.inc.dsc
+!include CryptoBinPkg/Driver/Bin/Crypto.inc.dsc
 
 !include UnitTestFrameworkPkg/UnitTestFrameworkPkgTarget.dsc.inc
 
