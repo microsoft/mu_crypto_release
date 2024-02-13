@@ -97,13 +97,7 @@ First Steps (for a new integration)
 
 While performing the Basecore integration:
 
-1) Squash any previous "Generate Basecore CryptoBin packaging files" commits into the primary
-   '[Binary Crypto]' commit (see `generate-packaging-files`_ for details on these commits)
-
-   - The '[Binary Crypto]' commit is currently here, but hash will change:
-   - edd8e20089 ("[Binary Crypto] The New BCOP in CryptoPkg (details below)", 2020-03-24)
-
-2) Disable the ``edk2-basecrypto-driver-bin`` extdep until a new release can be generated for
+1) Disable the ``edk2-basecrypto-driver-bin`` extdep until a new release can be generated for
    this integration
 
    - In the file ``CryptoPkg/Driver/Bin/BaseCryptoDriver_ext_dep.json``:
@@ -133,39 +127,32 @@ Then, in this repo:
 Regular Release Steps
 ---------------------
 
-In the Basecore repo:
+In this repo:
 
 .. _generate-packaging-files:
 
-1) Determine whether any configuration or PCDs need to change. This configuration is outside the
+1) Update to the correct release branches for each submodule in ``.gitmodules``
+2) Pull the correct commit for each submodule
+3) Determine whether any configuration or PCDs need to change. This configuration is outside the
    scope of this document. Please refer to the greater documentation around CryptoBin and BCOP
-2) Generate the new packaging files. These files are created by a script that lives in Basecore
+4) Generate the new packaging files. These files are created by a script that lives in Mu Crypto Release
 
-   - Script lives at ``CryptoPkg/Driver/Packaging/generate_cryptodriver.py``
+   - Script lives at ``CryptoBinPkg/Driver/Packaging/generate_cryptodriver.py``
    - Running this with no arguments should be an acceptable default. Refer to the script help
      for information on the possible arguments
    - This script needs to be executed from within a valid Python venv configured for Mu
 
-3) Compare the changes and stage them for PR into Basecore
+5) Compare the changes and stage them for PR into Mu Crypto Release
 
-   - Total changes should affect dozens of files in CryptoPkg, most of which live in ``CryptoPkg/Driver/Bin``
+   - Total changes should affect dozens of files in CryptoBinPkg, most of which live in ``CryptoBinPkg/Driver/Bin``
      directory
    - For *most* releases, these changes should only be timestamps. If they are anything other than timestamps,
      make sure you understand why and make sure they are intended
    - **IMPORTANT NOTE** If *any* new functions are introduced or any existing crypto family is updated
      to include new functions (or the prototypes change), you must update the ``EDKII_CRYPTO_VERSION``
-     in ``CryptoPkg/Driver/Packaging/Crypto.template.h``
+     in ``CryptoBinPkg/Driver/Packaging/Crypto.template.h``
 
-4) Submit your PR to Basecore
-
-   - Ideally, prefix your PR name with ``[Binary Crypto]`` so that it's easy to locate and squash on the
-     next integration.
-
-Once Basecore is complete (and the PR is in), do the following in this repo:
-
-1) Update to the correct release branches for each submodule in ``.gitmodules``
-2) Pull the correct commit for each submodule
-3) Push the new branch to the server (or PR into it if the branch already exists)
+6) Submit your PR to Mu Crypto Release
 
 Once the server is updated for the new release, run the release pipeline on the new branch. The release
 pipeline is located in the public Project Mu DevOps organization. To release a new version:
@@ -186,8 +173,6 @@ pipeline is located in the public Project Mu DevOps organization. To release a n
        will ignore it entirely
 
 Once successfully released, tag the commit with the version (e.g. ``2022.02.1``) and push tag to the server.
-
-**TODO** Add a pipeline stage to perform this tagging.
 
 
 Code of Conduct
