@@ -83,12 +83,12 @@ def main():
         flavor_input_dir = os.path.join(args.input_dir, flavor_dir_name)
         
         # May need to merge multiple Build output directories
-        if not os.path.exists(flavor_input_dir):
-            os.makedirs(flavor_input_dir)
-            for folder in glob.glob(f"{args.input_dir}/{CommonPlatform.BaseName}_*_{flavor}"):
-                logging.debug(f"MERGING FOLDER: '{folder}'")
-                for content in os.listdir(folder):
-                    shutil.move(os.path.join(folder,content), flavor_input_dir)
+        #if not os.path.exists(flavor_input_dir):
+        #    os.makedirs(flavor_input_dir)
+        #    for folder in glob.glob(f"{args.input_dir}/{CommonPlatform.BaseName}_*_{flavor}"):
+        #        logging.debug(f"MERGING FOLDER: '{folder}'")
+        #        for content in os.listdir(folder):
+        #            shutil.move(os.path.join(folder,content), flavor_input_dir)
 
         logging.debug(f"FLAVOR PATH: '{flavor_input_dir}'")
 
