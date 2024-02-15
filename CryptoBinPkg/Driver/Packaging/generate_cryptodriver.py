@@ -580,6 +580,7 @@ def get_crypto_dsc(options, functions):
     # Set the default file guids
     lines.append("  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = d6f4500f-ad73-4368-9149-842c49f3aa00")
     lines.append("  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = 254e0f83-c675-4578-bc16-d44111c34e01")
+    lines.append("  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = c7ade7a2-3fc9-4762-9c9a-d7ae1ed2e9c3")
     lines.append("  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = be5b74af-e07f-456b-a9e4-296c8fee9502")
     lines.append("  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = 9c6714d5-33da-4488-9a9c-2a7070635140")
     lines.append("")
@@ -591,9 +592,11 @@ def get_crypto_dsc(options, functions):
         dxe_guid = guid[0:-2] + '02'
         smm_guid = guid[0:-2] + '03'
         standalone_mm_guid = guid[0:-2] + '04'
+        runtime_dxe_guid = guid[0:-2] + '05'
         lines.append(f"!if $(CRYPTO_SERVICES) == {flavor}")
         lines.append(f"  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = {pei_guid}")
         lines.append(f"  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = {dxe_guid}")
+        lines.append(f"  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = {runtime_dxe_guid}")
         lines.append(f"  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = {smm_guid}")
         lines.append(f"  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_guid}")
         lines.append(f"!endif\n")
@@ -635,7 +638,7 @@ def get_crypto_dsc(options, functions):
 
         flavor_file = f"Crypto.pcd.{flavor}.inc.dsc"
         generate_file_replacement(flavor_lines, None, flavor_file, options, "#")
-        lines.append(f"!include CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{flavor_file}")
+        lines.append(f"!include $(SHARED_CRYPTO_PATH)/Driver/Bin/{flavor_file}")
         lines.append("!endif\n")
 
     generate_file_replacement(lines, None, "Crypto.inc.dsc", options, "#")
@@ -676,7 +679,7 @@ def generate_platform_files():
         out_dir = DEFAULT_OUTPUT_DIR
         verbose = False
     flavors = get_flavors()
-    phases = ["Pei", "Dxe", "Smm", "StandaloneMm"]
+    phases = ["Pei", "Dxe", "RuntimeDxe", "Smm", "StandaloneMm"]
     # Arm is currently disabled
     arches = ["X64", "AARCH64", "IA32", ]  # "ARM"
     targets = ["DEBUG", "RELEASE"]
@@ -706,6 +709,7 @@ def generate_platform_files():
         guid = flavors[flavor]["guid"]
         module_types = {
             "Dxe": "DXE_DRIVER",
+            "RuntimeDxe": "DXE_RUNTIME_DRIVER",
             "Pei": "PEIM",
             "Smm": "DXE_SMM_DRIVER",
             "StandaloneMm": "MM_STANDALONE"
@@ -732,6 +736,10 @@ def generate_platform_files():
             guid = guid[:-2] + "20"
         elif phase == "Smm":
             guid = guid[:-2] + "30"
+        elif phase == "StandaloneMm":
+            guid = guid[:-2] + "40"
+        elif phase == "RuntimeDxe":
+            guid = guid[:-2] + "50"
         if len(guid) != len(original_guid):
             raise ValueError(
                 f"{guid} is not long enough. {len(guid)} vs {len(original_guid)}")
@@ -747,7 +755,11 @@ def generate_platform_files():
         inf_lines.append(f"\n[Binaries.{arch}]")
         inf_lines.append(
             f"  PE32|../../{flavor}/{target}/{arch}/Crypto{phase}.efi|{target}")
-        depex_phase = phase.upper() if phase != "StandaloneMm" else "SMM"
+        depex_phase = phase.upper()
+        if phase == "StandaloneMm":
+            depex_phase = "SMM"
+        if phase == "RuntimeDxe":
+            depex_phase = "DXE"
         inf_lines.append(
             f"  {depex_phase}_DEPEX|../../{flavor}/{target}/Crypto{phase}.depex|{target}")
         inf_lines.append("\n[Packages]")
@@ -758,7 +770,7 @@ def generate_platform_files():
         inf_filename = f"{inf_start}_{flavor}_{phase}_{target}_{arch}.inf"
         # Add to the CI
         dsc_ci_lines.append(f"[Components.{arch}]")
-        dsc_ci_lines.append("  CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/" + inf_filename)
+        dsc_ci_lines.append("  $(SHARED_CRYPTO_PATH)/Driver/Bin/" + inf_filename)
         generate_file_replacement(
             inf_lines, None, inf_filename, options(), comment="#")
 
@@ -771,7 +783,7 @@ def generate_platform_files():
     dsc_lines = []
     dsc_lines.append("# this is to be included by a platform :)")
     dsc_lines.append("[Defines]")
-    all_flavors = "ALL "+" ".join(list(flavors))
+    all_flavors = "ALL NONE "+" ".join(list(flavors))
     for phase in phases:
         phase = phase.upper()
         dsc_lines.append(f"!ifndef {phase}_CRYPTO_SERVICES")
@@ -779,14 +791,17 @@ def generate_platform_files():
         dsc_lines.append("!endif")
         dsc_lines.append(
             f"!if $({phase}_CRYPTO_SERVICES) IN \"{all_flavors}\"")
-        dsc_lines.append(" # we don't have a problem")
+        dsc_lines.append(f"  !if $({phase}_CRYPTO_SERVICES) != NONE")
+        dsc_lines.append(f"    !ifndef {phase}_CRYPTO_ARCH")
+        dsc_lines.append(
+            f"      !error Please define {phase}_CRYPTO_ARCH for your platform")
+        dsc_lines.append("    !endif")
+        dsc_lines.append("  !else")
+        dsc_lines.append("     # we don't have a problem")
+        dsc_lines.append("  !endif")
         dsc_lines.append("!else")
         dsc_lines.append(
-            f" !error CRYPTO_SERVICES must be set to one of {all_flavors}.")
-        dsc_lines.append("!endif")
-        dsc_lines.append(f"!ifndef {phase}_CRYPTO_ARCH")
-        dsc_lines.append(
-            f" !error Please define {phase}_CRYPTO_ARCH for your platform")
+            f"  !error {phase}_CRYPTO_SERVICES must be set to one of {all_flavors}.")
         dsc_lines.append("!endif")
         dsc_lines.append("")
 
@@ -807,7 +822,7 @@ def generate_platform_files():
                     f" !if $({upper_phase}_CRYPTO_ARCH) == {arch}")
                 dsc_lines.append(f"  [{comp_str}]")
                 dsc_lines.append(
-                    f"    CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
+                    f"    $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
                 dsc_lines.append(" !endif")
             dsc_lines.append("")
             # Add the library as well
@@ -817,7 +832,7 @@ def generate_platform_files():
                 f"   CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase}CryptLib.inf " + "{")
             dsc_lines.append("     <PcdsFixedAtBuild>")
             dsc_lines.append(
-                f"      !include CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
+                f"      !include $(SHARED_CRYPTO_PATH)/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
             dsc_lines.append("    }")
             dsc_lines.append("!endif\n")
     dsc_lines.append("")
@@ -858,7 +873,7 @@ def generate_platform_files():
             for target in targets:
                 fdf_bb_lines.append(f" !if $(TARGET) == {target}")
                 fdf_bb_lines.append(
-                    f"    INF  CryptoPkg/edk2-basecrypto-driver-bin_extdep/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
+                    f"    INF  $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
                 fdf_bb_lines.append("  !endif")
             fdf_bb_lines.append("!endif\n")
         generate_file_replacement(
@@ -876,6 +891,8 @@ def get_supported_library_types(phase):
         return ["PEIM", "PEI_CORE"]
     elif phase == "DXE":
         return ["DXE_DRIVER", "UEFI_DRIVER", "UEFI_APPLICATION", "DXE_CORE"]
+    elif phase == "RUNTIMEDXE":
+        return ["DXE_RUNTIME_DRIVER"]
     elif phase == "SMM":
         return ["DXE_SMM_DRIVER", "SMM_CORE"]
     elif phase == "STANDALONEMM":
