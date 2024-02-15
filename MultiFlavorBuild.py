@@ -125,7 +125,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                             break
                 if use_gcc:
                     params = [flavor]
-                    params += [f"TOOL_CHAIN_TAG=GCC5"]
+                    params += [f"TOOL_CHAIN_TAG=VS2022"]
                     params += ["-t", target]
                     params += ["-a", "AARCH64"]
 
