@@ -127,25 +127,25 @@ def get_flavors():
         "TINY_SHA": {
             "families": ["SHA1", "SHA256", "SHA384"],
             "individuals": ["Pkcs5HashPassword"],
-            "exclude": ["Sha256HashAll", "Sha1HashAll"],
+            "exclude": ["Sha1HashAll"],
             "guid": "e6ed744a-8db0-42b8-a507-8909782ed200"
         },
         "MINIMAL_SHA_SM3": {
             "families": ["HMACSHA256", "SHA1", "SHA256", "SHA384", "SHA512", "SM3"],
             "individuals": ["Pkcs5HashPassword"],
-            "exclude": ["Sha256HashAll", "Sha1HashAll"],
+            "exclude": ["Sha1HashAll"],
             "guid": "6d653b3b-0654-4eec-8ab3-183a3e061400"
         },
         "SMALL_SHA_RSA": {
             "families": ["HMACSHA256", "SHA1", "SHA256", "SHA384", "SHA512", "SM3"],
             "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "Pkcs5HashPassword", "RsaPssSign", "RsaPssVerify"],
-            "exclude": ["Sha256HashAll", "Sha1HashAll"],
+            "exclude": ["Sha1HashAll"],
             "guid": "d9a75606-caba-4aa0-80a6-591852335400"
         },
         "STANDARD": {
             "families": ["HMACSHA256", "PKCS", "SHA1", "SHA256", "SHA384", "SHA512", "RANDOM", "TLS", "TLSGET", "TLSSET"],
             "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaGetPublicKeyFromX509", "X509GetSubjectName", "X509GetCommonName", "X509GetOrganizationName", "X509GetTBSCert", "RsaPssSign", "RsaPssVerify"],
-            "exclude": ["Sha1HashAll", "Sha256HashAll", "Pkcs7Sign", "Pkcs7GetCertificatesList", "ImageTimestampVerify"],
+            "exclude": ["Sha1HashAll", "Pkcs7Sign", "Pkcs7GetCertificatesList", "ImageTimestampVerify"],
             "guid": "bdee011f-87f2-4a7f-bc5e-44b6b61fef00"
         }
     }
@@ -787,7 +787,7 @@ def generate_platform_files():
     for phase in phases:
         phase = phase.upper()
         dsc_lines.append(f"!ifndef {phase}_CRYPTO_SERVICES")
-        dsc_lines.append(f" !error Please define {phase}_CRYPTO_SERVICES")
+        dsc_lines.append(f"  DEFINE {phase}_CRYPTO_SERVICES = NONE")
         dsc_lines.append("!endif")
         dsc_lines.append(
             f"!if $({phase}_CRYPTO_SERVICES) IN \"{all_flavors}\"")
@@ -797,7 +797,7 @@ def generate_platform_files():
             f"      !error Please define {phase}_CRYPTO_ARCH for your platform")
         dsc_lines.append("    !endif")
         dsc_lines.append("  !else")
-        dsc_lines.append("     # we don't have a problem")
+        dsc_lines.append(f"    DEFINE {phase}_CRYPTO_ARCH = NONE")
         dsc_lines.append("  !endif")
         dsc_lines.append("!else")
         dsc_lines.append(
