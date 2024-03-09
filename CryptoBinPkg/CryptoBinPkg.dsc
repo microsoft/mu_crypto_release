@@ -203,11 +203,6 @@
       FILE_GUID = $(SMM_CRYPTO_DRIVER_FILE_GUID)
   }
 
-  CryptoBinPkg/Driver/CryptoRuntimeDxe.inf {
-    <Defines>
-      FILE_GUID = $(RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID)
-  }
-
 [Components.IA32, Components.X64, Components.AARCH64]
   CryptoBinPkg/Driver/CryptoPei.inf {
     <Defines>
@@ -217,6 +212,11 @@
   CryptoBinPkg/Driver/CryptoDxe.inf {
     <Defines>
       FILE_GUID = $(DXE_CRYPTO_DRIVER_FILE_GUID)
+  }
+
+  CryptoBinPkg/Driver/CryptoRuntimeDxe.inf {
+    <Defines>
+      FILE_GUID = $(RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID)
   }
 
 [Components.AARCH64, Components.X64]
