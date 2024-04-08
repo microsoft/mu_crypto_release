@@ -3,7 +3,7 @@
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
-  Copyright (C) 2016 Microsoft Corporation. All Rights Reserved.
+  Copyright (C) Microsoft Corporation. All Rights Reserved.
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
 
 **/
@@ -68,6 +68,12 @@ Pkcs1v2Encrypt (
                                   to be used when initializing the PRNG. NULL otherwise.
   @param[in]  PrngSeedSize        [Optional] If provided, size of the random seed buffer.
                                   0 otherwise.
+  @param[in]  DigestLen           [Optional] If provided, size of the hash used:
+                                  SHA1_DIGEST_SIZE
+                                  SHA256_DIGEST_SIZE
+                                  SHA384_DIGEST_SIZE
+                                  SHA512_DIGEST_SIZE
+                                  0 to use default (SHA1)
   @param[out] EncryptedData       Pointer to an allocated buffer containing the encrypted
                                   message.
   @param[out] EncryptedDataSize   Size of the encrypted message buffer.
@@ -84,6 +90,7 @@ RsaOaepEncrypt (
   IN   UINTN        InDataSize,
   IN   CONST UINT8  *PrngSeed   OPTIONAL,
   IN   UINTN        PrngSeedSize   OPTIONAL,
+  IN   UINT16       DigestLen   OPTIONAL,
   OUT  UINT8        **EncryptedData,
   OUT  UINTN        *EncryptedDataSize
   )
@@ -113,7 +120,6 @@ RsaOaepEncrypt (
   @retval     FALSE               Encryption failed.
 
 **/
-
 BOOLEAN
 EFIAPI
 Pkcs1v2Decrypt (
@@ -142,6 +148,12 @@ Pkcs1v2Decrypt (
                                   provisioned with a private key using RsaSetKey().
   @param[in]  EncryptedData       Data to be decrypted.
   @param[in]  EncryptedDataSize   Size of the encrypted buffer.
+  @param[in]  DigestLen           [Optional] If provided, size of the hash used:
+                                  SHA1_DIGEST_SIZE
+                                  SHA256_DIGEST_SIZE
+                                  SHA384_DIGEST_SIZE
+                                  SHA512_DIGEST_SIZE
+                                  0 to use default (SHA1)
   @param[out] OutData             Pointer to an allocated buffer containing the encrypted
                                   message.
   @param[out] OutDataSize         Size of the encrypted message buffer.
@@ -153,13 +165,14 @@ Pkcs1v2Decrypt (
 BOOLEAN
 EFIAPI
 RsaOaepDecrypt (
-  IN   VOID         *RsaContext,
-  IN   UINT8        *EncryptedData,
-  IN   UINTN        EncryptedDataSize,
-  OUT  UINT8        **OutData,
-  OUT  UINTN        *OutDataSize
+  IN   VOID    *RsaContext,
+  IN   UINT8   *EncryptedData,
+  IN   UINTN   EncryptedDataSize,
+  IN   UINT16  DigestLen   OPTIONAL,
+  OUT  UINT8   **OutData,
+  OUT  UINTN   *OutDataSize
   )
 {
   ASSERT (FALSE);
   return FALSE;
-};
+}

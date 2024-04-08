@@ -3,7 +3,7 @@
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
-  Copyright (C) 2016 Microsoft Corporation. All Rights Reserved.
+  Copyright (C) Microsoft Corporation. All Rights Reserved.
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
 
 **/
@@ -13,6 +13,37 @@
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <Library/MemoryAllocationLib.h>
+
+/**
+  Retrieve a pointer to EVP message digest object.
+
+  @param[in]  DigestLen   Length of the message digest.
+
+**/
+STATIC
+const
+EVP_MD *
+GetEvpMD (
+  IN UINT16  DigestLen
+  )
+{
+  switch (DigestLen) {
+    case SHA1_DIGEST_SIZE:
+      return EVP_sha1 ();
+      break;
+    case SHA256_DIGEST_SIZE:
+      return EVP_sha256 ();
+      break;
+    case SHA384_DIGEST_SIZE:
+      return EVP_sha384 ();
+      break;
+    case SHA512_DIGEST_SIZE:
+      return EVP_sha512 ();
+      break;
+    default:
+      return NULL;
+  }
+}
 
 /**
   Encrypts a blob using PKCS1v2 (RSAES-OAEP) schema. On success, will return the
@@ -34,6 +65,12 @@
                                   to be used when initializing the PRNG. NULL otherwise.
   @param[in]  PrngSeedSize        [Optional] If provided, size of the random seed buffer.
                                   0 otherwise.
+  @param[in]  DigestLen           [Optional] If provided, size of the hash used:
+                                  SHA1_DIGEST_SIZE
+                                  SHA256_DIGEST_SIZE
+                                  SHA384_DIGEST_SIZE
+                                  SHA512_DIGEST_SIZE
+                                  0 to use default (SHA1)
   @param[out] EncryptedData       Pointer to an allocated buffer containing the encrypted
                                   message.
   @param[out] EncryptedDataSize   Size of the encrypted message buffer.
@@ -50,6 +87,7 @@ InternalPkcs1v2Encrypt (
   IN   UINTN        InDataSize,
   IN   CONST UINT8  *PrngSeed   OPTIONAL,
   IN   UINTN        PrngSeedSize   OPTIONAL,
+  IN   UINT16       DigestLen   OPTIONAL,
   OUT  UINT8        **EncryptedData,
   OUT  UINTN        *EncryptedDataSize
   )
@@ -58,6 +96,7 @@ InternalPkcs1v2Encrypt (
   EVP_PKEY_CTX  *PkeyCtx;
   UINT8         *OutData;
   UINTN         OutDataSize;
+  CONST EVP_MD  *HashAlg;
 
   //
   // Check input parameters.
@@ -107,6 +146,21 @@ InternalPkcs1v2Encrypt (
     // Fail to initialize the context.
     //
     goto _Exit;
+  }
+
+  if (DigestLen != 0) {
+    HashAlg = GetEvpMD (DigestLen);
+    if (HashAlg == NULL) {
+      goto _Exit;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_oaep_md (PkeyCtx, HashAlg) <= 0) {
+      goto _Exit;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_mgf1_md (PkeyCtx, HashAlg) <= 0) {
+      goto _Exit;
+    }
   }
 
   //
@@ -258,7 +312,7 @@ Pkcs1v2Encrypt (
     goto _Exit;
   }
 
-  Result = InternalPkcs1v2Encrypt (Pkey, InData, InDataSize, PrngSeed, PrngSeedSize, EncryptedData, EncryptedDataSize);
+  Result = InternalPkcs1v2Encrypt (Pkey, InData, InDataSize, PrngSeed, PrngSeedSize, 0, EncryptedData, EncryptedDataSize);
 
 _Exit:
   //
@@ -280,7 +334,6 @@ _Exit:
   encrypted message in a newly allocated buffer.
 
   Things that can cause a failure include:
-  - X509 key size does not match any known key size.
   - Fail to allocate an intermediate buffer.
   - Null pointer provided for a non-optional parameter.
   - Data size is too large for the provided key size (max size is a function of key size
@@ -294,6 +347,12 @@ _Exit:
                                   to be used when initializing the PRNG. NULL otherwise.
   @param[in]  PrngSeedSize        [Optional] If provided, size of the random seed buffer.
                                   0 otherwise.
+  @param[in]  DigestLen           [Optional] If provided, size of the hash used:
+                                  SHA1_DIGEST_SIZE
+                                  SHA256_DIGEST_SIZE
+                                  SHA384_DIGEST_SIZE
+                                  SHA512_DIGEST_SIZE
+                                  0 to use default (SHA1)
   @param[out] EncryptedData       Pointer to an allocated buffer containing the encrypted
                                   message.
   @param[out] EncryptedDataSize   Size of the encrypted message buffer.
@@ -310,6 +369,7 @@ RsaOaepEncrypt (
   IN   UINTN        InDataSize,
   IN   CONST UINT8  *PrngSeed   OPTIONAL,
   IN   UINTN        PrngSeedSize   OPTIONAL,
+  IN   UINT16       DigestLen OPTIONAL,
   OUT  UINT8        **EncryptedData,
   OUT  UINTN        *EncryptedDataSize
   )
@@ -340,7 +400,7 @@ RsaOaepEncrypt (
     goto _Exit;
   }
 
-  Result = InternalPkcs1v2Encrypt (Pkey, InData, InDataSize, PrngSeed, PrngSeedSize, EncryptedData, EncryptedDataSize);
+  Result = InternalPkcs1v2Encrypt (Pkey, InData, InDataSize, PrngSeed, PrngSeedSize, DigestLen, EncryptedData, EncryptedDataSize);
 
 _Exit:
   //
@@ -365,6 +425,12 @@ _Exit:
   @param[in]  Pkey                A pointer to an EVP_PKEY which will decrypt that data.
   @param[in]  EncryptedData       Data to be decrypted.
   @param[in]  EncryptedDataSize   Size of the encrypted buffer.
+  @param[in]  DigestLen           [Optional] If provided, size of the hash used:
+                                  SHA1_DIGEST_SIZE
+                                  SHA256_DIGEST_SIZE
+                                  SHA384_DIGEST_SIZE
+                                  SHA512_DIGEST_SIZE
+                                  0 to use default (SHA1)
   @param[out] OutData             Pointer to an allocated buffer containing the encrypted
                                   message.
   @param[out] OutDataSize         Size of the encrypted message buffer.
@@ -376,11 +442,12 @@ _Exit:
 BOOLEAN
 EFIAPI
 InternalPkcs1v2Decrypt (
-  EVP_PKEY    *Pkey,
-  IN   UINT8  *EncryptedData,
-  IN   UINTN  EncryptedDataSize,
-  OUT  UINT8  **OutData,
-  OUT  UINTN  *OutDataSize
+  EVP_PKEY     *Pkey,
+  IN   UINT8   *EncryptedData,
+  IN   UINTN   EncryptedDataSize,
+  IN   UINT16  DigestLen   OPTIONAL,
+  OUT  UINT8   **OutData,
+  OUT  UINTN   *OutDataSize
   )
 {
   BOOLEAN       Result;
@@ -388,6 +455,7 @@ InternalPkcs1v2Decrypt (
   UINT8         *TempData;
   UINTN         TempDataSize;
   INTN          ReturnCode;
+  CONST EVP_MD  *HashAlg;
 
   //
   // Check input parameters.
@@ -426,6 +494,21 @@ InternalPkcs1v2Decrypt (
     //
     DEBUG ((DEBUG_ERROR, "[%a] EVP_PKEY_decrypt_init() failed\n", __func__));
     goto _Exit;
+  }
+
+  if (DigestLen != 0) {
+    HashAlg = GetEvpMD (DigestLen);
+    if (HashAlg == NULL) {
+      goto _Exit;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_oaep_md (PkeyCtx, HashAlg) <= 0) {
+      goto _Exit;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_mgf1_md (PkeyCtx, HashAlg) <= 0) {
+      goto _Exit;
+    }
   }
 
   //
@@ -544,7 +627,7 @@ Pkcs1v2Decrypt (
     goto _Exit;
   }
 
-  Result = InternalPkcs1v2Decrypt (Pkey, EncryptedData, EncryptedDataSize, OutData, OutDataSize);
+  Result = InternalPkcs1v2Decrypt (Pkey, EncryptedData, EncryptedDataSize, 0, OutData, OutDataSize);
 
 _Exit:
   if (Pkey != NULL) {
@@ -567,6 +650,12 @@ _Exit:
                                   provisioned with a private key using RsaSetKey().
   @param[in]  EncryptedData       Data to be decrypted.
   @param[in]  EncryptedDataSize   Size of the encrypted buffer.
+  @param[in]  DigestLen           [Optional] If provided, size of the hash used:
+                                  SHA1_DIGEST_SIZE
+                                  SHA256_DIGEST_SIZE
+                                  SHA384_DIGEST_SIZE
+                                  SHA512_DIGEST_SIZE
+                                  0 to use default (SHA1)
   @param[out] OutData             Pointer to an allocated buffer containing the encrypted
                                   message.
   @param[out] OutDataSize         Size of the encrypted message buffer.
@@ -578,11 +667,12 @@ _Exit:
 BOOLEAN
 EFIAPI
 RsaOaepDecrypt (
-  IN   VOID   *RsaContext,
-  IN   UINT8  *EncryptedData,
-  IN   UINTN  EncryptedDataSize,
-  OUT  UINT8  **OutData,
-  OUT  UINTN  *OutDataSize
+  IN   VOID    *RsaContext,
+  IN   UINT8   *EncryptedData,
+  IN   UINTN   EncryptedDataSize,
+  IN   UINT16  DigestLen OPTIONAL,
+  OUT  UINT8   **OutData,
+  OUT  UINTN   *OutDataSize
   )
 {
   BOOLEAN   Result;
@@ -613,7 +703,7 @@ RsaOaepDecrypt (
     goto _Exit;
   }
 
-  Result = InternalPkcs1v2Decrypt (Pkey, EncryptedData, EncryptedDataSize, OutData, OutDataSize);
+  Result = InternalPkcs1v2Decrypt (Pkey, EncryptedData, EncryptedDataSize, DigestLen, OutData, OutDataSize);
 
 _Exit:
   if (Pkey != NULL) {
