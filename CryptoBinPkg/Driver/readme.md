@@ -1,54 +1,99 @@
-# Crypto Driver
+# Shared Crypto Binaries
 
-VERSION: 2.0
+Shared crypto consists of a set of pre-built binaries that provide cryptographic services. The services are exposed
+to other modules via dynamic interfaces such as PPIs in the PEI phase and protocols in the DXE and MM phases
 
-This is a pre-built version of BaseCryptLib and TlsLib built into binaries that make the services available to other
-modules via dynamic interfaces such as PPIs and protocols.
+**This project does not directly implement crypto algorithms**. Crypto algorithm implementation is provided by an
+underlying crypto provider. The provided may change over time based on industry shifts in crypto requirements,
+enhancements for embedded crypto support in available crypto projects, and overall crypto provider quality and
+maintainership.
 
-This currently supports Openssl implementation of BaseCryptLib but this will be expanded in the future.
+- Currently, the OpenSSL crypto project is used.
+
+Any consumer of this binary should expect that the underlying crypto provider may change. Consumers are encouraged to
+participate in all aspects of shared crypto including code contributions and feedback.
+
+## Terminology
+
+- **Crypto Provider** - The project that provides an implementation of cryptographic algorithms used by this project
+  those crypto services to platform firmware.
+  - Examples: [OpenSSL](https://github.com/openssl/openssl), [Mbed TLS](https://github.com/Mbed-TLS/mbedtls),
+    [SymCrypt](https://github.com/microsoft/SymCrypt).
+- **Flavor** - A collection of cryptographic algorithms included in a given shared crypto binary.
+- **Phase** - The "boot phase" that the binary applies to where a phase is defined in the [Platform Initialization
+  Specification](https://uefi.org/specs/PI/1.8A/).
+  - Examples: `PEIM`, `DXE_DRIVER`, `DXE_SMM_DRIVER`, etc.
+- **Platform Firmware** - A firmware project that integrates the shared crypto binaries made available by this project.
+  An open-source example of platform firmware is the [Mu Tiano Platforms firmware repo](https://github.com/microsoft/mu_tiano_platforms).
+- **Shared Crypto** - The name of this project. Shared crypto means a set of pre-built binaries that provide
+  cryptographic services.
 
 ## Benefits
 
-But first, why would you care about this?
-
-It has a few benefits, namely:
-
-- Smaller Binary sizes
+- Smaller binary sizes
 - Easier to service/upgrade
-- Transparency on what version of crypto you're using
-- Reduced build times (if using pre-compiled version)
+- Reduced platform firmware build times
+- Central tracking of binary versioning and version details
 - Ability to more rigorously track crypto such as with SBOM
 
-There are different flavors of Crypto available, with different functions supported. For example, don't need to use
-HMAC in your PEI phase? Then, select a service level or flavor that doesn't include HMAC in your platform inclusion
-of shared crypto.
+There are different flavors of shared crypto binaries available, with different functions supported. For example, if
+HMAC is not required in the PEI phase of your project, you can simply select the flavor without HMAC support.
 
-## Considerations when migrating to using a crypto binary
+## Adoption/Migration Considerations
 
 Transitioning to using these binaries for platforms that previously relied on BaseCryptLib have a few decisions during
 the process.
 
-1. Platform required crypto
-    You need to select what flavor of crypto works for your platform for each phase.  Cross reference the pcd.FLAVOR
-    files and your platforms requires to find which one works best.  If none of them work for you the ALL flavor
-    enables all cryptographic functions.
+1. **Your Platform** Crypto Requirements
 
-2. What ARCH to use and what they're compiled with
-    Currently all the different ARCHs use VS2022 for compilation with AARCH64 being the notable exception.  This may
-    have platform remifications so be mindful of that.
-    NOTE: AARCH64 will be compiled with VS2022 eventually and GCC5 binaries will no longer be produced.
+   You need to select what flavor of crypto works for your platform for each phase. Cross reference the PCD flavor
+   files and your platform's requirements to find which one works best. The `ALL` flavor enables all supported
+   cryptographic functions.
 
-3. Library consideration
-    There are a couple of specific libraries that you need to be aware of when it comes to crypto interaction
-    - DebugLib is set in the binary itself and is not effected by the platform.  Currently the MM crypto is
-      using a null debug lib
-    - RngLib does effect the crypto binaries.  Which RngLib you use will have effects on crypto.  For example for
-      AARCH64 platforms ArmTrngLib and BaseRngLib effect eachother which causes issues.  Dependencies like that can
-      lead to complications while integrating the crypto binaries.
+   If you require a crypto algorithm not available in any flavor, including `ALL`, file a feature request issue in
+   this repo describing the algorithm required and a use case for that algorithm in platform firmware.
+
+2. **Your Platform** Architecture
+
+    For each phase, ensure you have selected the correct architecture. Failure to do so will potentially result in
+    build errors and incorrect behaior during boot.
+
+3. Dependencies Built into Shared Crypto
+
+    Ultimately, the shared crypto binaries have dependencies that must be fulfilled by the shared crypto project
+    when the binaries are built. It is important to be aware of those selections and how they may impact usage of
+    the binary.
+
+    **Feedback** on dependency selections is welcome.
+
+    There are a couple of specific services (library selections) that you need to be aware of when it comes to crypto
+    interaction.
+
+    - **Debug Output** - The binary for each boot phase is linked against a `DebugLib` instance.
+      - Currently the `Null` instance of `DebugLib` is used for most phases which means that those binaries do not emit
+        debug output.
+      - The `PEIM` binaries are currently linked against the [`PeiDxeDebugLibReportStatusCode](https://github.com/tianocore/edk2/tree/master/MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode)
+      library instance which sends debug output to the report status code infrastructure.
+
+      - The `DXE_DRIVER` binaries are currently linked against the [`UefiDebugLibDebugPortProtocol`](https://github.com/tianocore/edk2/tree/master/MdePkg/Library/UefiDebugLibDebugPortProtocol)
+      library instance which sends messages to an instance of the
+      [`EFI_DEBUGPORT_PROTOCOL`](https://github.com/tianocore/edk2/blob/master/MdePkg/Include/Protocol/DebugPort.h).
+
+      - Always check `CryptoBinPkg.dsc` to verify the `DebugLib` instance linked against the crypto module type you
+        depend on to verify the instance actively used.
+
+    - **Random Number Generation (RNG)** - Crypto operations can depend on random number generation. Therefore, the
+      crypto code compiled into the shared crypto binary must be linked against a method to generate random numbers.
+      Look for the `RngLib` instance in `CryptoBinPkg.dsc` to see the current random generation library being used.
+
+    - **PE/COFF Binary Properties** - Each crypto binary within shared crypto is a PE32 binary with a .efi extension.
+      To allow image loaders to apply page attributes to a loaded image, section alignment is set to 4KB. In some cases,
+      file alignment is set to 4k as well. This is currently the case for `PEIM` binaries to support 4k section
+      alignment in Execute-in-Place (XIP) environments.
 
 ### Integrating the Pre-compiled binaries
 
-1. Include an external dependency file for the shared crypto binary release. An external is shown below.
+1. Include an external dependency file for the shared crypto binary release. An example is shown below.
 
    ```json
    {
@@ -62,8 +107,14 @@ the process.
    }
    ```
 
-   **IMPORTANT**: The `var_name` should be as specified above so the files distributed with the binaries that use that
+   - **IMPORTANT**: The `var_name` should be as specified above so the files distributed with the binaries that use that
    variable value to resolve the file paths to the binaries can resolve properly.
+
+   - **Purpose**: An external dependency is used within the [Stuart build system](https://www.tianocore.org/edk2-pytool-extensions/using/install/)
+     to automatically pull down a binary into a local workspace. In this case, the versioned binary on a NuGet feed is
+     being retrieved. Replace the version with the applicable version (usually latest available) when you follow these
+     instructions. You can of course of course use other methods to retrieve the release from the NuGet feed source
+     shown if your project does not Stuart.
 
 2. Define the service level that you want for each phase of UEFI in the defines section of your DSC.
 
@@ -81,10 +132,11 @@ the process.
         DEFINE STANDALONEMM_CRYPTO_ARCH     = NONE
     ```
 
-    The above example is for a standard intel platform, and the service levels or flavors available.
+    The above example is for a standard Intel platform and the service levels or flavors available.
 
-    All these DEFINE statements are required but if you set them to NONE you do not need to include the crypto arch
-    for that module type.
+    This example shows all of the `DEFINE` options available with common values selected for those options. **ThiS
+    example cannot be copied as-is. You must evaluate the crypto services and architecture for your platform and
+    replace the values above with the proper selection.**
 
 3. Add the DSC include
 
@@ -95,12 +147,27 @@ the process.
     This sets the definitions for BaseCryptLib as well as includes the correct flavor level of the component you
     wish to use.
 
+    > **Note:** This example depends on the `Stuart` tool in `Step 1` setting the `SHARED_CRYPTO_PATH` environment
+    > variable. If you are not using `Stuart` then this example will not work and you will need to provide the path
+    > to the file in your workspace.
+
 4. Add the FDF includes to your platform FDF
 
-    Currently, it isn't possible in an FDF to redefine a FV section and have them be combined.
-    There are two includes: BOOTBLOCK and DXE.
-    The first includes the PEI phase and is meant to be stuck in your BOOTBLOCK FV.
-    The second contains the DXE and SMM modules and is meant to be stuck in your FVDXE.
+    Currently, it isn't possible in an FDF to redefine a FV section and have them be combined. This means you will
+    need to place the `!include` line within the proper FV section or a build error will result.
+
+    A `!include` line only needs to be included for each boot phase you are actually using. This means that phase must
+    have a `<PHASE>_CRYPTO_SERVICES` `DEFINE` line in the `[Defines]` section set to a non-`NULL`. If this is not the
+    case, a build error will result.
+
+    **Example** - In this example a platform firmware has two firmware volumes. One is called `FVBOOTBLOCK` and
+    contains early `SEC` and `PEI` code. Therefore, `CryptoDriver.PEI.inc.fdf` is placed in that FV section. The
+    second firmware volume is called `FVDXE` and it contains the remainder of the platform's firmware code. Therefore,
+    all other `!include` lines are placed in that FV section.
+
+    > **Note:** This example shows all possible options. In practice, a platform may use some or none of these options.
+    > In particular, `SMM` and `STANDALONEMM` would never be included in the same platform as they're conflicting
+    > environments for `MM`.
 
     ```ini
     [FV.FVBOOTBLOCK]
@@ -117,4 +184,34 @@ the process.
       !include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.STANDALONEMM.inc.fdf
     ```
 
-    NOTE: Again. you don't need to include every one of these fdf files if you won't use them.
+## Common Build/Configuration Errors
+
+1. Typos - Verify all macro and values match the expected names.
+2. Older Shared Crypto - It is fine to use an older shared crypto release. However, you must ensure the instructions
+   you are following and dependencies like the `CryptoPkg` code you are using match what was used at the time of that
+   release. `CryptoPkg` is in the Project Mu [Mu Basecore](https://github.com/microsoft/mu_basecore) repository.
+3. Mismatched Defines and Includes - Crypto services for a phase must be opted into by using the corresponding
+   `<PHASE>_CRYPTO_SERVICES` line. Presence of that line then requires a `<PHASE>_CRYPTO_ARCH` that specifies the
+   architecture to use for that boot phase. For each `<PHASE>_CRYPTO_SERVICES` line present the corresponding
+   `!include CryptoDriver.<PHASE>.inc.fdf` line may be used.
+4. Incorrect DSC Include - The correct DSC include to use in the platform DSC is
+   `!include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.inc.dsc`. That line should be included at the top of the
+   DSC before the `[LibraryClasses]` and `[Components]` and after the `[Defines]` section. This allows the file to
+   impact the platform build but it also the platform DSC to override any content from the file if necessary.
+5. Conflicting Platform Content in the DSC - The `CryptoDriver.inc.dsc` file will set the `BaseCryptLib` and `TlsLib`
+   instances for each boot phase opted into in the `[Defines]` section. Platforms should remove any instances of those
+   library classes in the platform DSC to ensure the expected instance from the include are used.
+6. Incorrect Placement of the FDF Include Lines - The `!include CryptoDriver.<PHASE>.inc.fdf` lines must be placed in
+   an FV section. They **cannot** be placed before an apriori section that will result in a build error. They
+   **cannot** be placed within an apriori section that will not result in a build error but incorrect operation during
+   boot. Consider dispatch order when placing the files in the FDF. Ideally, they should be placed before modules
+   that use the `EDKII_CRYPTO_PPI` (PEI) or `EDKII_CRYPTO_PROTOCOL` (DXE/MM). This will allow those module's
+   dependency expressions on the interfaces to be satisfied more quickly during dispatch.
+7. Incorrect Architecture - Verify the correct architecture is used in the `<PHASE>_CRYPTO_ARCH` lines.
+8. Incompatible `CryptoPkg` Version in the Platform Submodule - The shared crypto binaries produce an instance of the
+   EDK II Crypto PPIs and Protocols. The interface of the PPI and Protocol may change over the time. In the past, the
+   interface was not always updated in a backward compatible manner. Therefore, verify that interface used in the
+   shared crypto build matches the version in the `CryptoPkg` used in your project. The version is tracked in
+   [`CryptoPkg/Include/Protocol/Crypto.h`](https://github.com/microsoft/mu_basecore/blob/HEAD/CryptoPkg/Include/Protocol/Crypto.h).
+   The version should match in the `MU_BASECORE` submodule of the `mu_crypto_release` repository and the version in
+   your repo. If it does not, you may need to use a different shared crypto release.
