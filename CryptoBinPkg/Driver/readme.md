@@ -20,10 +20,23 @@ participate in all aspects of shared crypto including code contributions and fee
   - Examples: [OpenSSL](https://github.com/openssl/openssl), [Mbed TLS](https://github.com/Mbed-TLS/mbedtls),
     [SymCrypt](https://github.com/microsoft/SymCrypt).
 - **Flavor** - A collection of cryptographic algorithms included in a given shared crypto binary.
+- **Module Type** - The module type per the definition in the [EDK II Build Specification](https://tianocore-docs.github.io/edk2-BuildSpecification/draft/appendix_h_module_types.html#appendix-h-module-types).
+  A module type defines the applicable environment for code during boot. Module types are constrained to certain boot
+  phases when the code may be dispatched and loaded.
+  - Examples: `PEIM`, `DXE_DRIVER`, `DXE_SMM_DRIVER`, etc.
 - **Phase** - The "boot phase" that the binary applies to where a phase is defined in the [Platform Initialization
   Specification](https://uefi.org/specs/PI/1.8A/).
-  - Examples: `PEIM`, `DXE_DRIVER`, `DXE_SMM_DRIVER`, etc.
 - **Platform Firmware** - A firmware project that integrates the shared crypto binaries made available by this project.
+  The shared crypto binaries install dynamic interfaces (e.g. the Crypto protocol in DXE) that make the crypto services
+  available to any module that locates the dynamic and calls the crypto functions. To assist with locating the crypto
+  interfaces, the `CryptoDriver.inc.dsc` file provided by this project specifies a `BaseCryptLib` instance that backs
+  each function in the library with the code to locate the dynamic interface and call the corresponding function.
+
+  This means platforms that were previously linking different instances of `BaseCryptLib` that actually linked crypto
+  code can simply use the `CryptoDriver.inc.dsc` file to use shared crypto without changing any code that calls into
+  the `BaseCryptLib` interface. *Shared Crypto* means the crypto code in the binary from this project is shared across
+  all other modules.
+
   An open-source example of platform firmware is the [Mu Tiano Platforms firmware repo](https://github.com/microsoft/mu_tiano_platforms).
 - **Shared Crypto** - The name of this project. Shared crypto means a set of pre-built binaries that provide
   cryptographic services.
@@ -72,12 +85,12 @@ the process.
     - **Debug Output** - The binary for each boot phase is linked against a `DebugLib` instance.
       - Currently the `Null` instance of `DebugLib` is used for most phases which means that those binaries do not emit
         debug output.
-      - The `PEIM` binaries are currently linked against the [`PeiDxeDebugLibReportStatusCode](https://github.com/tianocore/edk2/tree/master/MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode)
+      - The `PEIM` binaries are currently linked against the [`PeiDxeDebugLibReportStatusCode`](https://github.com/microsoft/mu_basecore/tree/HEAD/MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode)
       library instance which sends debug output to the report status code infrastructure.
 
-      - The `DXE_DRIVER` binaries are currently linked against the [`UefiDebugLibDebugPortProtocol`](https://github.com/tianocore/edk2/tree/master/MdePkg/Library/UefiDebugLibDebugPortProtocol)
+      - The `DXE_DRIVER` binaries are currently linked against the [`UefiDebugLibDebugPortProtocol`](https://github.com/microsoft/mu_basecore/tree/HEAD/MdePkg/Library/UefiDebugLibDebugPortProtocol)
       library instance which sends messages to an instance of the
-      [`EFI_DEBUGPORT_PROTOCOL`](https://github.com/tianocore/edk2/blob/master/MdePkg/Include/Protocol/DebugPort.h).
+      [`EFI_DEBUGPORT_PROTOCOL`](https://github.com/microsoft/mu_basecore/blob/HEAD/MdePkg/Include/Protocol/DebugPort.h).
 
       - Always check `CryptoBinPkg.dsc` to verify the `DebugLib` instance linked against the crypto module type you
         depend on to verify the instance actively used.
@@ -114,7 +127,7 @@ the process.
      to automatically pull down a binary into a local workspace. In this case, the versioned binary on a NuGet feed is
      being retrieved. Replace the version with the applicable version (usually latest available) when you follow these
      instructions. You can of course of course use other methods to retrieve the release from the NuGet feed source
-     shown if your project does not Stuart.
+     shown if your project does not use Stuart.
 
 2. Define the service level that you want for each phase of UEFI in the defines section of your DSC.
 
@@ -137,6 +150,9 @@ the process.
     This example shows all of the `DEFINE` options available with common values selected for those options. **ThiS
     example cannot be copied as-is. You must evaluate the crypto services and architecture for your platform and
     replace the values above with the proper selection.**
+
+    `<PHASE>_CRYPTO_SERVICES` lines set to `NONE` do not need to be specified. Any `<PHASE>_CRYPTO_SERVICES` line set
+    to a non-`NONE` value must set the corresponding `<PHASE>_CRYPTO_ARCH` value to a non-`NONE` value as well.
 
 3. Add the DSC include
 
@@ -184,6 +200,11 @@ the process.
       !include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.STANDALONEMM.inc.fdf
     ```
 
+    Finally, the FDF file needs rules to understand how to compose a FFS file from the .efi files distributed in
+    Shared Crypto. An example of how to do this is provided in [`CryptoPkg/CryptoPkg/SharedCrypto.BuildRules.fdf.inc`](https://github.com/microsoft/mu_basecore/blob/HEAD/CryptoPkg/SharedCrypto.BuildRules.fdf.inc).
+    You can include that file directly following the instructions in the file header or simply use it as a reference
+    to add the individual rules applicable to your platform to your platform FDF file.
+
 ## Common Build/Configuration Errors
 
 1. Typos - Verify all macro and values match the expected names.
@@ -202,8 +223,8 @@ the process.
    instances for each boot phase opted into in the `[Defines]` section. Platforms should remove any instances of those
    library classes in the platform DSC to ensure the expected instance from the include are used.
 6. Incorrect Placement of the FDF Include Lines - The `!include CryptoDriver.<PHASE>.inc.fdf` lines must be placed in
-   an FV section. They **cannot** be placed before an apriori section that will result in a build error. They
-   **cannot** be placed within an apriori section that will not result in a build error but incorrect operation during
+   an FV section. They **cannot** be placed before an apriori section; that will result in a build error. They
+   **cannot** be placed within an apriori section; that will not result in a build error but incorrect operation during
    boot. Consider dispatch order when placing the files in the FDF. Ideally, they should be placed before modules
    that use the `EDKII_CRYPTO_PPI` (PEI) or `EDKII_CRYPTO_PROTOCOL` (DXE/MM). This will allow those module's
    dependency expressions on the interfaces to be satisfied more quickly during dispatch.
