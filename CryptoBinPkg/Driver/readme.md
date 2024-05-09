@@ -202,7 +202,7 @@ the process.
     ```
 
     Finally, the FDF file needs rules to understand how to compose a FFS file from the .efi files distributed in
-    Shared Crypto. An example of how to do this is provided in [`CryptoPkg/CryptoPkg/SharedCrypto.BuildRules.fdf.inc`](https://github.com/microsoft/mu_basecore/blob/HEAD/CryptoPkg/SharedCrypto.BuildRules.fdf.inc).
+    Shared Crypto. An example of how to do this is provided in [`CryptoBinPkg/Driver/Bin/CryptoDriver.BuildRules.inc.fdf`](https://github.com/microsoft/mu_crypto_release/blob/HEAD/CryptoBinPkg/Driver/Bin/CryptoDriver.BuildRules.inc.fdf).
     You can include that file directly following the instructions in the file header or simply use it as a reference
     to add the individual rules applicable to your platform to your platform FDF file.
 
