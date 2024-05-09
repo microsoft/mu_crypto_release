@@ -16,7 +16,7 @@ participate in all aspects of shared crypto including code contributions and fee
 ## Terminology
 
 - **Crypto Provider** - The project that provides an implementation of cryptographic algorithms used by this project
-  those crypto services to platform firmware.
+  to provide those crypto services to platform firmware.
   - Examples: [OpenSSL](https://github.com/openssl/openssl), [Mbed TLS](https://github.com/Mbed-TLS/mbedtls),
     [SymCrypt](https://github.com/microsoft/SymCrypt).
 - **Flavor** - A collection of cryptographic algorithms included in a given shared crypto binary.
@@ -28,9 +28,10 @@ participate in all aspects of shared crypto including code contributions and fee
   Specification](https://uefi.org/specs/PI/1.8A/).
 - **Platform Firmware** - A firmware project that integrates the shared crypto binaries made available by this project.
   The shared crypto binaries install dynamic interfaces (e.g. the Crypto protocol in DXE) that make the crypto services
-  available to any module that locates the dynamic and calls the crypto functions. To assist with locating the crypto
-  interfaces, the `CryptoDriver.inc.dsc` file provided by this project specifies a `BaseCryptLib` instance that backs
-  each function in the library with the code to locate the dynamic interface and call the corresponding function.
+  available to any module that locates the dynamic interface and calls the crypto functions. To assist with locating
+  the crypto interfaces, the `CryptoDriver.inc.dsc` file provided by this project specifies a `BaseCryptLib` instance
+  that back each function in the library with the code to locate the dynamic interface and call the corresponding
+  function.
 
   This means platforms that were previously linking different instances of `BaseCryptLib` that actually linked crypto
   code can simply use the `CryptoDriver.inc.dsc` file to use shared crypto without changing any code that calls into
@@ -126,8 +127,8 @@ the process.
    - **Purpose**: An external dependency is used within the [Stuart build system](https://www.tianocore.org/edk2-pytool-extensions/using/install/)
      to automatically pull down a binary into a local workspace. In this case, the versioned binary on a NuGet feed is
      being retrieved. Replace the version with the applicable version (usually latest available) when you follow these
-     instructions. You can of course of course use other methods to retrieve the release from the NuGet feed source
-     shown if your project does not use Stuart.
+     instructions. You can of course use other methods to retrieve the release from the NuGet feed source shown if your
+     project does not use Stuart.
 
 2. Define the service level that you want for each phase of UEFI in the defines section of your DSC.
 
@@ -218,7 +219,7 @@ the process.
 4. Incorrect DSC Include - The correct DSC include to use in the platform DSC is
    `!include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.inc.dsc`. That line should be included at the top of the
    DSC before the `[LibraryClasses]` and `[Components]` and after the `[Defines]` section. This allows the file to
-   impact the platform build but it also the platform DSC to override any content from the file if necessary.
+   impact the platform build but it also allows the platform DSC to override any content from the file if necessary.
 5. Conflicting Platform Content in the DSC - The `CryptoDriver.inc.dsc` file will set the `BaseCryptLib` and `TlsLib`
    instances for each boot phase opted into in the `[Defines]` section. Platforms should remove any instances of those
    library classes in the platform DSC to ensure the expected instance from the include are used.
