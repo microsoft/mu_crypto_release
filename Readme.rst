@@ -2,18 +2,27 @@
 Mu Crypto Release Repository
 ============================
 
-This project behaves like a FW platform. It consists of scripts, pipelines, and submodules to perform
-a binary release of EDK2 CryptoPkg drivers to power the BaseCryptOnProtocol/Ppi infrastructure.
+This project builds the Project Mu shared crypto binaries. It consists of scripts, pipelines, and submodules to perform
+a binary release of EDK II [`CryptoPkg`](https://github.com/microsoft/mu_basecore/tree/HEAD/CryptoPkg)
+drivers to power the `BaseCryptOnProtocol/Ppi` infrastructure.
 
-These releases will be tagged and tracked in this  repo, but published to the Mu Nuget feed.
+These releases will be tagged and tracked in this repo, but published to the Mu Nuget feed.
 
-This repository is part of Project Mu.  Please see Project Mu for details https://microsoft.github.io/mu
+This repository is part of Project Mu. Please see Project Mu for details https://microsoft.github.io/mu
+
+
+Using Shared Crypto
+===================
+
+If you simply want to use shared crypto in your project, view the [shared crypto driver instructions](CryptoBinPkg/Driver/readme.md).
+
+The remaining instructions are for those working directly in this repository to build new shared crypto releases.
 
 
 Repo Scripts
 ============
 
-Here is a brief description of the scripts and how they are used.
+Here is a brief description of the scripts in this repository and how they are used.
 
 
 CommonBuildSettings.py
