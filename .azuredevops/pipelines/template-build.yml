@@ -196,6 +196,14 @@ jobs:
           for content in Path(src_folder).iterdir():
               print(content)
               shutil.copytree(content, dest_folder, dirs_exist_ok=True)
+    
+    - task: CopyFiles@2
+      displayName: Copy License
+      inputs:
+        sourceFolder: '$(Pipeline.Workspace)/Extras'
+        contents: 'License.txt'
+        targetFolder: '$(Pipeline.Workspace)/FinalPackage'
+        flattenFolders: true
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Binaries
