@@ -82,7 +82,7 @@ The steps are:
 3) Run the ``MultiFlavorBuild.py`` script with ``--update``
 4) Run the ``MultiFlavorBuild.py`` script with whatever flavors and architectures you would like in
    your binary package. This is the primary build and may take a while
-5) Run the ``MultiFlavorBuild`` script with ``--bundle`` to create the Nuget package layout
+5) Run the ``MultiFlavorBuild.py`` script with ``--bundle`` to create the Nuget package layout
    in the ``Bundle`` directory
 
 
