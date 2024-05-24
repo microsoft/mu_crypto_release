@@ -177,11 +177,11 @@ jobs:
             os.makedirs(dest_folder)
 
           if not os.path.exists(dest_folder):
-              os.makedirs(dest_folder)
+            os.makedirs(dest_folder)
 
           for content in Path(src_folder).iterdir():
-              print(content)
-              shutil.copytree(content, dest_folder, dirs_exist_ok=True)
+            print(content)
+            shutil.copytree(content, dest_folder, dirs_exist_ok=True)
     
     - task: CopyFiles@2
       displayName: Copy License
