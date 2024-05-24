@@ -10,7 +10,7 @@ import logging
 from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 
-from CommonBuildSettngs import CommonPlatform, CommonSettingsManager
+from CommonBuildSettings import CommonPlatform, CommonSettingsManager
 
 
 # ####################################################################################### #
@@ -55,7 +55,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def GetActiveScopes(self):
         ''' return tuple containing scopes that should be active for this process '''
-        return CommonPlatform.Scopes
+        return CommonPlatform.Scopes + ("crypto-bundle",)
 
     def GetBaseName(self):
         return "CryptoBin_%s" % self.flavor

@@ -1,0 +1,5 @@
+{
+  "scope": "crypto-bundle",
+  "name": "Bundle Crypto Contents",
+  "module": "BundleCrypto"
+}

@@ -13,7 +13,7 @@ from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 from edk2toollib.utility_functions import RunPythonScript
 
-from CommonBuildSettngs import CommonPlatform, CommonSettingsManager
+from CommonBuildSettings import CommonPlatform, CommonSettingsManager
 
 
 # ####################################################################################### #
