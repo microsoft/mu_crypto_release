@@ -167,68 +167,33 @@ jobs:
         path: '$(Pipeline.Workspace)/Staging'
 
     - task: DownloadPipelineArtifact@2
-      displayName: Download Logs Artifacts
-      inputs:
-        patterns: '*_Logs/**'
-        path: '$(Pipeline.Workspace)/Logs'
-
-    - task: DownloadPipelineArtifact@2
       displayName: Download Extras Artifacts
       inputs:
         artifact: Package_Extras
         path: '$(Pipeline.Workspace)/Extras'
 
-    - task: CopyFiles@2
-      displayName: Move Logs into Staging
-      inputs:
-        sourceFolder: '$(Pipeline.Workspace)/Logs'
-        contents: |
-          **/*.txt
-        targetFolder: '$(Pipeline.Workspace)/Staging'
-        flattenFolders: true
-
-    # Files in staging exists in this format
-    # {FLAVOR}
-    # -- CryptoPkg
-    # ---- {TARGET}_{TOOLCHAIN}
-    # ------ Crypto(Pei|Dxe|Smm).efi
-    # ------ {GUID}
-    # -------- DEBUG
-    # ---------- Crypto(Pei|Dxe|Smm).efi
-    # -------- OUTPUT
-    # ---------- Crypto(Pei|Dxe|Smm).efi
-    # ---------- Crypto(Pei|Dxe|Smm).depex
-    # -- UPDATE_LOG.txt
-    # -- CI_BUILDLOG.txt
-    # -- edk2-BaseCryptoDriver.config.json
-
-    # {FLAVOR} = ALL, TINY_SHA, ...
-    # {TARGET} = DEBUG, RELEASE
-    # {TOOLCHAIN} = VS2019, VS2017
-    # {ARCH} = IA32, X64, AARCH64
-
-    # We need them laid out like this
-    # {FLAVOR}
-    # -- {TARGET}
-    # ---- {ARCH}
-    # ------- Crypto(Pei|Dxe|Smm).efi
-    # ---- BuildReport.txt
-    # ---- Crypto(Pei|Dxe|Smm).depex
-    # License.txt
-    # Readme.md
-
     - task: PythonScript@0
-      displayName: Assemble Release Package
+      displayName: Merge CryptoBin Artifacts
+      env:
+        ARTIFACT_DIR: '$(Pipeline.Workspace)/Staging'
+        OUT_DIR: '$(Pipeline.Workspace)/FinalPackage'
       inputs:
-        scriptSource: filePath
-        scriptPath: AssembleNugetPackage.py
-        arguments: > # Use this to avoid newline characters in multiline string
-          -v
-          -f
-          -l
-          -e $(Pipeline.Workspace)/Extras/License.txt
-          -o $(Pipeline.Workspace)/FinalPackage
-          $(Pipeline.Workspace)/Staging
+        scriptSource: 'inline'
+        script: |
+          import os
+          import shutil
+          from pathlib import Path
+
+          destination_folder = os.environ['OUT_DIR']
+          src_folder = os.environ['ARTIFACT_DIR']
+      
+          if not os.path.exists(destination_folder):
+            os.makedirs(destination_folder)
+
+          for folder in Path(src_folder).iterdir():
+            for content in os.listdir(folder):
+              print(os.path.join(folder,content))
+              shutil.copytree(os.path.join(folder,content), dest_folder, dirs_exist_ok=True)
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Binaries

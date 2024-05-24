@@ -18,7 +18,8 @@ class BundleCrypto(IUefiBuildPlugin):
         bundle_dir = Path(thebuilder.ws) / "Bundle" / thebuilder.flavor / thebuilder.env.GetValue("TARGET")
 
         # Copy .pdb, .depex, .map, .efi files for each architecture built.
-        for arch in thebuilder.env.GetValue("TARGET_ARCH").split(" "):
+        arch_list = thebuilder.env.GetValue("TARGET_ARCH")
+        for arch in arch_list.split(" "):
             target_dir = bundle_dir / arch
             target_dir.mkdir(parents=True, exist_ok=True)
             arch_build_path = build_path / arch
@@ -42,15 +43,14 @@ class BundleCrypto(IUefiBuildPlugin):
         
         # Copy the Build report
         br_src = Path(thebuilder.env.GetValue("BUILD_OUTPUT_BASE"), "BUILD_REPORT.TXT")
-        br_dst = bundle_dir / "BUILD_REPORT.TXT"
+        br_dst = bundle_dir / f"BUILD_REPORT_{arch_list.replace(' ', '_')}.TXT"
         if not br_dst.exists() or br_dst.stat().st_ino != br_src.stat().st_ino:
             br_dst.unlink(missing_ok=True)
             br_dst.hardlink_to(br_src)
         
         # Copy the build log
-        filename = f"BUILDLOG_CryptoBin_{thebuilder.flavor}_{thebuilder.env.GetValue('TARGET')}.txt"
-        bl_src = Path(thebuilder.ws) / "Build" / filename
-        bl_dst = bundle_dir / filename
+        bl_src = Path(thebuilder.ws) / "Build" / f"BUILDLOG_CryptoBin_{thebuilder.flavor}_{thebuilder.env.GetValue('TARGET')}.txt"
+        bl_dst = bundle_dir / f"BUILDLOG_CryptoBin_{thebuilder.flavor}_{thebuilder.env.GetValue('TARGET')}_{arch_list.replace(' ', '_')}.txt"
         if not bl_dst.exists() or bl_dst.stat().st_ino != bl_src.stat().st_ino:
             bl_dst.unlink(missing_ok=True)
             bl_dst.hardlink_to(bl_src)
