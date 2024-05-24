@@ -84,7 +84,7 @@
   NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
 
 [LibraryClasses.common.DXE_CORE, LibraryClasses.common.SMM_CORE, LibraryClasses.common.DXE_SMM_DRIVER, LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.DXE_SAL_DRIVER, LibraryClasses.common.UEFI_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
-  NULL|MdePkg/Library/StackCheckLib/StackCheckLibDynamicInit.inf
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
 
 [LibraryClasses.X64.SMM_CORE, LibraryClasses.X64.DXE_SMM_DRIVER, LibraryClasses.X64.MM_CORE_STANDALONE, LibraryClasses.X64.MM_STANDALONE, LibraryClasses.X64.DXE_CORE, LibraryClasses.X64.DXE_DRIVER, LibraryClasses.X64.DXE_RUNTIME_DRIVER, LibraryClasses.X64.DXE_SAL_DRIVER, LibraryClasses.X64.UEFI_DRIVER, LibraryClasses.X64.UEFI_APPLICATION]
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
