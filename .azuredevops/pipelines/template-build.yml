@@ -184,14 +184,16 @@ jobs:
           import shutil
           from pathlib import Path
 
-          destination_folder = os.environ['OUT_DIR']
+          dest_folder = os.environ['OUT_DIR']
           src_folder = os.environ['ARTIFACT_DIR']
       
-          if not os.path.exists(destination_folder):
-            os.makedirs(destination_folder)
+          if not os.path.exists(dest_folder):
+            os.makedirs(dest_folder)
 
           for folder in Path(src_folder).iterdir():
+            print(folder)
             for content in os.listdir(folder):
+              print(content)
               print(os.path.join(folder,content))
               shutil.copytree(os.path.join(folder,content), dest_folder, dirs_exist_ok=True)
 
