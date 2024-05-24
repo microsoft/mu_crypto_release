@@ -58,12 +58,16 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         parserObj.add_argument("-f", "--flavor", dest="flavor", type=validate_flavors,
                                default=CommonPlatform.AvailableFlavors,
                                help="flavor(s) for the build {%s}" % ",".join(CommonPlatform.AvailableFlavors))
+        parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
+                               default=False,
+                               help="Bundles the build output into the directory structure for the Crypto binary distribution.")
 
     def RetrieveCommandLineOptions(self, args):
         self.arch = args.arch
         self.target = args.target
         self.flavor = args.flavor
         self.stop = args.stop
+        self.bundle = args.bundle
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -110,6 +114,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                     params += [f"TOOL_CHAIN_TAG={toolchain}"]
                     params += ["-t", target]
                     params += ["-a", ",".join(arches)]
+                    if self.bundle:
+                        params += ["-b"]
 
                     current_build = f"{flavor} {target}"
                     logging.log(edk2_logging.SECTION, f"Building {current_build}")

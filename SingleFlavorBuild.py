@@ -39,11 +39,16 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         parserObj.add_argument(dest="flavor", type=str,
                                choices=CommonPlatform.AvailableFlavors,
                                help="the flavor to build for the Crypto binary distribution")
+        parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
+                               default=False,
+                               help="Bundles the build output into the directory structure for the Crypto binary distribution.")
+
 
     def RetrieveCommandLineOptions(self, args):
         self.flavor = args.flavor
         self.target = args.target
         self.arch = args.arch
+        self.bundle = args.bundle
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -55,7 +60,9 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def GetActiveScopes(self):
         ''' return tuple containing scopes that should be active for this process '''
-        return CommonPlatform.Scopes + ("crypto-bundle",)
+        if self.bundle:
+            return CommonPlatform.Scopes + ("crypto-bundle",)
+        return CommonPlatform.Scopes
 
     def GetBaseName(self):
         return "CryptoBin_%s" % self.flavor

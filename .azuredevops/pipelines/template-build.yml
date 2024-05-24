@@ -87,24 +87,10 @@ jobs:
               -f ${{ item.Value.Flavor }}
               -a ${{ item.Value.ArchList }}
               -t ${{ parameters.build_targets }}
+              --bundle
               --stop-on-fail
               TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
 
-        # - task: CopyFiles@2
-        #   displayName: Filter Driver Binaries # To reduce network consumption.
-        #   inputs:
-        #     sourceFolder: 'Build/CryptoBin_${{ item.Value.Flavor }}'
-        #     contents: |
-        #       **/*.efi
-        #       **/*.depex
-        #       **/BUILD_REPORT.TXT
-        #     targetFolder: '$(Build.ArtifactStagingDirectory)/Drivers'
-        #     flattenFolders: false
-        # - task: PublishPipelineArtifact@1
-        #   displayName: Publish Driver Binaries
-        #   inputs:
-        #     targetPath: '$(Build.ArtifactStagingDirectory)/Drivers'
-        #     artifactName: CryptoBin_${{ Item.Value.ArchList }}_${{ item.Value.Flavor }}
         - task: PublishPipelineArtifact@1
           displayName: Publish Bundle
           inputs:
