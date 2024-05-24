@@ -190,12 +190,12 @@ jobs:
           if not os.path.exists(dest_folder):
             os.makedirs(dest_folder)
 
-          for folder in Path(src_folder).iterdir():
-            print(folder)
-            for content in os.listdir(folder):
+          if not os.path.exists(dest_folder):
+              os.makedirs(dest_folder)
+
+          for content in Path(src_folder).iterdir():
               print(content)
-              print(os.path.join(folder,content))
-              shutil.copytree(os.path.join(folder,content), dest_folder, dirs_exist_ok=True)
+              shutil.copytree(content, dest_folder, dirs_exist_ok=True)
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Binaries
