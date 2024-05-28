@@ -1,5 +1,5 @@
-## @file FlattenMaps.py
-# Plugin to support copying all Maps to 1 directory.
+## @file BundleCrypto.py
+# Plugin to Bundle the CryptoBin build output
 #
 ##
 # Copyright (c) Microsoft Corporation. All rights reserved.
@@ -8,7 +8,6 @@
 from edk2toolext.environment.plugintypes.uefi_build_plugin import IUefiBuildPlugin
 from pathlib import Path
 
-# MU_CHANGE Entire File - Perf improvements
 class BundleCrypto(IUefiBuildPlugin):
 
     def do_post_build(self, thebuilder):
