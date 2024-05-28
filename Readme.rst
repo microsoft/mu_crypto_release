@@ -81,10 +81,9 @@ The steps are:
 2) Run the ``MultiFlavorBuild.py`` script with ``--setup``
 3) Run the ``MultiFlavorBuild.py`` script with ``--update``
 4) Run the ``MultiFlavorBuild.py`` script with whatever flavors and architectures you would like in
-   your binary pacakge. This is the primary build and may take a while
-5) Run the ``AssembleNugetPackage.py`` script and point at the ``Build`` directory for your local
-   build (completed in step 4). There are extra parameters you can use to configure the package,
-   documented in the help for the script
+   your binary package. This is the primary build and may take a while
+5) Run the ``MultiFlavorBuild.py`` script with ``--bundle`` to create the Nuget package layout
+   in the ``Bundle`` directory
 
 
 Releasing a Pipeline Build
