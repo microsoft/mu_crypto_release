@@ -98,6 +98,19 @@ the process.
 
     - **Random Number Generation (RNG)** - Crypto operations can depend on random number generation. Therefore, the
       crypto code compiled into the shared crypto binary must be linked against a method to generate random numbers.
+
+      Currently, the following selections are made per shared crypto binary type:
+
+      - `CryptoPei` - `PeiRngLib` which uses the Crypto PPI to provide random numbers. This means a platform module
+        must produce the PPI (`gEfiRngPpiGuid`).
+      - `CryptoDxe` - `DxeRngLib` which uses the Crypto protocol to provide random numbers. This means a platform
+        module must produce the protocol (`gEfiRngProtocolGuid`).
+      - `CryptoRuntimeDxe` - `DxeRngLib` which uses the Crypto protocol to provide randmon numbers. This means a
+        platform module must produce the protocol (`gEfiRngProtocolGuid`).
+      - `CryptoStandaloneMm (AARCH64)` - `BaseRngLibTimerLib` is linked to the crypto binary.
+      - `CrytpStandaloneMm (X64)` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
+      - `CryptoSmm` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
+
       Look for the `RngLib` instance in `CryptoBinPkg.dsc` to see the current random generation library being used.
 
     - **PE/COFF Binary Properties** - Each crypto binary within shared crypto is a PE32 binary with a .efi extension.
