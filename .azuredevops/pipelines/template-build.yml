@@ -41,23 +41,23 @@ parameters:
 jobs:
   - ${{ each item in parameters.build_matrix }}:
     - job: Build_${{ item.Key }}
-
+      
       timeoutInMinutes: 120
-
+      
       workspace:
         clean: all
-
+      
       pool:
         vmImage: ${{ item.Value.VmImage }}
-
+      
       ${{ if eq(item.Value.Container, true) }}:
         container:
           image: ${{ parameters.linux_container_image }}
-
+      
       steps:
         - checkout: self
           clean: true
-
+  
         - ${{ if eq(item.Value.Container, true) }}:
           - script: pip install -r pip-requirements.txt --upgrade
             displayName: Install and Upgrade pip Modules
@@ -70,14 +70,14 @@ jobs:
             scriptSource: 'filePath'
             scriptPath: MultiFlavorBuild.py
             arguments: --setup TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
-
+        
         - task: PythonScript@0
           displayName: Update Workspace Extdeps
           inputs:
             scriptSource: 'filePath'
             scriptPath: MultiFlavorBuild.py
             arguments: --update TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
-
+        
         - task: PythonScript@0
           displayName: 'Build Crypto Drivers'
           inputs:
@@ -111,8 +111,8 @@ jobs:
             displayName: Save Configs and License
             inputs:
               contents: |
-                CryptoBinPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
-                CryptoBinPkg\Driver\Packaging\License.txt
+                MU_BASECORE\CryptoPkg\Driver\Packaging\edk2-BaseCryptoDriver.config.json
+                MU_BASECORE\CryptoPkg\Driver\Packaging\License.txt
               targetFolder: '$(Build.ArtifactStagingDirectory)/Extra'
               flattenFolders: true
           - task:  PublishPipelineArtifact@1
@@ -181,7 +181,7 @@ jobs:
           **/*.txt
         targetFolder: '$(Pipeline.Workspace)/Staging'
         flattenFolders: true
-
+    
     # Files in staging exists in this format
     # {FLAVOR}
     # -- CryptoPkg
@@ -230,7 +230,7 @@ jobs:
       inputs:
         targetPath: '$(Pipeline.Workspace)/FinalPackage'
         artifactName: CryptoBin_Nuget_Package
-
+  
   - ${{ if eq(parameters.publish_nuget, true) }}:
     - job: publish_package
       displayName: Publish CryptoBin_${{parameters.publish_version}}
@@ -288,7 +288,7 @@ jobs:
             --CustomLicensePath "$licenseFile";
 
             Get-Content $(Build.StagingDirectory)/NugetPackagingLog.txt;
-
+      
       - task: NuGetAuthenticate@0
         displayName: Authenticate Local Feed
 
