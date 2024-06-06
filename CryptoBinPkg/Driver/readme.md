@@ -38,13 +38,59 @@ the process.
     have platform remifications so be mindful of that.
     NOTE: AARCH64 will be compiled with VS2022 eventually and GCC5 binaries will no longer be produced.
 
-3. Library consideration
-    There are a couple of specific libraries that you need to be aware of when it comes to crypto interaction
-    - DebugLib is set in the binary itself and is not effected by the platform.  Currently the MM crypto is
-      using a null debug lib
-    - RngLib does effect the crypto binaries.  Which RngLib you use will have effects on crypto.  For example for
-      AARCH64 platforms ArmTrngLib and BaseRngLib effect eachother which causes issues.  Dependencies like that can
-      lead to complications while integrating the crypto binaries.
+   If you require a crypto algorithm not available in any flavor, including `ALL`, file a feature request issue in
+   this repo describing the algorithm required and a use case for that algorithm in platform firmware.
+
+2. **Your Platform** Architecture
+
+    For each phase, ensure you have selected the correct architecture. Failure to do so will potentially result in
+    build errors and incorrect behaior during boot.
+
+3. Dependencies Built into Shared Crypto
+
+    Ultimately, the shared crypto binaries have dependencies that must be fulfilled by the shared crypto project
+    when the binaries are built. It is important to be aware of those selections and how they may impact usage of
+    the binary.
+
+    **Feedback** on dependency selections is welcome.
+
+    There are a couple of specific services (library selections) that you need to be aware of when it comes to crypto
+    interaction.
+
+    - **Debug Output** - The binary for each boot phase is linked against a `DebugLib` instance.
+      - Currently the `Null` instance of `DebugLib` is used for most phases which means that those binaries do not emit
+        debug output.
+      - The `PEIM` binaries are currently linked against the [`PeiDxeDebugLibReportStatusCode`](https://github.com/microsoft/mu_basecore/tree/HEAD/MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode)
+      library instance which sends debug output to the report status code infrastructure.
+
+      - The `DXE_DRIVER` binaries are currently linked against the [`UefiDebugLibDebugPortProtocol`](https://github.com/microsoft/mu_basecore/tree/HEAD/MdePkg/Library/UefiDebugLibDebugPortProtocol)
+      library instance which sends messages to an instance of the
+      [`EFI_DEBUGPORT_PROTOCOL`](https://github.com/microsoft/mu_basecore/blob/HEAD/MdePkg/Include/Protocol/DebugPort.h).
+
+      - Always check `CryptoBinPkg.dsc` to verify the `DebugLib` instance linked against the crypto module type you
+        depend on to verify the instance actively used.
+
+    - **Random Number Generation (RNG)** - Crypto operations can depend on random number generation. Therefore, the
+      crypto code compiled into the shared crypto binary must be linked against a method to generate random numbers.
+
+      Currently, the following selections are made per shared crypto binary type:
+
+      - `CryptoPei` - `PeiRngLib` which uses the Crypto PPI to provide random numbers. This means a platform module
+        must produce the PPI (`gEfiRngPpiGuid`).
+      - `CryptoDxe` - `DxeRngLib` which uses the Crypto protocol to provide random numbers. This means a platform
+        module must produce the protocol (`gEfiRngProtocolGuid`).
+      - `CryptoRuntimeDxe` - `DxeRngLib` which uses the Crypto protocol to provide randmon numbers. This means a
+        platform module must produce the protocol (`gEfiRngProtocolGuid`).
+      - `CryptoStandaloneMm (AARCH64)` - `BaseRngLibTimerLib` is linked to the crypto binary.
+      - `CrytpStandaloneMm (X64)` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
+      - `CryptoSmm` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
+
+      Look for the `RngLib` instance in `CryptoBinPkg.dsc` to see the current random generation library being used.
+
+    - **PE/COFF Binary Properties** - Each crypto binary within shared crypto is a PE32 binary with a .efi extension.
+      To allow image loaders to apply page attributes to a loaded image, section alignment is set to 4KB. In some cases,
+      file alignment is set to 4k as well. This is currently the case for `PEIM` binaries to support 4k section
+      alignment in Execute-in-Place (XIP) environments.
 
 ### Integrating the Pre-compiled binaries
 
