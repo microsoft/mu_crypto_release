@@ -58,6 +58,7 @@
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   SmmCpuRendezvousLib|MdePkg/Library/SmmCpuRendezvousLibNull/SmmCpuRendezvousLibNull.inf
+  StackCheckFailureHookLib|MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
   SynchronizationLib|MdePkg/Library/BaseSynchronizationLib/BaseSynchronizationLib.inf
   TimerLib|MdePkg/Library/BaseTimerLibNullTemplate/BaseTimerLibNullTemplate.inf
   TlsLib|CryptoPkg/Library/TlsLibNull/TlsLibNull.inf
@@ -77,12 +78,16 @@
 #
 # For stack protection
 #
-[LibraryClasses.X64.SMM_CORE, LibraryClasses.X64.DXE_SMM_DRIVER, LibraryClasses.X64.MM_CORE_STANDALONE, LibraryClasses.X64.MM_STANDALONE, LibraryClasses.X64.DXE_CORE, LibraryClasses.X64.DXE_DRIVER, LibraryClasses.X64.DXE_RUNTIME_DRIVER, LibraryClasses.X64.DXE_SAL_DRIVER, LibraryClasses.X64.UEFI_DRIVER, LibraryClasses.X64.UEFI_APPLICATION]
-  NULL|MdePkg/Library/StackCheckLib/StackCheckLib.inf
-  RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
-  StackCheckFailureLib|MdePkg/Library/StackCheckFailureLibNull/StackCheckFailureLibNull.inf
+[LibraryClasses.common.PEI_CORE]
+  NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
 
-[LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
+[LibraryClasses.common.PEIM, LibraryClasses.common.MM_CORE_STANDALONE, LibraryClasses.common.MM_STANDALONE]
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
+
+[LibraryClasses.common.DXE_CORE, LibraryClasses.common.SMM_CORE, LibraryClasses.common.DXE_SMM_DRIVER, LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.DXE_SAL_DRIVER, LibraryClasses.common.UEFI_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
+
+[LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
   RngLib|MdePkg/Library/DxeRngLib/DxeRngLib.inf
 
 !if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
@@ -97,10 +102,6 @@
 [LibraryClasses.ARM, LibraryClasses.AARCH64]
   IntrinsicLib|MdePkg/Library/CompilerIntrinsicsLib/ArmCompilerIntrinsicsLib.inf
   NULL|MdePkg/Library/CompilerIntrinsicsLib/ArmCompilerIntrinsicsLib.inf
-
-  # Add support for stack protector
-  NULL|MdePkg/Library/BaseStackCheckLib/BaseStackCheckLib.inf
-  StackCheckFailureLib|MdePkg/Library/StackCheckFailureLibNull/StackCheckFailureLibNull.inf
 
 [LibraryClasses.common.PEIM]
   HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
@@ -241,6 +242,10 @@
   GCC:*_*_*_CC_FLAGS = -D ENABLE_MD5_DEPRECATED_INTERFACES
   RVCT:*_*_*_CC_FLAGS = -DENABLE_MD5_DEPRECATED_INTERFACES
 !endif
+MSFT:RELEASE_*_*_CC_FLAGS = /Zi
+MSFT:RELEASE_*_*_DLINK_FLAGS = /DEBUG /OPT:REF /OPT:ICF=10 /ALT /PDBALTPATH:$(MODULE_NAME)
+MSFT:RELEASE_*_*_ASM_FLAGS = /Zi
+MSFT:RELEASE_*_*_NASM_FLAGS = -g
 
 [BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
   MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
@@ -248,9 +253,6 @@
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER, BuildOptions.common.EDKII.DXE_SMM_DRIVER, BuildOptions.common.EDKII.SMM_CORE, BuildOptions.common.EDKII.DXE_DRIVER, BuildOptions.common.EDKII.MM_STANDALONE]
   MSFT:*_*_IA32_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
   MSFT:*_*_X64_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
-
-[BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
-  MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
 
 [BuildOptions.AARCH64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.DXE_DRIVER, BuildOptions.AARCH64.EDKII.MM_STANDALONE]
   GCC:*_*_*_DLINK_FLAGS = -z common-page-size=0x1000
