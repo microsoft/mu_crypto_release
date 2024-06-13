@@ -242,6 +242,10 @@
   GCC:*_*_*_CC_FLAGS = -D ENABLE_MD5_DEPRECATED_INTERFACES
   RVCT:*_*_*_CC_FLAGS = -DENABLE_MD5_DEPRECATED_INTERFACES
 !endif
+MSFT:RELEASE_*_*_CC_FLAGS = /Zi
+MSFT:RELEASE_*_*_DLINK_FLAGS = /DEBUG /OPT:REF /OPT:ICF=10 /ALT /PDBALTPATH:$(MODULE_NAME)
+MSFT:RELEASE_*_*_ASM_FLAGS = /Zi
+MSFT:RELEASE_*_*_NASM_FLAGS = -g
 
 [BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
   MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
@@ -249,9 +253,6 @@
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER, BuildOptions.common.EDKII.DXE_SMM_DRIVER, BuildOptions.common.EDKII.SMM_CORE, BuildOptions.common.EDKII.DXE_DRIVER, BuildOptions.common.EDKII.MM_STANDALONE]
   MSFT:*_*_IA32_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
   MSFT:*_*_X64_DLINK_FLAGS = /ALIGN:4096 # enable 4k alignment for MAT and other protections.
-
-[BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
-  MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
 
 [BuildOptions.AARCH64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.DXE_DRIVER, BuildOptions.AARCH64.EDKII.MM_STANDALONE]
   GCC:*_*_*_DLINK_FLAGS = -z common-page-size=0x1000
