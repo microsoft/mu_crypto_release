@@ -16,7 +16,6 @@ from CommonBuildSettngs import CommonPlatform
 SCRIPT_PATH = os.path.abspath(__file__)
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
 
-EXCLUDE_FILES = ["*.inf", "*.uni"]
 
 def parse_args():
     arg_parse = argparse.ArgumentParser(f"{CommonPlatform.BaseName} AssembleNugetPackage.py",
@@ -159,13 +158,7 @@ def main():
         # Skip directories for now
         if os.path.isdir(fullpath):
             continue
-
         filename = os.fsdecode(file)
-
-        # Skip the excluded files
-        if any(glob.fnmatch.fnmatch(filename, pattern) for pattern in EXCLUDE_FILES):
-            continue
-
         input_path = os.path.join(autogen_input_dir, filename)
         output_path = os.path.join(autogen_dest_path, filename)
         logging.debug(f"OUTPUT PATH: {output_path}")
@@ -183,11 +176,6 @@ def main():
         # Skip the temporary files
         if filename[0:4] == "temp":
             continue
-        
-        # Skip the excluded files
-        if any(glob.fnmatch.fnmatch(filename, pattern) for pattern in EXCLUDE_FILES):
-            continue
-
         input_path = os.path.join(autogen_input_dir, filename)
         output_path = os.path.join(autogen_dest_path, filename)
         logging.debug(f"OUTPUT PATH: {output_path}")
