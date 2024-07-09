@@ -81,8 +81,7 @@ TlsDoHandshake (
   TLS_CONNECTION  *TlsConn;
   UINTN           PendingBufferSize;
   INTN            Ret;
-  UINTN           ErrorCode;
-
+  
   TlsConn           = (TLS_CONNECTION *)Tls;
   PendingBufferSize = 0;
   Ret               = 1;
@@ -133,6 +132,8 @@ TlsDoHandshake (
         ));
       DEBUG_CODE_BEGIN ();
       while (TRUE) {
+        unsigned long  ErrorCode;
+
         ErrorCode = ERR_get_error ();
         if (ErrorCode == 0) {
           break;
