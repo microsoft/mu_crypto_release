@@ -514,7 +514,7 @@ def get_crypto_lib_c(options, functions):
                 lines.append("#else")
                 # TODO generate something that will cause the linker to have errors?
                 # we want to generate an error if someone includes this in their binary
-                lines.append(f"#endif\n")
+                lines.append("#endif\n")
 
     generate_file_replacement(lines, "CryptLib.template.c", "temp_CryptLib.c", options)
 
@@ -599,7 +599,7 @@ def get_crypto_dsc(options, functions):
         lines.append(f"  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = {runtime_dxe_guid}")
         lines.append(f"  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = {smm_guid}")
         lines.append(f"  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_guid}")
-        lines.append(f"!endif\n")
+        lines.append("!endif\n")
 
     # now set the PCDS
     lines.append("[PcdsFixedAtBuild]")
@@ -761,7 +761,7 @@ def generate_platform_files():
         if phase == "RuntimeDxe":
             depex_phase = "DXE"
         inf_lines.append(
-            f"  {depex_phase}_DEPEX|../../{flavor}/{target}/Crypto{phase}.depex|{target}")
+            f"  {depex_phase}_DEPEX|../../{flavor}/{target}/{arch}/Crypto{phase}.depex|{target}")
         inf_lines.append("\n[Packages]")
         inf_lines.append("  CryptoPkg/CryptoPkg.dec")
         inf_lines.append("")
