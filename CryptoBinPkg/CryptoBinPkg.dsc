@@ -47,6 +47,7 @@
   FltUsedLib|MdePkg/Library/FltUsedLib/FltUsedLib.inf
   HashApiLib|CryptoPkg/Library/BaseHashApiLib/BaseHashApiLib.inf
   HmacSha1Lib|OpensslPkg/Library/HmacSha1Lib/HmacSha1Lib.inf
+  IntrinsicLib|OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
   MmServicesTableLib|MdePkg/Library/MmServicesTableLib/MmServicesTableLib.inf
@@ -72,8 +73,6 @@
   UnitTestResultReportLib|UnitTestFrameworkPkg/Library/UnitTestResultReportLib/UnitTestResultReportLibDebugLib.inf
   NULL|MdePkg/Library/FltUsedLib/FltUsedLib.inf
 
-[LibraryClasses.IA32, LibraryClasses.X64]
-  IntrinsicLib|OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
 
 #
 # For stack protection
@@ -98,10 +97,6 @@
   # this is currently X64 only because MSVC doesn't support BaseMemoryLibOptDxe for AARCH64
   BaseMemoryLib|MdePkg/Library/BaseMemoryLibOptDxe/BaseMemoryLibOptDxe.inf
 !endif
-
-[LibraryClasses.ARM, LibraryClasses.AARCH64]
-  IntrinsicLib|MdePkg/Library/CompilerIntrinsicsLib/ArmCompilerIntrinsicsLib.inf
-  NULL|MdePkg/Library/CompilerIntrinsicsLib/ArmCompilerIntrinsicsLib.inf
 
 [LibraryClasses.common.PEIM]
   HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
