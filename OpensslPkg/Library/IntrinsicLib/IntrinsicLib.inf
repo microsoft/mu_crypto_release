@@ -52,6 +52,9 @@
 [Sources.X64]
   CopyMem.c
 
+[Sources.RISCV64]
+  CopyMem.c
+
 [Packages]
   MdePkg/MdePkg.dec
 
