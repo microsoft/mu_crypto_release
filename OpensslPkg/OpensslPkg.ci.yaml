@@ -53,10 +53,6 @@
     "CompilerPlugin": {
         "DscPath": "CryptoPkg.dsc"
     },
-    ## options defined .pytool/Plugin/HostUnitTestCompilerPlugin
-    "HostUnitTestCompilerPlugin": {
-        #"DscPath": "Test/CryptoPkgHostUnitTest.dsc"  # MU_CHANGE - Disable temporarily while transitioning crypto
-    },
     "CharEncodingCheck": {
         "IgnoreFiles": []
     },
@@ -65,6 +61,7 @@
             "MdePkg/MdePkg.dec",
             "MdeModulePkg/MdeModulePkg.dec",
             "CryptoPkg/CryptoPkg.dec",
+            "OpensslPkg/OpensslPkg.dec",
         ],
         # For host based unit tests
         "AcceptableDependencies-HOST_APPLICATION":[],
@@ -88,14 +85,12 @@
     "LibraryClassCheck": {
         "IgnoreHeaderFile": []
     },
-    ## MU_CHANGE [BEGIN] Disable AuditOnly
     "MarkdownLintCheck": {
         "AuditOnly": False,          # If True, log all errors and then mark as skipped
         "IgnoreFiles": [
             "Library/OpensslLib/openssl"
         ]            # package root relative file, folder, or glob pattern to ignore
     },
-    ## MU_CHANGE [END] Disable AuditOnly
 
     ## options defined ci/Plugin/SpellCheck
     "SpellCheck": {
