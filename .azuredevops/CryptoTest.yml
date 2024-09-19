@@ -54,6 +54,8 @@ variables:
     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
   ${{ else }}:
     value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
+- name: fw_dir
+  value: 'Build\test\Firmware'
 
 name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
 
@@ -124,20 +126,30 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)/Build/Test'
         flattenFolders: false
 
-    #- powershell: |
-    #    py muemu.py --update --firmwaredir ${{ variables.fw_dir }} --version latest --debugfw
-    #  displayName: Download Firmware
+    - powershell: |
+        py muemu.py --update --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu --version latest --debugfw
+      displayName: Download Firmware
 
-    #- powershell: |
-    #    py muemu.py --arch $(arch) --firmwaredir ${{ variables.fw_dir }} --disk ${{ variables.qcow_path }} --vnc :9 --verbose --timeout 300
-    #  displayName: Run Crypto Test
+    - powershell: |
+        py muemu.py --arch $(build_archs) --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu/X64/bin/ --verbose
+      displayName: Run Crypto Test
 
-    - task:  PublishPipelineArtifact@1
-      displayName: Publish Configs and License
-      condition: eq(variables['Build.CopyExtra'], 'true')
+    - task: CopyFiles@2
+      displayName: Copy Test Results
+      condition: succeededOrFailed()
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/Extra'
-        artifactName: Package_Extras
+        sourceFolder: 'Build/Test/Results'
+        contents: |
+          *.xml
+        targetFolder: '$(Build.ArtifactStagingDirectory)/Test'
+        flattenFolders: false
+
+    - task:  PublishBuildArtifacts@1
+      displayName: Publish Job Logs
+      condition: succeededOrFailed()
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/Test'
+        artifactName: Test
 
     - task: CopyFiles@2
       displayName: Save Job Logs

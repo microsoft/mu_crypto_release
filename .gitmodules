@@ -13,3 +13,7 @@
 [submodule "OpensslPkg/Library/OpensslLib/openssl"]
 	path = OpensslPkg/Library/OpensslLib/openssl
 	url = https://github.com/openssl/openssl.git
+[submodule "Common"]
+	path = Common
+	url = https://github.com/microsoft/mu_plus.git
+	branch = release/202302

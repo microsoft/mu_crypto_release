@@ -17,3 +17,4 @@ edk2-pytool-extensions==0.26.4
 regex
 GitPython
 setuptools
+requests
