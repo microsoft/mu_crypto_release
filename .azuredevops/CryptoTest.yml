@@ -11,36 +11,13 @@ trigger: none
 pr: none
 
 parameters:
-- name: publish_nuget
-  displayName: Publish as a Nuget Package
-  type: boolean
-  default: false
 - name: image
-  displayName: VM Pool
   type: string
-  default: windows-2022
-  values:
-  - windows-2022
-  - ubuntu-latest
+  default: 'windows-2022'
 - name: toolchain
   displayName: toolchain
   type: string
   default: VS2022
-  values:
-  - VS2022
-  - GCC5
-- name: version_major_minor
-  displayName: Major and Minor Version
-  type: string
-  default: 2022.08
-- name: version_patch
-  displayName: Patch Version (0-65535)
-  type: number
-  default: 0
-- name: version_label
-  displayName: Version Label (e.g. '-rc', '-beta') (Use 'None' for none)
-  type: string
-  default: None
 
 variables:
 - name: build_archs
@@ -49,15 +26,10 @@ variables:
   value: 'DEBUG'
 - name: python_version
   value: '3.12.x'
-- name: publish_version
-  ${{ if startsWith(parameters.version_label, '-') }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}${{ parameters.version_label }}
-  ${{ else }}:
-    value: ${{ parameters.version_major_minor }}.${{ parameters.version_patch }}
 - name: fw_dir
   value: 'Build\test\Firmware'
 
-name: CryptoBin_$(publish_version) Build_$(Date:yyyyMMdd)$(Rev:rr)
+name: CryptoTest Build_$(Date:yyyyMMdd)$(Rev:rr)
 
 stages:
 - stage: build
@@ -72,7 +44,7 @@ stages:
           Build.CopyExtra: false
     displayName: Crypto Build
     pool:
-      vmImage: ${{ parameters.image }}
+      vmImage:  ${{ parameters.image }}
 
     workspace:
       clean: all
@@ -115,7 +87,7 @@ stages:
           -a $(build_archs)
           -t $(build_targets)
           --stop-on-fail
-          TOOL_CHAIN_TAG=${{ parameters.toolchain }} 
+          TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
     - task: CopyFiles@2
       displayName: Filter Driver Binaries # To reduce network consumption.
