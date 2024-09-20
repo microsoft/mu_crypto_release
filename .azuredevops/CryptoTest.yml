@@ -7,8 +7,11 @@
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
 
-trigger: none
-pr: none
+trigger:
+- release/*
+
+pr:
+- release/*
 
 parameters:
 - name: image
