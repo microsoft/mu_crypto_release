@@ -250,3 +250,40 @@ the process.
    [`CryptoPkg/Include/Protocol/Crypto.h`](https://github.com/microsoft/mu_basecore/blob/HEAD/CryptoPkg/Include/Protocol/Crypto.h).
    The version should match in the `MU_BASECORE` submodule of the `mu_crypto_release` repository and the version in
    your repo. If it does not, you may need to use a different shared crypto release.
+
+## Finding the Version of a Shared Crypto Binary
+
+Version information is placed into the `VERSION_STRING` of the .inf files that are made available in Shared Crypto
+releases. For example, this is the `[DEFINES]` section for a `Driver/Bin/CryptoDriverBin_STANDARD_Dxe_DEBUG_X64.inf`
+file.
+
+```
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = BaseCryptoDriverDxeX64
+  MODULE_UNI_FILE                = Crypto.uni
+  FILE_GUID                      = bdee011f-87f2-4a7f-bc5e-44b6b61f2D20
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 18.2023.12.3
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = CryptoDxeEntry
+```
+
+When Shared Crypto is used by platform, this informs the build system that the `VERSION_STRING` value should be added
+to a version section in the FFS file created for the binary.
+
+This means that given a firmware image that uses shared crypto, you can view the version for the crypto binaries in
+that firmware by looking at the version section.
+
+This is possible using a tool like [UefiTool](https://github.com/LongSoft/UEFITool) which can open UEFI ROMs and
+firmware volumes. Find the shared crypto binary and go to the `Version section`. The tool will decode the
+`Version string` in the information panel on the right.
+
+An example:
+
+![FFS Version Section](Images/ffs_ver.jpg "FFS Version Section")
+
+Currently, this indicates:
+
+- The "EDK2 Crypto Version" is `18`. This is the version of the crypto protocol interface.
+- The Shared Crypto build version is `2023.12.3`
