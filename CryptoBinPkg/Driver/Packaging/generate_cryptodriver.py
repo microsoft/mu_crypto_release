@@ -12,11 +12,12 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
-import os
-import glob
-import shutil
 import argparse
 import datetime
+import glob
+import os
+import re
+import shutil
 from enum import Enum
 
 SCRIPT_DIR = os.path.dirname(__file__)
@@ -33,6 +34,8 @@ def main():
     options = ParseCommandLineOptions()
     # Read in all the functions from the Crypto and Tls headers
     crypto_functions = read_basecryptlib_and_tlslib(options)
+    h_file_path = os.path.join(options.out_dir, "temp_Crypto.h")
+
     # generate the requested files
     if options.c_file:
         get_crypto_c(options, crypto_functions)
@@ -43,8 +46,6 @@ def main():
     if options.h_file:
         get_crypto_h(options, crypto_functions)
         if options.copy:
-            # TODO: define this somewhere globally
-            h_file_path = os.path.join(options.out_dir, "temp_Crypto.h")
             shutil.copyfile(h_file_path, os.path.join(ROOT_DIR, "MU_BASECORE", "CryptoPkg", "Include", "Protocol", "Crypto.h"))
     if options.p_file:
         get_crypto_pcds(options, crypto_functions)
@@ -59,9 +60,21 @@ def main():
             c_lib_file_path = os.path.join(options.out_dir, "temp_CryptLib.c")
             shutil.copyfile(c_lib_file_path, os.path.join(ROOT_DIR, "MU_BASECORE", "CryptoPkg", "Library", "BaseCryptLibOnProtocolPpi", "CryptLib.c"))
 
-    generate_platform_files()   # TODO: Refactor. Copied from separate script.
+    generate_platform_files(_get_edk2_crypto_version(h_file_path))   # TODO: Refactor. Copied from separate script.
 
     print("Success. Thanks for playing :)")
+
+
+def _get_edk2_crypto_version(crypto_header_path: str) -> str:
+    with open(crypto_header_path, 'r') as crypt_header_file:
+        for line in crypt_header_file:
+            if 'define EDKII_CRYPTO_VERSION' in line:
+                match = re.search(r'\bdefine EDKII_CRYPTO_VERSION\s+(\d+)', line)
+                if match:
+                    ver = int(match.group(1))
+                    print(f"EDK2 Crypto Version Found: {ver}")
+                    return str(ver)
+    return "0"
 
 
 def ParseCommandLineOptions():
@@ -674,7 +687,7 @@ def get_crypto_inf(options, functions):
     generate_file_replacement(lines, None, "temp_crypto_pcd.inc.inf", options, "#")
 
 
-def generate_platform_files():
+def generate_platform_files(edk2_crypto_ver: str = "1.0"):
     class options():
         out_dir = DEFAULT_OUTPUT_DIR
         verbose = False
@@ -743,13 +756,23 @@ def generate_platform_files():
         if len(guid) != len(original_guid):
             raise ValueError(
                 f"{guid} is not long enough. {len(guid)} vs {len(original_guid)}")
+        # Get more detailed version info from the pipeline build if running in a
+        # pipeline with the version variables available.
+        #
+        # Final FFS Ver section value will be:
+        #   - Local Build: "{EDK2_CRYPTO_VER}"
+        #   - CI Build: "{EDK2_CRYPTO_VER}.{MAJOR}.{MINOR}.{PATCH}"
+        inf_ver_string = edk2_crypto_ver
+        if "PUBLISH_VERSION" in os.environ:
+            inf_ver_string += f".{os.environ['PUBLISH_VERSION']}"
+
         inf_lines.extend(["[Defines]",
                           "  INF_VERSION                    = 0x0001001B",
                           f"  BASE_NAME                      = BaseCryptoDriver{phase}{arch}",
                           "  MODULE_UNI_FILE                = Crypto.uni",
                           f"  FILE_GUID                      = {guid}",
                           f"  MODULE_TYPE                    = {mod_type}",
-                          "  VERSION_STRING                 = 1.0",
+                          f"  VERSION_STRING                 = {inf_ver_string}",
                           "  PI_SPECIFICATION_VERSION       = 0x00010032",
                           f"  ENTRY_POINT                    = Crypto{phase}Entry"])
         inf_lines.append(f"\n[Binaries.{arch}]")
@@ -773,6 +796,8 @@ def generate_platform_files():
         dsc_ci_lines.append("  $(SHARED_CRYPTO_PATH)/Driver/Bin/" + inf_filename)
         generate_file_replacement(
             inf_lines, None, inf_filename, options(), comment="#")
+
+    print(f"Final Crypto Binary Version: {inf_ver_string}")
 
     # now we generate the CI DSC include
     generate_file_replacement(

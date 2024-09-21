@@ -79,6 +79,14 @@ jobs:
             arguments: --update TOOL_CHAIN_TAG=${{ item.Value.ToolChain }}
 
         - task: PythonScript@0
+          displayName: Generate Updated Packaging Files
+          env:
+            PUBLISH_VERSION: ${{ parameters.publish_version }}
+          inputs:
+            scriptSource: 'filePath'
+            scriptPath: CryptoBinPkg/Driver/Packaging/generate_cryptodriver.py
+
+        - task: PythonScript@0
           displayName: 'Build Crypto Drivers'
           inputs:
             scriptSource: 'filePath'
@@ -172,14 +180,14 @@ jobs:
 
           dest_folder = os.environ['OUT_DIR']
           src_folder = os.environ['ARTIFACT_DIR']
-      
+
           if not os.path.exists(dest_folder):
             os.makedirs(dest_folder)
 
           for content in Path(src_folder).iterdir():
             print(content)
             shutil.copytree(content, dest_folder, dirs_exist_ok=True)
-    
+
     - task: CopyFiles@2
       displayName: Copy License
       inputs:
