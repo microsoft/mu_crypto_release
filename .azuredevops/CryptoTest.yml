@@ -101,13 +101,35 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)/Build/Test'
         flattenFolders: false
 
-    - powershell: |
-        py muemu.py --update --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu --version latest --debugfw
-      displayName: Download Firmware
+    - task: PythonScript@0
+      displayName: Download QEMU Firmware
+      inputs:
+        scriptSource: filePath
+        scriptPath: MuEMU.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          --update
+          --firmwaredir ${{ variables.fw_dir }}
+          --qemudir Build/Test/Qemu
+          --version latest
+          --debugfw
+    #- powershell: |
+    #    py muemu.py --update --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu --version latest --debugfw
+    #  displayName: Download Firmware
 
-    - powershell: |
-        py muemu.py --arch $(build_archs) --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu/X64/bin/ --verbose
+    - task: PythonScript@0
       displayName: Run Crypto Test
+      inputs:
+        scriptSource: filePath
+        scriptPath: MuEMU.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          --arch $(build_archs)
+          --firmwaredir ${{ variables.fw_dir }}
+          --qemudir Build/Test/Qemu/X64/bin/
+          --verbose
+
+    #- powershell: |
+    #    py muemu.py --arch $(build_archs) --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu/X64/bin/ --verbose
+    #  displayName: Run Crypto Test
 
     - task: CopyFiles@2
       displayName: Copy Test Results
