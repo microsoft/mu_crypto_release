@@ -107,7 +107,7 @@ stages:
         scriptSource: filePath
         scriptPath: MuEMU.py
         arguments: > # Use this to avoid newline characters in multiline string
-          --update
+          update
           --firmwaredir ${{ variables.fw_dir }}
           --qemudir Build/Test/Qemu
           --version latest
@@ -122,6 +122,7 @@ stages:
         scriptSource: filePath
         scriptPath: MuEMU.py
         arguments: > # Use this to avoid newline characters in multiline string
+          run
           --arch $(build_archs)
           --firmwaredir ${{ variables.fw_dir }}
           --qemudir Build/Test/Qemu/X64/bin/

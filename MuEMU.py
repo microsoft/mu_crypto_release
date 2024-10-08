@@ -58,31 +58,47 @@ VIRTUAL_DRIVE_PATH = Path("Build/Test/VirtualDrive.vhd")
 
 parser = argparse.ArgumentParser()
 
+
+
 # HINT: Run with '--help all' to get complete help.
-parser.add_argument("-u", "--update", action="store_true",
-                    help="Updates the firmware binaries.")
-parser.add_argument("--firmwaredir", default="./firmware",
-                    help="Directory to download and use firmware binaries.")
-parser.add_argument("-a", "--arch", default="X64",
-                    choices=["X64", "arm64"], help="The guest architecture for the VM.")
-parser.add_argument("-c", "--cores", default=2, type=int,
-                    help="The number of cores for the VM. This may be overridden based on the configuration.")
-parser.add_argument("-m", "--memory", default="4096",
-                    help="The memory size to use in Mb.")
-parser.add_argument("--accel", default="tcg",
-                    choices=["tcg", "kvm", "whpx"], help="Acceleration back-end to use in QEMU.")
-parser.add_argument("--version", default=DEFAULT_VERSION,
-                    help="The Project MU firmware version to use.")
-parser.add_argument("--qemudir", default="",
-                    help="Path to a custom QEMU install directory.")
-parser.add_argument("--debugfw", action="store_true",
-                    help="Enables update to use the DEBUG firmware binaries.")
-parser.add_argument("--verbose", action="store_true",
-                    help="Enabled verbose script prints.")
-parser.add_argument("--force", action="store_true",
-                    help="Disables automatic correction of VM configurations.")
-parser.add_argument("--timeout", type=int, default=None,
-                    help="The number of seconds to wait before killing the QEMU process.")
+# Initialize subparsers
+subparsers = parser.add_subparsers(dest="command", title="Commands", help="All subparsers")
+
+# Update subcommand
+update_parser = subparsers.add_parser("update", help="A subparser for updating to the latest Qemu firmware")
+update_parser.add_argument("--version", default=DEFAULT_VERSION,
+                           help="The Project MU firmware version to use.")
+update_parser.add_argument("--qemudir", default="",
+                           help="Path to a custom QEMU install directory.")
+update_parser.add_argument("--firmwaredir", default="./firmware",
+                           help="Directory to download and use firmware binaries.")
+update_parser.add_argument("--debugfw", action="store_true",
+                           help="Enables update to use the DEBUG firmware binaries.")
+
+# Run subcommand
+run_parser = subparsers.add_parser("run", help="A subparser for running the downloaded QEMU firmware")
+run_parser.add_argument("--firmwaredir", default="./firmware",
+                        help="Directory to download and use firmware binaries.")
+run_parser.add_argument("-a", "--arch", default="X64",
+                        choices=["X64", "arm64"], help="The guest architecture for the VM.")
+run_parser.add_argument("-c", "--cores", default=2, type=int,
+                        help="The number of cores for the VM. This may be overridden based on the configuration.")
+run_parser.add_argument("-m", "--memory", default="4096",
+                        help="The memory size to use in Mb.")
+run_parser.add_argument("--accel", default="tcg",
+                        choices=["tcg", "kvm", "whpx"], help="Acceleration back-end to use in QEMU.")
+run_parser.add_argument("--version", default=DEFAULT_VERSION,
+                        help="The Project MU firmware version to use.")
+run_parser.add_argument("--qemudir", default="",
+                        help="Path to a custom QEMU install directory.")
+run_parser.add_argument("--debugfw", action="store_true",
+                        help="Enables update to use the DEBUG firmware binaries.")
+run_parser.add_argument("--verbose", action="store_true",
+                        help="Enabled verbose script prints.")
+run_parser.add_argument("--force", action="store_true",
+                        help="Disables automatic correction of VM configurations.")
+run_parser.add_argument("--timeout", type=int, default=None,
+                        help="The number of seconds to wait before killing the QEMU process.")
 
 args = parser.parse_args()
 
@@ -93,40 +109,41 @@ args = parser.parse_args()
 
 def main():
     # Run special operations if requested.
-    if args.update:
+    if args.command == "update":
         update_firmware()
         download_qemu()
         return
+
+    if args.command == "run":
     
-    # Make virtual drive with Crypto Test
-    os.makedirs(VIRTUAL_DRIVE_PATH, exist_ok=True)
-    shutil.copy("Build/CryptoBin_STANDARD/DEBUG_VS2022/X64/BaseCryptLibUnitTestApp.efi", VIRTUAL_DRIVE_PATH)
-    nsh_path = VIRTUAL_DRIVE_PATH / "startup.nsh"
-    create_startup_script(STARTUP_SCRIPT, nsh_path)
+        os.makedirs(VIRTUAL_DRIVE_PATH, exist_ok=True)
+        shutil.copy("Build/CryptoBin_STANDARD/DEBUG_VS2022/X64/BaseCryptLibUnitTestApp.efi", VIRTUAL_DRIVE_PATH)
+        nsh_path = VIRTUAL_DRIVE_PATH / "startup.nsh"
+        create_startup_script(STARTUP_SCRIPT, nsh_path)
 
 
-    # Build the platform specific arguments.
-    qemu_args = []
+        # Build the platform specific arguments.
+        qemu_args = []
     
-    # Use X64 Qemu because all we care about is the shell test results
-    build_args_x64(qemu_args)
+        # Use X64 Qemu because all we care about is the shell test results
+        build_args_x64(qemu_args)
 
-    # General device config
-    qemu_args += ["-name", f"MU-{args.arch}"]
-    qemu_args += ["-m", f"{args.memory}"]
-    qemu_args += ["-smp", f"{args.cores}"]
+        # General device config
+        qemu_args += ["-name", f"MU-{args.arch}"]
+        qemu_args += ["-m", f"{args.memory}"]
+        qemu_args += ["-smp", f"{args.cores}"]
 
-    # Add virtual drive with crypto test
-    qemu_args += ["-drive", f"file=fat:rw:{VIRTUAL_DRIVE_PATH},format=raw,media=disk"]
+        # Add virtual drive with crypto test
+        qemu_args += ["-drive", f"file=fat:rw:{VIRTUAL_DRIVE_PATH},format=raw,media=disk"]
 
-    # Launch QEMU
-    run_qemu(qemu_args)
+        # Launch QEMU
+        run_qemu(qemu_args)
 
-    # Get test results
-    result = report_results("Build/Test/Results")
-    print("Crypto results: " + str(result))
-    if not result:
-        raise RuntimeError("Crypto Tests Failed!")
+        # Get test results
+        result = report_results("Build/Test/Results")
+        print("Crypto results: " + str(result))
+        if not result:
+            raise RuntimeError("Crypto Tests Failed!")
 
 
 def build_args_x64(qemu_args: List[str]):
