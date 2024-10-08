@@ -50,8 +50,7 @@ reset -s
 
 DEFAULT_VERSION = "0.1.0"
 
-BUILD_DIRECTORY_PATH = "../../"
-VIRTUAL_DRIVE_PATH = Path("../../Build/Test/VirtualDrive.vhd")
+VIRTUAL_DRIVE_PATH = Path("Build/Test/VirtualDrive.vhd")
 
 #
 # Setup and parse arguments.
@@ -141,7 +140,7 @@ def main():
         run_qemu(qemu_args)
 
         # Get test results
-        result = report_results("{BUILD_DIRECTORY_PATH}Build/Test/Results")
+        result = report_results("Build/Test/Results")
         print("Crypto results: " + str(result))
         if not result:
             raise RuntimeError("Crypto Tests Failed!")
@@ -149,7 +148,8 @@ def main():
 
 def build_args_x64(qemu_args: List[str]):
     smm_value = "off" if args.accel == "whpx" else "on"
-    qemu_args += [f"{BUILD_DIRECTORY_PATH}{args.qemudir}qemu-system-x86_64"]
+    print(f"{args.qemudir}qemu-system-x86_64")
+    qemu_args += [f"{args.qemudir}qemu-system-x86_64"]
     qemu_args += ["-cpu", "qemu64,+rdrand,umip,+smep,+popcnt,+sse4.2,+sse4.1"]
     qemu_args += ["-global", "ICH9-LPC.disable_s3=1"]
     qemu_args += ["-machine", f"q35,smm={smm_value},accel={args.accel}"]
@@ -159,14 +159,14 @@ def build_args_x64(qemu_args: List[str]):
 
     # Flash storage
     if smm_value == "on":
-        code_fd = f"{BUILD_DIRECTORY_PATH}{args.firmwaredir}/x64/QemuQ35/VisualStudio-x64/QEMUQ35_CODE.fd"
-        data_fd = f"{BUILD_DIRECTORY_PATH}{args.firmwaredir}/x64/QemuQ35/VisualStudio-x64/QEMUQ35_VARS.fd"
+        code_fd = f"{args.firmwaredir}/x64/QemuQ35/VisualStudio-x64/QEMUQ35_CODE.fd"
+        data_fd = f"{args.firmwaredir}/x64/QemuQ35/VisualStudio-x64/QEMUQ35_VARS.fd"
         qemu_args += ["-global",
                       "driver=cfi.pflash01,property=secure,value=on"]
     else:
         print("Switching to no-SMM firmware for WHPX.")
-        code_fd = f"{BUILD_DIRECTORY_PATH}{args.firmwaredir}/x64/QemuQ35.NoSmm/VisualStudio-NoSmm-x64/QEMUQ35_CODE.fd"
-        data_fd = f"{BUILD_DIRECTORY_PATH}{args.firmwaredir}/x64/QemuQ35.NoSmm/VisualStudio-NoSmm-x64/QEMUQ35_VARS.fd"
+        code_fd = f"{args.firmwaredir}/x64/QemuQ35.NoSmm/VisualStudio-NoSmm-x64/QEMUQ35_CODE.fd"
+        data_fd = f"{args.firmwaredir}/x64/QemuQ35.NoSmm/VisualStudio-NoSmm-x64/QEMUQ35_VARS.fd"
 
     qemu_args += ["-drive",
                   f"if=pflash,format=raw,unit=0,file={code_fd},readonly=on"]
@@ -205,8 +205,8 @@ def update_firmware():
     #
     print(f"Updating firmware to version {args.version}...")
 
-    if not os.path.exists(BUILD_DIRECTORY_PATH + args.firmwaredir):
-        os.makedirs(BUILD_DIRECTORY_PATH + args.firmwaredir)
+    if not os.path.exists(args.firmwaredir):
+        os.makedirs(args.firmwaredir)
 
     #fw_info_list = [["QemuQ35", "x64", True],
     #                ["QemuQ35.NoSmm", "x64", False],
@@ -218,12 +218,12 @@ def update_firmware():
     for fw_info in fw_info_list:
         build_type = "DEBUG" if args.debugfw and fw_info[2] else "RELEASE"
         url = f"https://github.com/microsoft/mu_tiano_platforms/releases/download/v{args.version}/Mu.{fw_info[0]}.FW.{build_type}-{args.version}.zip"
-        zip_path = f"{BUILD_DIRECTORY_PATH}{args.firmwaredir}/{fw_info[0]}.zip"
+        zip_path = f"{args.firmwaredir}/{fw_info[0]}.zip"
 
         print(f"Downloading {fw_info[0]} from {url}")
         urllib.request.urlretrieve(url, zip_path)
         print(f"Unzipping {fw_info[0]}")
-        unzip_path = f"{BUILD_DIRECTORY_PATH}{args.firmwaredir}/{fw_info[1]}/{fw_info[0]}/"
+        unzip_path = f"{args.firmwaredir}/{fw_info[1]}/{fw_info[0]}/"
         shutil.rmtree(unzip_path, ignore_errors=True)
         with zipfile.ZipFile(zip_path, "r") as zip:
             zip.extractall(unzip_path)
@@ -247,18 +247,18 @@ def download_qemu():
     #
     print(f"Updating QEMU to version {args.version}...")
 
-    if not os.path.exists(BUILD_DIRECTORY_PATH + args.qemudir):
-        os.makedirs(BUILD_DIRECTORY_PATH + args.qemudir)
+    if not os.path.exists(args.qemudir):
+        os.makedirs(args.qemudir)
 
     # Avoids potentially missing SSL certs
     ssl.create_default_context(cafile=certifi.where())
     url = f"https://github.com/microsoft/mu_tiano_platforms/releases/download/v{args.version}/qemu-windows-v{args.version}.zip"
-    zip_path = f"{BUILD_DIRECTORY_PATH}{args.qemudir}/qemu-windows-v{args.version}.zip"
+    zip_path = f"{args.qemudir}/qemu-windows-v{args.version}.zip"
 
     print(f"Downloading Qemu from {url}")
     urllib.request.urlretrieve(url, zip_path)
     print(f"Unzipping Qemu")
-    unzip_path = f"{BUILD_DIRECTORY_PATH}{args.qemudir}/X64"
+    unzip_path = f"{args.qemudir}/X64"
     shutil.rmtree(unzip_path, ignore_errors=True)
     with zipfile.ZipFile(zip_path, "r") as zip:
         zip.extractall(unzip_path)
