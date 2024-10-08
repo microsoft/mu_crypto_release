@@ -30,7 +30,7 @@ variables:
 - name: python_version
   value: '3.12.x'
 - name: fw_dir
-  value: 'Build\test\Firmware'
+  value: 'Build/test/Firmware'
 
 name: CryptoTest Build_$(Date:yyyyMMdd)$(Rev:rr)
 
