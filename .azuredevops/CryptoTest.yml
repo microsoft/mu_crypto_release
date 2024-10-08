@@ -105,7 +105,7 @@ stages:
       displayName: Download QEMU Firmware
       inputs:
         scriptSource: filePath
-        scriptPath: MuEMU.py
+        scriptPath: .azuredevops/scrips/MuEMU.py
         arguments: > # Use this to avoid newline characters in multiline string
           update
           --firmwaredir ${{ variables.fw_dir }}
@@ -120,7 +120,7 @@ stages:
       displayName: Run Crypto Test
       inputs:
         scriptSource: filePath
-        scriptPath: MuEMU.py
+        scriptPath: .azuredevops/scrips/MuEMU.py
         arguments: > # Use this to avoid newline characters in multiline string
           run
           --arch $(build_archs)
