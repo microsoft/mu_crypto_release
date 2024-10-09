@@ -186,6 +186,11 @@ class Settings(CiSetupSettingsManager, CiBuildSettingsManager, UpdateSettingsMan
                 "Path": "Features/MM_SUPV",
                 "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
                 "Branch": "main"
+            },
+            {
+                "Path": "Common/MU",
+                "Url": "https://github.com/microsoft/mu_plus.git",
+                "Branch": "release/202405"
             }
         ]
     def GetPackagesPath(self):
