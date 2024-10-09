@@ -1,0 +1,169 @@
+# File ReleaseBuild.yml
+#
+# Azure Pipeline to construct the final Nuget package for a binary release
+# of CryptoBin
+#
+# Copyright (C) Microsoft Corporation
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+trigger:
+- release/*
+
+pr:
+- release/*
+
+parameters:
+- name: image
+  type: string
+  default: 'windows-2022'
+- name: toolchain
+  displayName: toolchain
+  type: string
+  default: VS2022
+
+variables:
+- name: build_archs
+  value: 'X64'
+- name: build_targets
+  value: 'DEBUG'
+- name: python_version
+  value: '3.12.x'
+- name: fw_dir
+  value: 'Build/test/Firmware'
+
+name: CryptoTest Build_$(Date:yyyyMMdd)$(Rev:rr)
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - job: crypto_build
+    # Use Matrix to build multiple versions
+    strategy:
+      matrix:
+        TARGET_STANDARD:
+          Build.Flavor: 'STANDARD'
+          Build.CopyExtra: false
+    displayName: Crypto Build
+    pool:
+      vmImage:  ${{ parameters.image }}
+
+    workspace:
+      clean: all
+
+    steps:
+    - checkout: self
+      clean: true
+
+    - task: UsePythonVersion@0
+      displayName: Install Python v$(python_version)
+      inputs:
+        versionSpec: $(python_version)
+        addToPath: true
+        architecture: 'x64'
+
+    - script: pip install -r pip-requirements.txt --upgrade
+      displayName: 'Install/Upgrade pip Modules'
+
+    - task: PythonScript@0
+      displayName: Hydrate Workspace Code
+      inputs:
+        scriptSource: filePath
+        scriptPath: MultiFlavorBuild.py
+        arguments: --setup TOOL_CHAIN_TAG=${{ parameters.toolchain }}
+
+    - task: PythonScript@0
+      displayName: Update Workspace Extdeps
+      inputs:
+        scriptSource: filePath
+        scriptPath: MultiFlavorBuild.py
+        arguments: --update TOOL_CHAIN_TAG=${{ parameters.toolchain }}
+
+    - task: PythonScript@0
+      displayName: Build Crypto Drivers
+      inputs:
+        scriptSource: filePath
+        scriptPath: MultiFlavorBuild.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          -f $(Build.Flavor)
+          -a $(build_archs)
+          -t $(build_targets)
+          --stop-on-fail
+          TOOL_CHAIN_TAG=${{ parameters.toolchain }}
+
+    - task: CopyFiles@2
+      displayName: Filter Driver Binaries # To reduce network consumption.
+      inputs:
+        sourceFolder: 'Build/CryptoBin_STANDARD/DEBUG_VS2022/X64'
+        contents: |
+          BaseCryptLibUnitTestApp.efi
+        targetFolder: '$(Build.ArtifactStagingDirectory)/Build/Test'
+        flattenFolders: false
+
+    - task: PythonScript@0
+      displayName: Download QEMU Firmware
+      inputs:
+        scriptSource: filePath
+        scriptPath: .azuredevops/scripts/MuEMU.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          update
+          --firmwaredir ${{ variables.fw_dir }}
+          --qemudir Build/Test/Qemu
+          --version latest
+          --debugfw
+    #- powershell: |
+    #    py muemu.py --update --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu --version latest --debugfw
+    #  displayName: Download Firmware
+
+    - task: PythonScript@0
+      displayName: Run Crypto Test
+      inputs:
+        scriptSource: filePath
+        scriptPath: .azuredevops/scripts/MuEMU.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          run
+          --arch $(build_archs)
+          --firmwaredir ${{ variables.fw_dir }}
+          --qemudir Build/Test/Qemu/X64/bin/
+          --verbose
+
+    #- powershell: |
+    #    py muemu.py --arch $(build_archs) --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu/X64/bin/ --verbose
+    #  displayName: Run Crypto Test
+
+    - task: CopyFiles@2
+      displayName: Copy Test Results
+      condition: succeededOrFailed()
+      inputs:
+        sourceFolder: 'Build/Test/Results'
+        contents: |
+          *.xml
+        targetFolder: '$(Build.ArtifactStagingDirectory)/Test'
+        flattenFolders: false
+
+    - task:  PublishBuildArtifacts@1
+      displayName: Publish Job Logs
+      condition: succeededOrFailed()
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/Test'
+        artifactName: Test
+
+    - task: CopyFiles@2
+      displayName: Save Job Logs
+      condition: succeededOrFailed()
+      inputs:
+        sourceFolder: 'Build'
+        contents: |
+          BUILDLOG_CryptoBin_*.txt
+          SETUPLOG.txt
+          UPDATE_LOG.txt
+        targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
+        flattenFolders: true
+
+    - task:  PublishBuildArtifacts@1
+      displayName: Publish Job Logs
+      condition: succeededOrFailed()
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
+        artifactName: $(Build.Flavor)_Logs

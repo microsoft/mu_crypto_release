@@ -194,6 +194,21 @@
 #       generated for it, but the binary will not be put into any firmware volume.
 #
 ###################################################################################################
+[Components.X64]
+  CryptoPkg/Test/UnitTest/Library/BaseCryptLib/BaseCryptLibUnitTestApp.inf {
+    <LibraryClasses>
+      BaseCryptLib|OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      UnitTestResultReportLib |XmlSupportPkg/Library/UnitTestResultReportJUnitFormatLib/UnitTestResultReportLib.inf
+      XmlTreeLib                        |XmlSupportPkg/Library/XmlTreeLib/XmlTreeLib.inf
+      ShellLib         |ShellPkg/Library/UefiShellLib/UefiShellLib.inf
+      FileHandleLib     |MdePkg/Library/UefiFileHandleLib/UefiFileHandleLib.inf
+      UefiLib         |MdePkg/Library/UefiLib/UefiLib.inf
+      HiiLib          |MdeModulePkg/Library/UefiHiiLib/UefiHiiLib.inf
+      SortLib              |MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
+      UefiHiiServicesLib          |MdeModulePkg/Library/UefiHiiServicesLib/UefiHiiServicesLib.inf
+    <PcdsFixedAtBuild>
+      !include CryptoPkg/Test/Crypto.pcd.ALL.inc.dsc
+  }
 [Components.IA32, Components.X64]
   CryptoBinPkg/Driver/CryptoSmm.inf {
     <Defines>
