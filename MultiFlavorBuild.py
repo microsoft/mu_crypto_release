@@ -13,7 +13,7 @@ from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 from edk2toollib.utility_functions import RunPythonScript
 
-from CommonBuildSettings import CommonPlatform, CommonSettingsManager
+from CommonBuildSettings import CommonPlatform, CommonSettingsManager, crypto_platforms, validate_platform_option
 
 
 # ####################################################################################### #
@@ -52,15 +52,24 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
         def validate_flavors(flavor_arg: str):
             return validate_list(flavor_arg, CommonPlatform.AvailableFlavors)
+
+
         parserObj.add_argument("-t", "--target", dest="target", type=validate_targets,
                                default=CommonPlatform.TargetsSupported,
                                help="build target(s) for the build {%s}" % ",".join(CommonPlatform.TargetsSupported))
+        
         parserObj.add_argument("-f", "--flavor", dest="flavor", type=validate_flavors,
                                default=CommonPlatform.AvailableFlavors,
                                help="flavor(s) for the build {%s}" % ",".join(CommonPlatform.AvailableFlavors))
         parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
                                default=False,
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
+        parserObj.add_argument("--active-platform",
+                               dest="active_platform",
+                               choices=crypto_platforms.keys(),
+                               default="CryptoBinPkg",
+                               type=validate_platform_option,
+                               help="the active platform to build for the Crypto binary distribution")
 
     def RetrieveCommandLineOptions(self, args):
         self.arch = args.arch
@@ -68,6 +77,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.flavor = args.flavor
         self.stop = args.stop
         self.bundle = args.bundle
+        self.active_platform = args.active_platform
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''

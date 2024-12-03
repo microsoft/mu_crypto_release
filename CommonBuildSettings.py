@@ -13,6 +13,37 @@ from edk2toolext.invocables.edk2_setup import SetupSettingsManager, RequiredSubm
 from edk2toolext.invocables.edk2_update import UpdateSettingsManager
 from edk2toollib.utility_functions import RunCmd
 
+crypto_platforms = {
+    "CryptoBinPkg": {
+        "PRODUCT_NAME": "CryptoBin",
+        "ACTIVE_PLATFORM": "CryptoBinPkg/CryptoBinPkg.dsc",
+        "custom_settings": {
+            "flavor": {
+                "supported_flavors": ("ALL", "TINY_SHA", "MINIMAL_SHA_SM3", "SMALL_SHA_RSA", "STANDARD"),
+                "type": str,
+                "help": "The flavors to build. Default is all flavors."
+            }
+        },
+    },
+    "OpensslLibPkg": {
+        "PRODUCT_NAME": "OpensslLib",
+        "ACTIVE_PLATFORM": "OpensslPkg/OpensslLibPkg.dsc",
+        "custom_settings": {
+            "flavor": {
+                "supported_flavors": ("SHARED",),
+                "type": str,
+                "help": "The flavors to build. Default is all flavors."
+            }
+        },
+    }
+}
+
+def validate_platform_option(active_platform):
+    if active_platform not in crypto_platforms:
+        logging.error(f"Invalid platform option: {active_platform}. Must be one of {list(crypto_platforms.keys())}")
+        raise ValueError(f"Invalid platform option: {active_platform}. Must be one of {list(crypto_platforms.keys())}")
+
+    return active_platform
 
 # ####################################################################################### #
 #                                Common Configuration                                     #
@@ -27,8 +58,22 @@ class CommonPlatform():
     TargetsSupported = ("DEBUG", "RELEASE")
     Scopes = ('cryptobin', 'edk2-build')
     # TODO: Maybe load this from the supported flavors in MU_BASECORE\CryptoPkg\Driver\Packaging modules?
-    AvailableFlavors = ('ALL', 'TINY_SHA', 'MINIMAL_SHA_SM3', 'SMALL_SHA_RSA', 'STANDARD')
     WorkspaceRoot = os.path.dirname(os.path.abspath(__file__))
+
+    def ValidateAvailableFlavors(active_platform, target_flavor):
+        custom_settings = crypto_platforms[active_platform].get("custom_settings", None)
+        if custom_settings is None:
+            return True
+
+        supported_flavors = custom_settings.get("supported_flavors", None)
+        if supported_flavors is None:
+            return
+
+        if target_flavor not in supported_flavors:
+            logging.error(f"Invalid flavor option: {target_flavor}. Must be one of {supported_flavors}")
+            raise ValueError(f"Invalid flavor option: {target_flavor}. Must be one of {supported_flavors}")
+
+        return
 
     def GetAllSubmodules():
         rs = []
@@ -66,7 +111,7 @@ class CommonPlatform():
                     raise ValueError("must be in set: {%s}" % valid_archs)
             return archs
         parserObj.add_argument("-a", "--arch", dest="arch", type=validate_arch,
-                               default=valid_archs,
+                               default='X64', # TODO why isn't this being respected
                                help="target architecture(s) for the build {%s}" % valid_archs)
 
 

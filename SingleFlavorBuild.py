@@ -10,7 +10,7 @@ import logging
 from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 
-from CommonBuildSettings import CommonPlatform, CommonSettingsManager
+from CommonBuildSettings import CommonPlatform, CommonSettingsManager, crypto_platforms, validate_platform_option
 
 
 # ####################################################################################### #
@@ -36,12 +36,25 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                                default=CommonPlatform.TargetsSupported[0],
                                choices=CommonPlatform.TargetsSupported,
                                help="the target to build for the Crypto binary distribution")
-        parserObj.add_argument(dest="flavor", type=str,
-                               choices=CommonPlatform.AvailableFlavors,
-                               help="the flavor to build for the Crypto binary distribution")
+
         parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
                                default=False,
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
+
+        subparsers = parserObj.add_subparsers(dest="active_platform", help="Sub-commands for active platform", required=True)
+
+        # Add a subparser for each active platform
+        for platform_name, platform_info in crypto_platforms.items():
+            subparser = subparsers.add_parser(platform_name, help=f"Options for {platform_name}")
+            if "custom_settings" in platform_info:
+                for setting in platform_info["custom_settings"]:
+                    setting_info = platform_info["custom_settings"][setting]
+                    if setting == "flavor":
+                        subparser.add_argument(f"--{setting}", type=setting_info["type"], choices=setting_info["supported_flavors"], required=True, help=setting_info["help"])
+                    else:
+                        raise ValueError(f"Unknown custom setting: {setting}")
+
+        # TODO for some reason the subparsers are not being added to the help output
 
 
     def RetrieveCommandLineOptions(self, args):
@@ -49,6 +62,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.target = args.target
         self.arch = args.arch
         self.bundle = args.bundle
+        self.active_platform = crypto_platforms[args.active_platform]["ACTIVE_PLATFORM"]
+        self.product_name = crypto_platforms[args.active_platform]["PRODUCT_NAME"]
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -83,8 +98,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def SetPlatformEnv(self):
         logging.debug("PlatformBuilder SetPlatformEnv")
-        self.env.SetValue("PRODUCT_NAME", "CryptoBin", "Platform Hardcoded")
-        self.env.SetValue("ACTIVE_PLATFORM", "CryptoBinPkg/CryptoBinPkg.dsc", "Platform Hardcoded")
+        self.env.SetValue("PRODUCT_NAME", self.product_name, "Platform Hardcoded")
+        self.env.SetValue("ACTIVE_PLATFORM", self.active_platform, "Platform Hardcoded")
         self.env.SetValue("BLD_%s_OUTPUT_SUB_DIRECTORY" % self.target, self.GetBaseName(), "Platform Hardcoded")
         self.env.SetValue("OUTPUT_DIRECTORY", "Build/%s" % self.GetBaseName(), "Platform Hardcoded")
         self.env.SetValue("TARGET_ARCH", " ".join(self.arch), "CLI args")
