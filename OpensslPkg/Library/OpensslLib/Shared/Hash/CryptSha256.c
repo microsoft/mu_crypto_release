@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "InternalCryptLib.h"
+#include "CryptHash.h"
 #include <openssl/sha.h>
 
 /**
@@ -221,4 +221,23 @@ Sha256HashAll (
   } else {
     return TRUE;
   }
+}
+
+VOID
+InitSha256Support (
+  HashFunctions  *HashFuncs
+  )
+{
+  if (HashFuncs == NULL) {
+    // TODO ASSERT
+    return;
+  }
+
+  HashFuncs->SHA256.Signature      = SIGNATURE_32 ('S', '2', '5', '6');
+  HashFuncs->SHA256.GetContextSize = Sha256GetContextSize;
+  HashFuncs->SHA256.Init           = Sha256Init;
+  HashFuncs->SHA256.Update         = Sha256Update;
+  HashFuncs->SHA256.Final          = Sha256Final;
+  HashFuncs->SHA256.Duplicate      = Sha256Duplicate;
+  HashFuncs->SHA256.HashAll        = Sha256HashAll;
 }

@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "InternalCryptLib.h"
+#include "CryptHash.h"
 #include <openssl/sha.h>
 
 /**
@@ -439,4 +439,23 @@ Sha512HashAll (
   } else {
     return TRUE;
   }
+}
+
+VOID
+InitSha512Support (
+  HashFunctions  *HashFuncs
+  )
+{
+  if (HashFuncs == NULL) {
+    // TODO ASSERT
+    return;
+  }
+
+  HashFuncs->SHA512.Signature      = SIGNATURE_32 ('S', '5', '1', '2');
+  HashFuncs->SHA512.GetContextSize = Sha512GetContextSize;
+  HashFuncs->SHA512.Init           = Sha512Init;
+  HashFuncs->SHA512.Update         = Sha512Update;
+  HashFuncs->SHA512.Final          = Sha512Final;
+  HashFuncs->SHA512.Duplicate      = Sha512Duplicate;
+  HashFuncs->SHA512.HashAll        = Sha512HashAll;
 }

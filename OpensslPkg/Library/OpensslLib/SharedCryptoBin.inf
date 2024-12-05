@@ -46,7 +46,19 @@
   Shared/Cipher/CryptAeadAesGcm.h
   Shared/Cipher/CryptAes.c
   Shared/Cipher/CryptAes.h
+
+  # Hash Crypto API
+  Shared/Hash/CryptHash.c
+  Shared/Hash/CryptHash.h
+  Shared/Hash/CryptMd5.c
+  Shared/Hash/CryptSha1.c
+  Shared/Hash/CryptSha256.c
+  Shared/Hash/CryptSha512.c
+  
+  # Random Crypto API
   rand_pool.c
+
+  # OpenSSL Crypto Library
   $(OPENSSL_PATH)/e_os.h
   $(OPENSSL_PATH)/ms/uplink.h
   $(OPENSSL_PATH)/crypto/aes/aes_cbc.c
