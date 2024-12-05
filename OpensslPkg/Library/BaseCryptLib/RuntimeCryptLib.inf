@@ -36,12 +36,12 @@
 
 [Sources]
   InternalCryptLib.h
-  Hash/CryptMd5Null.c         ## MS_CHANGE_162948 MSChange - Remove support for deprecated crypto.
   Hash/CryptSha1.c
   Hash/CryptSha256.c
   Hash/CryptSm3.c
   Hash/CryptSha512.c
-  Hash/CryptParallelHashNull.c
+  Hash/CryptParallelHash.h
+  Hash/CryptParallelHash.c
   Hmac/CryptHmac.c
   Kdf/CryptHkdf.c
   Cipher/CryptAes.c
