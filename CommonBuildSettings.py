@@ -32,7 +32,7 @@ crypto_platforms = {
             "flavor": {
                 "supported_flavors": ("SHARED",),
                 "type": str,
-                "help": "The flavors to build. Default is all flavors."
+                "help": "The flavors to build. Default is SHARED."
             }
         },
     }
