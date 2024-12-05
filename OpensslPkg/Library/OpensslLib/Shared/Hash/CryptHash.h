@@ -2,6 +2,7 @@
 #define _CRYPT_HASH_H_
 
 #include <Uefi.h>
+#include "CrtLibSupport.h"
 
 /**
  * @typedef HashGetContextSizeFunc
@@ -74,7 +75,6 @@ typedef BOOLEAN (*HashDuplicateFunc)(
   OUT VOID       *NewHashContext
   );
 
-
 /**
   Structure that defines the function pointers for a specific hash algorithm.
 
@@ -111,6 +111,7 @@ typedef struct {
   HashFunctionApi    SHA256;
   HashFunctionApi    SHA384;
   HashFunctionApi    SHA512;
+  HashFunctionApi    SM3;
 } HashFunctions;
 
 /**
@@ -155,11 +156,22 @@ InitSha512Support (
   );
 
 /**
+  Initializes the SM3 function pointers in the HashFunctions structure.
+
+  @param[out]  HashFuncs  Pointer to the structure that will hold the SM3 function pointers.
+**/
+VOID
+InitSm3Support (
+  HashFunctions  *HashFuncs
+  );
+
+/**
   Initializes all supported hash function pointers in the HashFunctions structure.
 
   @param[out]  HashFuncs  Pointer to the structure that will hold the hash function pointers.
 **/
 VOID
+EFIAPI
 HashInitFunctions (
   HashFunctions  *HashFuncs
   );

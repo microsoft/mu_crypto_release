@@ -55,6 +55,7 @@
   Shared/Hash/CryptSha1.c
   Shared/Hash/CryptSha256.c
   Shared/Hash/CryptSha512.c
+  Shared/Hash/CryptSm3.c
 
   # HMAC API
   Shared/Hmac/CryptHmac.c
