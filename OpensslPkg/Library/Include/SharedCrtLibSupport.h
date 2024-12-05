@@ -1,5 +1,5 @@
 #ifndef SHARED_CRT_LIB_H
-#define SHARED_CRYPTO_LIB_H
+#define SHARED_CRT_LIB_H
 
 #include <Uefi.h>
 
@@ -230,4 +230,4 @@ AsciiSPrint (
   ...
   );
 
-#endif // SHARED_CRYPTO_LIB_H
+#endif // SHARED_CRT_LIB_H
