@@ -23,6 +23,7 @@
 [LibraryClasses]
   UefiApplicationEntryPoint
   IntrinsicLib
+  BaseLib
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -54,7 +55,11 @@
   Shared/Hash/CryptSha1.c
   Shared/Hash/CryptSha256.c
   Shared/Hash/CryptSha512.c
-  
+
+  # HMAC API
+  Shared/Hmac/CryptHmac.c
+  Shared/Hmac/CryptHmac.h
+
   # Random Crypto API
   rand_pool.c
 

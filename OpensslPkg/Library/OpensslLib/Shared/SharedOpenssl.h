@@ -6,7 +6,7 @@
 #include "Cipher/CryptAeadAesGcm.h"
 #include "Cipher/CryptAes.h"
 #include "Hash/CryptHash.h"
-
+#include "Hmac/CryptHmac.h"
 
 /**
   Structure that holds the function tables for various cryptographic operations.
@@ -21,6 +21,7 @@ typedef struct {
     AeadAesGcmFunctions AeadAesGcmFunctionsTable;
     AesFunctions AesFunctionsTable;
     HashFunctions HashFunctionsTable;
+    HmacFunctions HmacFunctionsTable;
 } SHARED_CRYPTO_LIB;
 
 VOID
