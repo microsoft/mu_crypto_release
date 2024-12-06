@@ -643,30 +643,32 @@ HmacSha384All (
 VOID
 EFIAPI
 HmacInitFunctions (
-  HmacFunctions  *Funcs
+    SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  if (Funcs == NULL) {
+  if (Crypto == NULL) {
     return;
   }
 
+  //
   // Initialize HMAC-SHA256 function pointers
-  Funcs->SHA256.Signature = SIGNATURE_32 ('H', '2', '5', '6');
-  Funcs->SHA256.New       = HmacSha256New;
-  Funcs->SHA256.Free      = HmacSha256Free;
-  Funcs->SHA256.SetKey    = HmacSha256SetKey;
-  Funcs->SHA256.Duplicate = HmacSha256Duplicate;
-  Funcs->SHA256.Update    = HmacSha256Update;
-  Funcs->SHA256.Final     = HmacSha256Final;
-  Funcs->SHA256.All       = HmacSha256All;
+  //
+  Crypto->HmacSha256New       = HmacSha256New;
+  Crypto->HmacSha256Free      = HmacSha256Free;
+  Crypto->HmacSha256SetKey    = HmacSha256SetKey;
+  Crypto->HmacSha256Duplicate = HmacSha256Duplicate;
+  Crypto->HmacSha256Update    = HmacSha256Update;
+  Crypto->HmacSha256Final     = HmacSha256Final;
+  Crypto->HmacSha256All       = HmacSha256All;
 
+  //
   // Initialize HMAC-SHA384 function pointers
-  Funcs->SHA384.Signature = SIGNATURE_32 ('H', '3', '8', '4');
-  Funcs->SHA384.New       = HmacSha384New;
-  Funcs->SHA384.Free      = HmacSha384Free;
-  Funcs->SHA384.SetKey    = HmacSha384SetKey;
-  Funcs->SHA384.Duplicate = HmacSha384Duplicate;
-  Funcs->SHA384.Update    = HmacSha384Update;
-  Funcs->SHA384.Final     = HmacSha384Final;
-  Funcs->SHA384.All       = HmacSha384All;
+  //
+  Crypto->HmacSha384New       = HmacSha384New;
+  Crypto->HmacSha384Free      = HmacSha384Free;
+  Crypto->HmacSha384SetKey    = HmacSha384SetKey;
+  Crypto->HmacSha384Duplicate = HmacSha384Duplicate;
+  Crypto->HmacSha384Update    = HmacSha384Update;
+  Crypto->HmacSha384Final     = HmacSha384Final;
+  Crypto->HmacSha384All       = HmacSha384All;
 }

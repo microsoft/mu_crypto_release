@@ -234,21 +234,26 @@ Sm3HashAll (
   return TRUE;
 }
 
+/**
+  Initializes the function pointers for SHA-1 hashing operations.
+
+  @param[out]  Crypto  Pointer to the structure containing the function pointers.
+
+**/
 VOID
 InitSm3Support (
-  HashFunctions  *HashFuncs
+  OUT SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  if (HashFuncs == NULL) {
+  if (Crypto == NULL) {
     // TODO ASSERT
     return;
   }
 
-  HashFuncs->SM3.Signature      = SIGNATURE_32 ('S', 'M', '3', ' ');
-  HashFuncs->SM3.GetContextSize = Sm3GetContextSize;
-  HashFuncs->SM3.Init           = Sm3Init;
-  HashFuncs->SM3.Update         = Sm3Update;
-  HashFuncs->SM3.Final          = Sm3Final;
-  HashFuncs->SM3.Duplicate      = Sm3Duplicate;
-  HashFuncs->SM3.HashAll        = Sm3HashAll;
+  Crypto->Sm3GetContextSize = Sm3GetContextSize;
+  Crypto->Sm3Init           = Sm3Init;
+  Crypto->Sm3Update         = Sm3Update;
+  Crypto->Sm3Final          = Sm3Final;
+  Crypto->Sm3Duplicate      = Sm3Duplicate;
+  Crypto->Sm3HashAll        = Sm3HashAll;
 }

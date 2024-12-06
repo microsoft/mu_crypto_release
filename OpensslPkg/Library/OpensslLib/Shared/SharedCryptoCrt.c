@@ -297,3 +297,23 @@ AsciiSPrint (
   ) {
     return 0;
   }
+
+UINTN
+EFIAPI
+AsciiStrLen (
+  IN      CONST CHAR8  *String
+  )
+{
+  UINTN  Length;
+
+  // TODO
+
+  for (Length = 0; *String != '\0'; String++, Length++) {
+    //
+    // If PcdMaximumUnicodeStringLength is not zero,
+    // length should not more than PcdMaximumUnicodeStringLength
+    //
+  }
+
+  return Length;
+}

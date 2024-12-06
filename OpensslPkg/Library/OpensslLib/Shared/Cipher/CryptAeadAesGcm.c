@@ -9,9 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-//#include "InternalCryptLib.h" TODO
-#include "CryptAeadAesGcm.h"
-#include "CrtLibSupport.h"
+#include "CryptCipher.h"
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 
@@ -283,15 +281,14 @@ Done:
 VOID
 EFIAPI
 AeadAesGcmInitFunctions (
-  OUT AeadAesGcmFunctions  *Funcs
+  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
   )
 {
-  if (Funcs == NULL) {
+  if (Crypto == NULL) {
+    // TODO ASSERT
     return;
   }
 
-  Funcs->Signature = AEAD_AES_GCM_FUNCTIONS_SIGNATURE;
-  Funcs->Version = AEAD_AES_GCM_FUNCTIONS_VERSION;
-  Funcs->Encrypt = AeadAesGcmEncrypt;
-  Funcs->Decrypt = AeadAesGcmDecrypt;
+  Crypto->AeadAesGcmEncrypt = AeadAesGcmEncrypt;
+  Crypto->AeadAesGcmDecrypt = AeadAesGcmDecrypt;
 }

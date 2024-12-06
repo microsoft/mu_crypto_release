@@ -3,17 +3,17 @@
 /**
   Initializes the hash function pointers in the HashFunctions structure.
 
-  @param[out]  HashFuncs  Pointer to the structure that will hold the hash function pointers.
+  @param[out]  Crypto  Pointer to the structure that will hold the hash function pointers.
 **/
 VOID
 EFIAPI
 HashInitFunctions (
-  HashFunctions  *HashFuncs
+  OUT SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  InitMd5Support (HashFuncs);
-  InitSha1Support (HashFuncs);
-  InitSha256Support (HashFuncs);
-  InitSha512Support (HashFuncs);
-  InitSm3Support (HashFuncs);
+  InitMd5Support (Crypto);
+  InitSha1Support (Crypto);
+  InitSha256Support (Crypto);
+  InitSha512Support (Crypto);
+  InitSm3Support (Crypto);
 }

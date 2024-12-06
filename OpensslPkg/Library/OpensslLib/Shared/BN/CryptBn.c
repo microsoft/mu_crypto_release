@@ -583,38 +583,36 @@ BigNumAddMod (
 VOID
 EFIAPI
 BigNumInitFunctions (
-    OUT BigNumFunctions *Funcs
-    )
+  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
+  )
 {
-    if (Funcs == NULL) {
-        return;
-    }
+  if (Crypto == NULL) {
+    return;
+  }
 
-    Funcs->Signature = BIGNUM_FUNCTIONS_SIGNATURE;
-    Funcs->Version = BIGNUM_FUNCTIONS_VERSION;
-    Funcs->Init = BigNumInit;
-    Funcs->FromBin = BigNumFromBin;
-    Funcs->ToBin = BigNumToBin;
-    Funcs->Free = BigNumFree;
-    Funcs->Add = BigNumAdd;
-    Funcs->Sub = BigNumSub;
-    Funcs->Mod = BigNumMod;
-    Funcs->ExpMod = BigNumExpMod;
-    Funcs->InverseMod = BigNumInverseMod;
-    Funcs->Div = BigNumDiv;
-    Funcs->MulMod = BigNumMulMod;
-    Funcs->Cmp = BigNumCmp;
-    Funcs->Bits = BigNumBits;
-    Funcs->Bytes = BigNumBytes;
-    Funcs->IsWord = BigNumIsWord;
-    Funcs->IsOdd = BigNumIsOdd;
-    Funcs->Copy = BigNumCopy;
-    Funcs->ValueOne = BigNumValueOne;
-    Funcs->RShift = BigNumRShift;
-    Funcs->ConstTime = BigNumConstTime;
-    Funcs->SqrMod = BigNumSqrMod;
-    Funcs->NewContext = BigNumNewContext;
-    Funcs->ContextFree = BigNumContextFree;
-    Funcs->SetUint = BigNumSetUint;
-    Funcs->AddMod = BigNumAddMod;
+  Crypto->BigNumInit        = BigNumInit;
+  Crypto->BigNumFromBin     = BigNumFromBin;
+  Crypto->BigNumToBin       = BigNumToBin;
+  Crypto->BigNumFree        = BigNumFree;
+  Crypto->BigNumAdd         = BigNumAdd;
+  Crypto->BigNumSub         = BigNumSub;
+  Crypto->BigNumMod         = BigNumMod;
+  Crypto->BigNumExpMod      = BigNumExpMod;
+  Crypto->BigNumInverseMod  = BigNumInverseMod;
+  Crypto->BigNumDiv         = BigNumDiv;
+  Crypto->BigNumMulMod      = BigNumMulMod;
+  Crypto->BigNumCmp         = BigNumCmp;
+  Crypto->BigNumBits        = BigNumBits;
+  Crypto->BigNumBytes       = BigNumBytes;
+  Crypto->BigNumIsWord      = BigNumIsWord;
+  Crypto->BigNumIsOdd       = BigNumIsOdd;
+  Crypto->BigNumCopy        = BigNumCopy;
+  Crypto->BigNumValueOne    = BigNumValueOne;
+  Crypto->BigNumRShift      = BigNumRShift;
+  Crypto->BigNumConstTime   = BigNumConstTime;
+  Crypto->BigNumSqrMod      = BigNumSqrMod;
+  Crypto->BigNumNewContext  = BigNumNewContext;
+  Crypto->BigNumContextFree = BigNumContextFree;
+  Crypto->BigNumSetUint     = BigNumSetUint;
+  Crypto->BigNumAddMod      = BigNumAddMod;
 }

@@ -62,7 +62,7 @@ UefiMain (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  SHARED_CRYPTO_LIB Crypto;
+  SHARED_CRYPTO_PROTOCOL Crypto;
 
   CryptoInit(&Crypto);
 
