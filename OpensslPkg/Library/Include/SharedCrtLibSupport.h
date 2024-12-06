@@ -151,6 +151,12 @@ AsciiStrCpyS (
   );
 
 
+UINTN
+EFIAPI
+AsciiStrLen (
+  IN      CONST CHAR8  *String
+  );
+
 RETURN_STATUS
 EFIAPI
 AsciiStrCpyS (
