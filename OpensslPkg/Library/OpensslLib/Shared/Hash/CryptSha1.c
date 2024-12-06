@@ -228,25 +228,25 @@ Sha1HashAll (
 /**
   Initializes the function pointers for SHA-1 hashing operations.
 
-  @param[out]  HashFuncs  Pointer to the structure containing the function pointers.
+  @param[out]  Crypto  Pointer to the structure containing the function pointers.
 
 **/
 VOID
 InitSha1Support (
-  HashFunctions  *HashFuncs
+  OUT SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  if (HashFuncs == NULL) {
+  if (Crypto == NULL) {
     // TODO ASSERT
     return;
   }
-  HashFuncs->SHA1.Signature      = SIGNATURE_32 ('S', 'H', 'A', '1');
-  HashFuncs->SHA1.GetContextSize = Sha1GetContextSize;
-  HashFuncs->SHA1.Init           = Sha1Init;
-  HashFuncs->SHA1.Duplicate      = Sha1Duplicate;
-  HashFuncs->SHA1.Update         = Sha1Update;
-  HashFuncs->SHA1.Final          = Sha1Final;
-  HashFuncs->SHA1.HashAll        = Sha1HashAll;
+
+  Crypto->Sha1GetContextSize = Sha1GetContextSize;
+  Crypto->Sha1Init           = Sha1Init;
+  Crypto->Sha1Update         = Sha1Update;
+  Crypto->Sha1Final          = Sha1Final;
+  Crypto->Sha1Duplicate      = Sha1Duplicate;
+  Crypto->Sha1HashAll        = Sha1HashAll;
 }
 
 #endif

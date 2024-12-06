@@ -223,21 +223,26 @@ Sha256HashAll (
   }
 }
 
+/**
+  Initializes the function pointers for SHA-1 hashing operations.
+
+  @param[out]  Crypto  Pointer to the structure containing the function pointers.
+
+**/
 VOID
 InitSha256Support (
-  HashFunctions  *HashFuncs
+  OUT SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  if (HashFuncs == NULL) {
+  if (Crypto == NULL) {
     // TODO ASSERT
     return;
   }
 
-  HashFuncs->SHA256.Signature      = SIGNATURE_32 ('S', '2', '5', '6');
-  HashFuncs->SHA256.GetContextSize = Sha256GetContextSize;
-  HashFuncs->SHA256.Init           = Sha256Init;
-  HashFuncs->SHA256.Update         = Sha256Update;
-  HashFuncs->SHA256.Final          = Sha256Final;
-  HashFuncs->SHA256.Duplicate      = Sha256Duplicate;
-  HashFuncs->SHA256.HashAll        = Sha256HashAll;
+  Crypto->Sha256GetContextSize = Sha256GetContextSize;
+  Crypto->Sha256Init           = Sha256Init;
+  Crypto->Sha256Update         = Sha256Update;
+  Crypto->Sha256Final          = Sha256Final;
+  Crypto->Sha256Duplicate      = Sha256Duplicate;
+  Crypto->Sha256HashAll        = Sha256HashAll;
 }

@@ -34,6 +34,7 @@
   SharedCryptoBin.c
   Shared/SharedOpenssl.c
   Shared/SharedOpenssl.h
+  Shared/SharedCryptoProtocol.h
   Shared/SharedCryptoCrt.c
   Shared/Syscall/CrtWrapper.c
   Shared/Syscall/BaseMemAllocation.c
@@ -43,10 +44,9 @@
   Shared/BN/CryptBn.c
   Shared/BN/CryptBn.h
   # Cipher Crypto API
+  Shared/Cipher/CryptCipher.h
   Shared/Cipher/CryptAeadAesGcm.c
-  Shared/Cipher/CryptAeadAesGcm.h
   Shared/Cipher/CryptAes.c
-  Shared/Cipher/CryptAes.h
 
   # Hash Crypto API
   Shared/Hash/CryptHash.c
@@ -60,6 +60,14 @@
   # HMAC API
   Shared/Hmac/CryptHmac.c
   Shared/Hmac/CryptHmac.h
+
+  # KDF API
+  Shared/Kdf/CryptHkdf.c
+  Shared/Kdf/CryptHkdf.h
+
+  # PEM API
+  Shared/Pem/CryptPem.c
+  Shared/Pem/CryptPem.h
 
   # Random Crypto API
   rand_pool.c

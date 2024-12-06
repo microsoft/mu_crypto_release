@@ -227,7 +227,7 @@ Md5HashAll (
 
 VOID
 InitMd5Support (
-  HashFunctions  *HashFuncs
+  SHARED_CRYPTO_PROTOCOL  *Crypto
   )
 {
   if (HashFuncs == NULL) {
@@ -235,33 +235,32 @@ InitMd5Support (
     return;
   }
 
-  HashFuncs->MD5.Signature      = SIGNATURE_32 ('M', 'D', '5', ' ');
-  HashFuncs->MD5.GetContextSize = MD5GetContextSize;
-  HashFuncs->MD5.Init           = MD5Init;
-  HashFuncs->MD5.Update         = MD5Update;
-  HashFuncs->MD5.Final          = MD5Final;
-  HashFuncs->MD5.Duplicate      = MD5Duplicate;
-  HashFuncs->MD5.HashAll        = MD5HashAll;
+  Crypto->Md5GetContextSize = MD5GetContextSize;
+  Crypto->Md5Init           = MD5Init;
+  Crypto->Md5Update         = MD5Update;
+  Crypto->Md5Final          = MD5Final;
+  Crypto->Md5Duplicate      = MD5Duplicate;
+  Crypto->Md5HashAll        = MD5HashAll;
 }
 
 #else
+
 VOID
 InitMd5Support (
-  HashFunctions  *HashFuncs
+  OUT SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  if (HashFuncs == NULL) {
+  if (Crypto == NULL) {
     // TODO ASSERT
     return;
   }
 
-  HashFuncs->MD5.Signature      = SIGNATURE_32 ('M', 'D', '5', ' ');
-  HashFuncs->MD5.GetContextSize = NULL;
-  HashFuncs->MD5.Init           = NULL;
-  HashFuncs->MD5.Update         = NULL;
-  HashFuncs->MD5.Final          = NULL;
-  HashFuncs->MD5.Duplicate      = NULL;
-  HashFuncs->MD5.HashAll        = NULL;
+  Crypto->Md5HashAll        = NULL;
+  Crypto->Md5GetContextSize = NULL;
+  Crypto->Md5Init           = NULL;
+  Crypto->Md5Update         = NULL;
+  Crypto->Md5Final          = NULL;
+  Crypto->Md5Duplicate      = NULL;
 }
 
 #endif

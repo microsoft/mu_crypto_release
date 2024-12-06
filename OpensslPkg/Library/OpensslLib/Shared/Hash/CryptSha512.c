@@ -441,21 +441,26 @@ Sha512HashAll (
   }
 }
 
+/**
+  Initializes the function pointers for SHA-1 hashing operations.
+
+  @param[out]  Crypto  Pointer to the structure containing the function pointers.
+
+**/
 VOID
 InitSha512Support (
-  HashFunctions  *HashFuncs
+  OUT SHARED_CRYPTO_PROTOCOL *Crypto
   )
 {
-  if (HashFuncs == NULL) {
+  if (Crypto == NULL) {
     // TODO ASSERT
     return;
   }
 
-  HashFuncs->SHA512.Signature      = SIGNATURE_32 ('S', '5', '1', '2');
-  HashFuncs->SHA512.GetContextSize = Sha512GetContextSize;
-  HashFuncs->SHA512.Init           = Sha512Init;
-  HashFuncs->SHA512.Update         = Sha512Update;
-  HashFuncs->SHA512.Final          = Sha512Final;
-  HashFuncs->SHA512.Duplicate      = Sha512Duplicate;
-  HashFuncs->SHA512.HashAll        = Sha512HashAll;
+  Crypto->Sha512GetContextSize = Sha512GetContextSize;
+  Crypto->Sha512Init           = Sha512Init;
+  Crypto->Sha512Update         = Sha512Update;
+  Crypto->Sha512Final          = Sha512Final;
+  Crypto->Sha512Duplicate      = Sha512Duplicate;
+  Crypto->Sha512HashAll        = Sha512HashAll;
 }

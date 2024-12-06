@@ -1,6 +1,20 @@
 #include "SharedOpenssl.h"
-
+#include "Hmac/CryptHmac.h"
+#include "Hash/CryptHash.h"
+#include "BN/CryptBn.h"
+#include "Kdf/CryptHkdf.h"
+#include "Cipher/CryptCipher.h"
+#include "Pem/CryptPem.h"
 #include <Uefi.h>
+
+UINT64
+EFIAPI
+GetVersion (
+  VOID
+  )
+{
+  return SHARED_CRYPTO_VERSION;
+}
 
 /**
  * Initializes the cryptographic library by setting up function tables for various cryptographic operations.
@@ -17,10 +31,21 @@
 VOID
 EFIAPI
 CryptoInit (
-    SHARED_CRYPTO_LIB *Crypto
-) {
-    BigNumInitFunctions(&Crypto->BigNumFunctionsTable);
-    AeadAesGcmInitFunctions(&Crypto->AeadAesGcmFunctionsTable);
-    AesInitFunctions(&Crypto->AesFunctionsTable);
-    HashInitFunctions(&Crypto->HashFunctionsTable);
+  SHARED_CRYPTO_PROTOCOL  *Crypto
+  )
+{
+  //
+  // Set the Crypto Version
+  //
+  Crypto->GetVersion = GetVersion;
+  //
+  // Begin filling out the crypto protocol
+  //
+  HmacInitFunctions (Crypto);
+  BigNumInitFunctions(Crypto);
+  AeadAesGcmInitFunctions(Crypto);
+  AesInitFunctions(Crypto);
+  HashInitFunctions (Crypto);
+  HkdfInstallFunctions(Crypto);
+  PemInstallFunctions(Crypto);
 }
