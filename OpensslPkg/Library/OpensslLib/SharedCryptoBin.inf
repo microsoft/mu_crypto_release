@@ -69,8 +69,19 @@
   Shared/Pem/CryptPem.c
   Shared/Pem/CryptPem.h
 
+  # PK API
+  Shared/Pk/CryptPk.h
+  Shared/Pk/CryptPk.c
+  Shared/Pk/CryptAuthenticode.c
+  Shared/Pk/CryptPkcs7VerifyCommon.c
+  Shared/Pk/CryptDh.c
+  Shared/Pk/CryptPkcs5Pbkdf2.c
+  Shared/Pk/CryptPkcs1Oaep.c
+
   # Random Crypto API
   rand_pool.c
+  Shared/Rand/CryptRand.h
+  Shared/Rand/CryptRand.c
 
   # OpenSSL Crypto Library
   $(OPENSSL_PATH)/e_os.h

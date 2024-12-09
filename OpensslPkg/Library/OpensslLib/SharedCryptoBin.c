@@ -11,34 +11,31 @@
 #include "Shared/SharedOpenssl.h"
 #include "SharedCrtLibSupport.h"
 
-//#if defined(_MSC_VER)
-#define COMMON_EXPORT_API __declspec(dllexport)
-//#else
-//#define COMMON_EXPORT_API
-//#endif
-
-
+// #if defined(_MSC_VER)
+#define COMMON_EXPORT_API  __declspec(dllexport)
+// #else
+// #define COMMON_EXPORT_API
+// #endif
 
 
 COMMON_EXPORT_API
 EFI_STATUS
 EFIAPI
 Constructor (
-  IN VOID  *Depends,
-  OUT VOID *OutCrypto
+  IN VOID   *Depends,
+  OUT VOID  *OutCrypto
   )
 {
   //
   // Map the provided depencencies to our global instance
   //
-  // TODO we need to validate this structure matches the version we expect it to
-  //
   gSharedDepends = (SHARED_DEPENDENCIES *)Depends;
+
 
   //
   // Build the Crypto
   //
-  CryptoInit(OutCrypto);
+  CryptoInit (OutCrypto);
 
   return EFI_SUCCESS;
 }
@@ -62,10 +59,9 @@ UefiMain (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  SHARED_CRYPTO_PROTOCOL Crypto;
+  SHARED_CRYPTO_PROTOCOL  Crypto;
 
-  CryptoInit(&Crypto);
-
+  CryptoInit (&Crypto);
 
   return EFI_SUCCESS;
 }
