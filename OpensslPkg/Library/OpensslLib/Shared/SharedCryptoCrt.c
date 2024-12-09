@@ -317,3 +317,40 @@ AsciiStrLen (
 
   return Length;
 }
+
+
+UINT16
+EFIAPI
+WriteUnaligned16 (
+  OUT UINT16  *Buffer,
+  IN  UINT16  Value
+  )
+{
+  ASSERT (Buffer != NULL);
+
+  // TODO
+
+  ((volatile UINT8 *)Buffer)[0] = (UINT8)Value;
+  ((volatile UINT8 *)Buffer)[1] = (UINT8)(Value >> 8);
+
+  return Value;
+}
+
+UINT32
+EFIAPI
+WriteUnaligned32 (
+  OUT UINT32  *Buffer,
+  IN  UINT32  Value
+  )
+{
+  ASSERT (Buffer != NULL);
+
+  // TODO
+
+  ((volatile UINT8 *)Buffer)[0] = (UINT8)Value;
+  ((volatile UINT8 *)Buffer)[1] = (UINT8)(Value >> 8);
+  ((volatile UINT8 *)Buffer)[2] = (UINT8)(Value >> 16);
+  ((volatile UINT8 *)Buffer)[3] = (UINT8)(Value >> 24);
+
+  return Value;
+}
