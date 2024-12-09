@@ -8,7 +8,7 @@
 VOID
 EFIAPI
 CryptoInit (
-    SHARED_CRYPTO_PROTOCOL *Crypto
-);
+  SHARED_CRYPTO_PROTOCOL  *Crypto
+  );
 
 #endif // SHARED_OPENSSL_H_
