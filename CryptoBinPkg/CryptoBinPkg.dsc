@@ -149,9 +149,7 @@
   BaseCryptLib|OpensslPkg/Library/BaseCryptLib/SmmCryptLib.inf
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
   MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
-  MmServicesTableLib|MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
   ReportStatusCodeLib|MdeModulePkg/Library/SmmReportStatusCodeLib/StandaloneMmReportStatusCodeLib.inf
-  StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
   TlsLib|CryptoPkg/Library/TlsLibNull/TlsLibNull.inf
 
 [LibraryClasses.common.PEIM]
@@ -231,12 +229,30 @@
       FILE_GUID = $(RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID)
   }
 
-[Components.AARCH64, Components.X64]
+[Components.X64]
   # Note: MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf has instructions
   #       that are not supported in 32-bit. Only 64-bit is practically needed, so only build for 64-bit here.
+  CryptoBinPkg/Driver/CryptoMmSupervisorStandaloneMm.inf {
+    <Defines>
+      FILE_GUID = $(STANDALONEMM_MMSUPERVISOR_CRYPTO_DRIVER_FILE_GUID)
+    <LibraryClasses>
+      MmServicesTableLib|MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+      StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+    <PcdsFixedAtBuild>
+      # MM environment only set up the exception handler for the upper 32 entries.
+      # The platform should set this to a non-conflicting exception number, otherwise
+      # it will be treated as one of the normal types of CPU faults.
+      gEfiMdePkgTokenSpaceGuid.PcdStackCookieExceptionVector|0x0F
+  }
+
+[Components.AARCH64, Components.X64]
+  # Note: Only 64-bit is practically needed, so only build for 64-bit here.
   CryptoBinPkg/Driver/CryptoStandaloneMm.inf {
     <Defines>
       FILE_GUID = $(STANDALONEMM_CRYPTO_DRIVER_FILE_GUID)
+    <LibraryClasses>
+      MmServicesTableLib|MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+      StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
     <PcdsFixedAtBuild>
       # MM environment only set up the exception handler for the upper 32 entries.
       # The platform should set this to a non-conflicting exception number, otherwise
