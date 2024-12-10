@@ -7,7 +7,7 @@
 ##
 {
     "PrEval": {
-        "DscPath": "CryptoPkg.dsc",
+        "DscPath": "OpensslPkg.dsc",
     },
     "LicenseCheck": {
         "IgnoreFiles": [
@@ -51,7 +51,7 @@
         ]
     },
     "CompilerPlugin": {
-        "DscPath": "CryptoPkg.dsc"
+        "DscPath": "OpensslPkg.dsc"
     },
     "CharEncodingCheck": {
         "IgnoreFiles": []
@@ -70,11 +70,11 @@
         "IgnoreInf": []
     },
     "DscCompleteCheck": {
-        "DscPath": "CryptoPkg.dsc",
+        "DscPath": "OpensslPkg.dsc",
         "IgnoreInf": [
-            "CryptoPkg/Library/OpensslLib/OpensslLibAccel.inf",
-            "CryptoPkg/Library/OpensslLib/OpensslLibFull.inf",
-            "CryptoPkg/Library/OpensslLib/OpensslLibFullAccel.inf"
+            "OpensslPkg/Library/OpensslLib/OpensslLibAccel.inf",
+            "OpensslPkg/Library/OpensslLib/OpensslLibFull.inf",
+            "OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf"
         ]
     },
     "GuidCheck": {

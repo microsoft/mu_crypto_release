@@ -45,6 +45,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  OpensslPkg/OpensslPkg.dec
 
 [LibraryClasses]
   BaseLib
