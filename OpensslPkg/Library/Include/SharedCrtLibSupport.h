@@ -47,10 +47,10 @@ typedef EFI_STATUS (EFIAPI *GET_TIME)(
 typedef
 RETURN_STATUS
 (EFIAPI *ASCII_STR_CPY_S)(
-    OUT CHAR8        *Destination,
-    IN  UINTN        DestMax,
-    IN  CONST CHAR8  *Source
-    );
+  OUT CHAR8        *Destination,
+  IN  UINTN        DestMax,
+  IN  CONST CHAR8  *Source
+  );
 
 /**
   Returns the size of a Null-terminated ASCII string in bytes, including the Null terminator.
@@ -77,6 +77,7 @@ typedef INTN (EFIAPI *ASCII_STR_CMP)(
   IN      CONST CHAR8  *FirstString,
   IN      CONST CHAR8  *SecondString
   );
+
 /**
   Returns the length of a Null-terminated ASCII string.
 
@@ -205,40 +206,48 @@ BOOLEAN
 
 // Structure to hold function pointers
 typedef struct  _SHARED_DEPENDENCIES {
-  ALLOCATE_POOL           AllocatePool;
-  FREE_POOL               FreePool;
-  COPY_MEM                CopyMem;
-  ASSERT_T                ASSERT;       // TODO
-  GET_TIME                GetTime;
-  DEBUG_PRINT             DebugPrint;
-  GET_RANDOM_NUMBER_64    GetRandomNumber64;
-  ASCII_STR_CPY_S         AsciiStrCpyS;
-  ASCII_STR_SIZE          AsciiStrSize;
-  ASCII_STR_CMP           AsciiStrCmp;
-  ASCII_STRN_LEN_S        AsciiStrnLenS;
-  ASCII_STRN_CMP          AsciiStrnCmp;
-  ASCII_STR_DECIMAL_TO_UINTN  AsciiStrDecimalToUintn;
-  ASCII_STRN_CPY_S        AsciiStrnCpyS;
-  ASCII_STRI_CMP          AsciiStriCmp;
-  ASCII_STR_CAT_S         AsciiStrCatS;
-  ASCII_S_PRINT           AsciiSPrint;
-  ASCII_STR_LEN           AsciiStrLen;
+  ALLOCATE_POOL                 AllocatePool;
+  FREE_POOL                     FreePool;
+  COPY_MEM                      CopyMem;
+  ASSERT_T                      ASSERT; // TODO
+  GET_TIME                      GetTime;
+  DEBUG_PRINT                   DebugPrint;
+  GET_RANDOM_NUMBER_64          GetRandomNumber64;
+  ASCII_STR_CPY_S               AsciiStrCpyS;
+  ASCII_STR_SIZE                AsciiStrSize;
+  ASCII_STR_CMP                 AsciiStrCmp;
+  ASCII_STRN_LEN_S              AsciiStrnLenS;
+  ASCII_STRN_CMP                AsciiStrnCmp;
+  ASCII_STR_DECIMAL_TO_UINTN    AsciiStrDecimalToUintn;
+  ASCII_STRN_CPY_S              AsciiStrnCpyS;
+  ASCII_STRI_CMP                AsciiStriCmp;
+  ASCII_STR_CAT_S               AsciiStrCatS;
+  ASCII_S_PRINT                 AsciiSPrint;
+  ASCII_STR_LEN                 AsciiStrLen;
 } SHARED_DEPENDENCIES;
 
 SHARED_DEPENDENCIES  *gSharedDepends;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ASSERT  gSharedDepends->ASSERT;
+#define ASSERT(Expression) \
+  do { \
+    if (gSharedDepends != NULL && gSharedDepends->ASSERT != NULL) { \
+      gSharedDepends->ASSERT(Expression); \
+    } else { \
+      while (!(Expression)) { \
+        /* Spin loop */ \
+      } \
+    } \
+  } while (0)
 
 // TODO might make more sense to move this to a separate file
-#define DEBUG_ERROR  0x80000000
-#define DEBUG_WARN   0x40000000
-#define DEBUG_INFO   0x20000000
-#define DEBUG_VERBOSE 0x10000000
+#define DEBUG_ERROR    0x80000000
+#define DEBUG_WARN     0x40000000
+#define DEBUG_INFO     0x20000000
+#define DEBUG_VERBOSE  0x10000000
 #define DEBUG(Args) \
   do { \
     if (gSharedDepends != NULL && gSharedDepends->DebugPrint != NULL) { \
@@ -325,7 +334,6 @@ AsciiStrCpyS (
   IN  CONST CHAR8  *Source
   );
 
-
 UINTN
 EFIAPI
 AsciiStrLen (
@@ -353,7 +361,6 @@ AsciiStrCmp (
   IN      CONST CHAR8  *SecondString
   );
 
-
 UINTN
 EFIAPI
 AsciiStrnLenS (
@@ -361,7 +368,7 @@ AsciiStrnLenS (
   IN UINTN        MaxSize
   );
 
-  // AsciiStrnCmp
+// AsciiStrnCmp
 INTN
 EFIAPI
 AsciiStrnCmp (
@@ -424,6 +431,5 @@ WriteUnaligned32 (
   OUT UINT32  *Buffer,
   IN  UINT32  Value
   );
-
 
 #endif // SHARED_CRT_LIB_H
