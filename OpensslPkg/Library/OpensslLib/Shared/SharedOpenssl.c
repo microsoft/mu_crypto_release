@@ -55,7 +55,8 @@ CryptoInit (
   // If this does not match, then this request is not compatible with the provided crypto functions.
   //
   if (Major != VERSION_MAJOR) {
-    // TODO ASSERT
+    DEBUG ((DEBUG_ERROR, "Incompatible major version: %d\n", Minor));
+    ASSERT (Major != VERSION_MAJOR);
     return;
   }
 
@@ -64,7 +65,8 @@ CryptoInit (
   // If this does not match, then this request is not compatible with the provided crypto functions.
   //
   if (Minor >= VERSION_MINOR) {
-    // TODO ASSERT
+    DEBUG ((DEBUG_ERROR, "Incompatible minor version: %d\n", Minor));
+    ASSERT (Minor < VERSION_MINOR);
     return;
   }
 
