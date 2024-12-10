@@ -33,7 +33,7 @@ This file cannot depend on anything but UEFI primatives.
 
     @return  The version of the shared crypto protocol.
 **/
-typedef UINT64 (*GetVersionFunc)(
+typedef UINT64 (*SHARED_GET_VERSION)(
   VOID
   );
 
@@ -46,7 +46,7 @@ typedef UINT64 (*GetVersionFunc)(
 
   @return  Pointer to the new HMAC context.
 **/
-typedef VOID *(*HmacNewFunc)(
+typedef VOID *(*SHARED_HMAC_NEW)(
   VOID
   );
 
@@ -55,7 +55,7 @@ typedef VOID *(*HmacNewFunc)(
 
   @param[in]  HmacCtx  Pointer to the HMAC context to be freed.
 **/
-typedef VOID (*HmacFreeFunc)(
+typedef VOID (*SHARED_HMAC_FREE)(
   VOID  *HmacCtx
   );
 
@@ -69,7 +69,7 @@ typedef VOID (*HmacFreeFunc)(
   @retval TRUE   Key was set successfully.
   @retval FALSE  Failed to set the key.
 **/
-typedef BOOLEAN (*HmacSetKeyFunc)(
+typedef BOOLEAN (*SHARED_HMAC_SET_KEY)(
   VOID         *HmacContext,
   CONST UINT8  *Key,
   UINTN        KeySize
@@ -84,7 +84,7 @@ typedef BOOLEAN (*HmacSetKeyFunc)(
   @retval TRUE   Context was duplicated successfully.
   @retval FALSE  Failed to duplicate the context.
 **/
-typedef BOOLEAN (*HmacDuplicateFunc)(
+typedef BOOLEAN (*SHARED_HMAC_DUPLICATE)(
   CONST VOID  *HmacContext,
   VOID        *NewHmacContext
   );
@@ -99,7 +99,7 @@ typedef BOOLEAN (*HmacDuplicateFunc)(
   @retval TRUE   Data was updated successfully.
   @retval FALSE  Failed to update the data.
 **/
-typedef BOOLEAN (*HmacUpdateFunc)(
+typedef BOOLEAN (*SHARED_HMAC_UPDATE)(
   VOID        *HmacContext,
   CONST VOID  *Data,
   UINTN       DataSize
@@ -114,7 +114,7 @@ typedef BOOLEAN (*HmacUpdateFunc)(
   @retval TRUE   HMAC value was produced successfully.
   @retval FALSE  Failed to produce the HMAC value.
 **/
-typedef BOOLEAN (*HmacFinalFunc)(
+typedef BOOLEAN (*SHARED_HMAC_FINAL)(
   VOID   *HmacContext,
   UINT8  *HmacValue
   );
@@ -131,7 +131,7 @@ typedef BOOLEAN (*HmacFinalFunc)(
   @retval TRUE   HMAC operation was performed successfully.
   @retval FALSE  Failed to perform the HMAC operation.
 **/
-typedef BOOLEAN (*HmacAllFunc)(
+typedef BOOLEAN (*SHARED_HMAC_ALL)(
   CONST VOID   *Data,
   UINTN        DataSize,
   CONST UINT8  *Key,
@@ -144,72 +144,72 @@ typedef BOOLEAN (*HmacAllFunc)(
 // =====================================================================================
 
 /**
- * @typedef HashGetContextSizeFunc
+ * @typedef SHARED_HASH_GET_CONTEXT_SIZE
  * @brief Function pointer type for retrieving the size of the Hash context buffer.
  * @return The size, in bytes, of the context buffer required for hash operations.
  */
-typedef UINTN (*HashGetContextSizeFunc)(
+typedef UINTN (*SHARED_HASH_GET_CONTEXT_SIZE)(
   VOID
   );
 
 /**
- * @typedef HashInitFunc
+ * @typedef SHARED_HASH_INIT
  * @brief Function pointer type for initializing Hash context.
  * @param[out] ContHashContextext Pointer to the Hash context being initialized.
  * @return TRUE if Hash context initialization succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (*HashInitFunc)(
+typedef BOOLEAN (*SHARED_HASH_INIT)(
   OUT VOID  *HashContext
   );
 
 /**
- * @typedef HashUpdateFunc
+ * @typedef SHARED_HASH_UPDATE
  * @brief Function pointer type for updating Hash context with input data.
  * @param[in, out] HashContext Pointer to the Hash context.
  * @param[in] Data Pointer to the buffer containing the data to be hashed.
  * @param[in] DataSize Size of Data buffer in bytes.
  * @return TRUE if Hash data digest succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (*HashUpdateFunc)(
+typedef BOOLEAN (*SHARED_HASH_UPDATE)(
   IN OUT VOID    *HashContext,
   IN CONST VOID  *Data,
   IN UINTN       DataSize
   );
 
 /**
- * @typedef HashFinalFunc
+ * @typedef SHARED_HASH_FINAL
  * @brief Function pointer type for finalizing Hash context and retrieving the digest.
  * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
  * @param[in, out] HashContext Pointer to the Hash context.
  * @return TRUE if Hash finalization succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (*HashFinalFunc)(
+typedef BOOLEAN (*SHARED_HASH_FINAL)(
   OUT UINT8    *HashDigest,
   IN OUT VOID  *HashContext
   );
 
 /**
- * @typedef HashHashAllFunc
+ * @typedef SHARED_HASH_ALL
  * @brief Function pointer type for performing Hash hash on a data buffer.
  * @param[in] Data Pointer to the buffer containing the data to be hashed.
  * @param[in] DataSize Size of Data buffer in bytes.
  * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
  * @return TRUE if Hash hash succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (*HashHashAllFunc)(
+typedef BOOLEAN (*SHARED_HASH_ALL)(
   IN CONST VOID  *Data,
   IN UINTN       DataSize,
   OUT UINT8      *HashDigest
   );
 
 /**
- * @typedef HashDuplicateFunc
+ * @typedef SHARED_HASH_DUPLICATE
  * @brief Function pointer type for duplicating an existing HASH context.
  * @param[in] HashContext Pointer to Hash context being copied.
  * @param[out] NewHashContext Pointer to new Hash context.
  * @return TRUE if Hash context copy succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (*HashDuplicateFunc)(
+typedef BOOLEAN (*SHARED_HASH_DUPLICATE)(
   IN CONST VOID  *HashContext,
   OUT VOID       *NewHashContext
   );
@@ -346,93 +346,93 @@ typedef BOOLEAN (*AeadAesGcmDecryptFunc)(
 // =====================================================================================
 
 /**
- * @typedef BigNumInitFunc
+ * @typedef BIG_NUM_INIT
  * @brief Function pointer type for initializing a big number.
  * @return A pointer to the initialized big number.
  */
-typedef VOID *(*BigNumInitFunc)(
+typedef VOID *(*SHARED_BIG_NUM_INIT)(
   VOID
   );
 
 /**
- * @typedef BigNumFromBinFunc
+ * @typedef SHARED_BIG_NUM_FROM_BIN
  * @brief Function pointer type for creating a big number from a binary buffer.
  * @param Buf The binary buffer.
  * @param Len The length of the binary buffer.
  * @return A pointer to the created big number.
  */
-typedef VOID *(*BigNumFromBinFunc)(
+typedef VOID *(*SHARED_BIG_NUM_FROM_BIN)(
   IN CONST UINT8  *Buf,
   IN UINTN        Len
   );
 
 /**
- * @typedef BigNumToBinFunc
+ * @typedef SHARED_BIG_NUM_TO_BIN
  * @brief Function pointer type for converting a big number to a binary buffer.
  * @param Bn The big number to convert.
  * @param Buf The output binary buffer.
  * @return The length of the binary buffer.
  */
-typedef INTN (*BigNumToBinFunc)(
+typedef INTN (*SHARED_BIG_NUM_TO_BIN)(
   IN CONST VOID  *Bn,
   OUT UINT8      *Buf
   );
 
 /**
- * @typedef BigNumFreeFunc
+ * @typedef SHARED_BIG_NUM_FREE
  * @brief Function pointer type for freeing a big number.
  * @param Bn The big number to free.
  * @param Clear Whether to clear the memory before freeing.
  */
-typedef VOID (*BigNumFreeFunc)(
+typedef VOID (*SHARED_BIG_NUM_FREE)(
   IN VOID     *Bn,
   IN BOOLEAN  Clear
   );
 
 /**
- * @typedef BigNumAddFunc
+ * @typedef SHARED_BIG_NUM_ADD
  * @brief Function pointer type for adding two big numbers.
  * @param BnA The first big number.
  * @param BnB The second big number.
  * @param BnRes The result of the addition.
  * @return TRUE if the addition was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumAddFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_ADD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumSubFunc
+ * @typedef SHARED_BIG_NUM_SUB
  * @brief Function pointer type for subtracting one big number from another.
  * @param BnA The big number to subtract from.
  * @param BnB The big number to subtract.
  * @param BnRes The result of the subtraction.
  * @return TRUE if the subtraction was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumSubFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_SUB)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumModFunc
+ * @typedef SHARED_BIG_NUM_MOD
  * @brief Function pointer type for computing the modulus of two big numbers.
  * @param BnA The dividend big number.
  * @param BnB The divisor big number.
  * @param BnRes The result of the modulus operation.
  * @return TRUE if the modulus operation was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumModFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_MOD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumExpModFunc
+ * @typedef SHARED_BIG_NUM_EXP_MOD
  * @brief Function pointer type for computing the modular exponentiation of a big number.
  * @param BnA The base big number.
  * @param BnP The exponent big number.
@@ -440,7 +440,7 @@ typedef BOOLEAN (*BigNumModFunc)(
  * @param BnRes The result of the modular exponentiation.
  * @return TRUE if the modular exponentiation was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumExpModFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_EXP_MOD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnP,
   IN CONST VOID  *BnM,
@@ -448,35 +448,35 @@ typedef BOOLEAN (*BigNumExpModFunc)(
   );
 
 /**
- * @typedef BigNumInverseModFunc
+ * @typedef SHARED_BIG_NUM_INVERSE_MOD
  * @brief Function pointer type for computing the modular inverse of a big number.
  * @param BnA The big number to invert.
  * @param BnM The modulus big number.
  * @param BnRes The result of the modular inverse.
  * @return TRUE if the modular inverse was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumInverseModFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_INVERSE_MOD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnM,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumDivFunc
+ * @typedef SHARED_BIG_NUM_DIV
  * @brief Function pointer type for dividing one big number by another.
  * @param BnA The dividend big number.
  * @param BnB The divisor big number.
  * @param BnRes The result of the division.
  * @return TRUE if the division was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumDivFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_DIV)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumMulModFunc
+ * @typedef SHARED_BIG_NUM_MUL_MOD
  * @brief Function pointer type for computing the modular multiplication of two big numbers.
  * @param BnA The first big number.
  * @param BnB The second big number.
@@ -484,7 +484,7 @@ typedef BOOLEAN (*BigNumDivFunc)(
  * @param BnRes The result of the modular multiplication.
  * @return TRUE if the modular multiplication was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumMulModFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_MUL_MOD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   IN CONST VOID  *BnM,
@@ -492,149 +492,149 @@ typedef BOOLEAN (*BigNumMulModFunc)(
   );
 
 /**
- * @typedef BigNumCmpFunc
+ * @typedef SHARED_BIG_NUM_CMP
  * @brief Function pointer type for comparing two big numbers.
  * @param BnA The first big number.
  * @param BnB The second big number.
  * @return A negative value if BnA < BnB, zero if BnA == BnB, and a positive value if BnA > BnB.
  */
-typedef INTN (*BigNumCmpFunc)(
+typedef INTN (*SHARED_BIG_NUM_CMP)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB
   );
 
 /**
- * @typedef BigNumBitsFunc
+ * @typedef SHARED_BIG_NUM_BITS
  * @brief Function pointer type for getting the number of bits in a big number.
  * @param Bn The big number.
  * @return The number of bits in the big number.
  */
-typedef UINTN (*BigNumBitsFunc)(
+typedef UINTN (*SHARED_BIG_NUM_BITS)(
   IN CONST VOID  *Bn
   );
 
 /**
- * @typedef BigNumBytesFunc
+ * @typedef SHARED_BIG_NUM_BYTES
  * @brief Function pointer type for getting the number of bytes in a big number.
  * @param Bn The big number.
  * @return The number of bytes in the big number.
  */
-typedef UINTN (*BigNumBytesFunc)(
+typedef UINTN (*SHARED_BIG_NUM_BYTES)(
   IN CONST VOID  *Bn
   );
 
 /**
- * @typedef BigNumIsWordFunc
+ * @typedef SHARED_BIG_NUM_IS_WORD
  * @brief Function pointer type for checking if a big number is equal to a specific word.
  * @param Bn The big number.
  * @param Num The word to compare against.
  * @return TRUE if the big number is equal to the word, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumIsWordFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_IS_WORD)(
   IN CONST VOID  *Bn,
   IN UINTN       Num
   );
 
 /**
- * @typedef BigNumIsOddFunc
+ * @typedef SHARED_BIG_NUM_IS_ODD
  * @brief Function pointer type for checking if a big number is odd.
  * @param Bn The big number.
  * @return TRUE if the big number is odd, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumIsOddFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_IS_ODD)(
   IN CONST VOID  *Bn
   );
 
 /**
- * @typedef BigNumCopyFunc
+ * @typedef SHARED_BIG_NUM_COPY
  * @brief Function pointer type for copying one big number to another.
  * @param BnDst The destination big number.
  * @param BnSrc The source big number.
  * @return A pointer to the destination big number.
  */
-typedef VOID *(*BigNumCopyFunc)(
+typedef VOID *(*SHARED_BIG_NUM_COPY)(
   OUT VOID       *BnDst,
   IN CONST VOID  *BnSrc
   );
 
 /**
- * @typedef BigNumValueOneFunc
+ * @typedef SHARED_BIG_NUM_VALUE_ONE
  * @brief Function pointer type for getting a big number representing the value one.
  * @return A pointer to the big number representing the value one.
  */
-typedef CONST VOID *(*BigNumValueOneFunc)(
+typedef CONST VOID *(*SHARED_BIG_NUM_VALUE_ONE)(
   VOID
   );
 
 /**
- * @typedef BigNumRShiftFunc
+ * @typedef SHARED_BIG_NUM_R_SHIFT
  * @brief Function pointer type for right-shifting a big number by a specified number of bits.
  * @param Bn The big number to shift.
  * @param N The number of bits to shift.
  * @param BnRes The result of the right shift.
  * @return TRUE if the right shift was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumRShiftFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_R_SHIFT)(
   IN CONST VOID  *Bn,
   IN UINTN       N,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumConstTimeFunc
+ * @typedef SHARED_BIG_NUM_CONST_TIME
  * @brief Function pointer type for performing a constant-time operation on a big number.
  * @param Bn The big number.
  */
-typedef VOID (*BigNumConstTimeFunc)(
+typedef VOID (*SHARED_BIG_NUM_CONST_TIME)(
   IN VOID  *Bn
   );
 
 /**
- * @typedef BigNumSqrModFunc
+ * @typedef SHARED_BIG_NUM_SQR_MOD
  * @brief Function pointer type for computing the modular square of a big number.
  * @param BnA The big number to square.
  * @param BnM The modulus big number.
  * @param BnRes The result of the modular square.
  * @return TRUE if the modular square was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumSqrModFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_SQR_MOD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnM,
   OUT VOID       *BnRes
   );
 
 /**
- * @typedef BigNumNewContextFunc
+ * @typedef SHARED_BIG_NUM_NEW_CONTEXT
  * @brief Function pointer type for creating a new big number context.
  * @return A pointer to the new big number context.
  */
-typedef VOID *(*BigNumNewContextFunc)(
+typedef VOID *(*SHARED_BIG_NUM_NEW_CONTEXT)(
   VOID
   );
 
 /**
- * @typedef BigNumContextFreeFunc
+ * @typedef SHARED_BIG_NUM_CONTEXT_FREE
  * @brief Function pointer type for freeing a big number context.
  * @param BnCtx The big number context to free.
  */
-typedef VOID (*BigNumContextFreeFunc)(
+typedef VOID (*SHARED_BIG_NUM_CONTEXT_FREE)(
   IN VOID  *BnCtx
   );
 
 /**
- * @typedef BigNumSetUintFunc
+ * @typedef SHARED_BIG_NUM_SET_UINT
  * @brief Function pointer type for setting a big number to a specific unsigned integer value.
  * @param Bn The big number.
  * @param Val The unsigned integer value.
  * @return TRUE if the operation was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumSetUintFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_SET_UINT)(
   IN VOID   *Bn,
   IN UINTN  Val
   );
 
 /**
- * @typedef BigNumAddModFunc
+ * @typedef SHARED_BIG_NUM_ADD_MOD
  * @brief Function pointer type for computing the modular addition of two big numbers.
  * @param BnA The first big number.
  * @param BnB The second big number.
@@ -642,7 +642,7 @@ typedef BOOLEAN (*BigNumSetUintFunc)(
  * @param BnRes The result of the modular addition.
  * @return TRUE if the modular addition was successful, FALSE otherwise.
  */
-typedef BOOLEAN (*BigNumAddModFunc)(
+typedef BOOLEAN (*SHARED_BIG_NUM_ADD_MOD)(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   IN CONST VOID  *BnM,
@@ -668,7 +668,7 @@ typedef BOOLEAN (*BigNumAddModFunc)(
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
 **/
-typedef BOOLEAN (EFIAPI *HkdfExtractAndExpandFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT_AND_EXPAND)(
   IN   CONST UINT8  *Key,
   IN   UINTN        KeySize,
   IN   CONST UINT8  *Salt,
@@ -692,7 +692,7 @@ typedef BOOLEAN (EFIAPI *HkdfExtractAndExpandFunc)(
   @retval true   Hkdf generated successfully.
   @retval false  Hkdf generation failed.
 **/
-typedef BOOLEAN (EFIAPI *HkdfExtractFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT)(
   IN CONST UINT8  *Key,
   IN UINTN        KeySize,
   IN CONST UINT8  *Salt,
@@ -714,7 +714,7 @@ typedef BOOLEAN (EFIAPI *HkdfExtractFunc)(
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
 **/
-typedef BOOLEAN (EFIAPI *HkdfExpandFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXPAND)(
   IN   CONST UINT8  *Prk,
   IN   UINTN        PrkSize,
   IN   CONST UINT8  *Info,
@@ -737,27 +737,10 @@ typedef BOOLEAN (EFIAPI *HkdfExpandFunc)(
   @retval  TRUE   Private Key was retrieved successfully.
   @retval  FALSE  Invalid PEM key data or incorrect password.
 **/
-typedef BOOLEAN (EFIAPI *RsaGetPrivateKeyFromPemFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_RSA_GET_PRIVATE_KEY_FROM_PEM)(
   IN   CONST UINT8  *PemData,
   IN   UINTN        PemSize,
   IN   CONST CHAR8  *Password,
-  OUT  VOID         **RsaContext
-  );
-
-/**
-  Retrieve the Public Key from the PEM key data.
-
-  @param[in]  PemData      Pointer to the PEM-encoded key data to be retrieved.
-  @param[in]  PemSize      Size of the PEM key data in bytes.
-  @param[out] RsaContext   Pointer to new-generated RSA context which contains the retrieved public key component.
-                           Use RsaFree() function to free the resource.
-
-  @retval  TRUE   Public Key was retrieved successfully.
-  @retval  FALSE  Invalid PEM key data.
-**/
-typedef BOOLEAN (EFIAPI *RsaGetPublicKeyFromPemFunc)(
-  IN   CONST UINT8  *PemData,
-  IN   UINTN        PemSize,
   OUT  VOID         **RsaContext
   );
 
@@ -773,27 +756,10 @@ typedef BOOLEAN (EFIAPI *RsaGetPublicKeyFromPemFunc)(
   @retval  TRUE   Private Key was retrieved successfully.
   @retval  FALSE  Invalid PEM key data or incorrect password.
 **/
-typedef BOOLEAN (EFIAPI *EcGetPrivateKeyFromPemFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_EC_GET_PRIVATE_KEY_FROM_PEM)(
   IN   CONST UINT8  *PemData,
   IN   UINTN        PemSize,
   IN   CONST CHAR8  *Password,
-  OUT  VOID         **EcContext
-  );
-
-/**
-  Retrieve the Public Key from the PEM key data.
-
-  @param[in]  PemData      Pointer to the PEM-encoded key data to be retrieved.
-  @param[in]  PemSize      Size of the PEM key data in bytes.
-  @param[out] EcContext    Pointer to new-generated EC context which contains the retrieved public key component.
-                           Use EcFree() function to free the resource.
-
-  @retval  TRUE   Public Key was retrieved successfully.
-  @retval  FALSE  Invalid PEM key data.
-**/
-typedef BOOLEAN (EFIAPI *EcGetPublicKeyFromPemFunc)(
-  IN   CONST UINT8  *PemData,
-  IN   UINTN        PemSize,
   OUT  VOID         **EcContext
   );
 
@@ -816,7 +782,7 @@ typedef BOOLEAN (EFIAPI *EcGetPublicKeyFromPemFunc)(
   @retval  TRUE   The specified Authenticode Signature is valid.
   @retval  FALSE  Invalid Authenticode Signature.
 **/
-typedef BOOLEAN (EFIAPI *AuthenticodeVerifyFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_AUTHENTICODE_VERIFY)(
   IN  CONST UINT8  *AuthData,
   IN  UINTN        DataSize,
   IN  CONST UINT8  *TrustedCert,
@@ -854,7 +820,7 @@ typedef BOOLEAN (EFIAPI *AuthenticodeVerifyFunc)(
 **/
 typedef
 BOOLEAN
-(EFIAPI *Pkcs5HashPasswordFunc)(
+(EFIAPI *SHARED_PKCS5_HASH_PASSWORD)(
   IN  UINTN        PasswordLength,
   IN  CONST CHAR8  *Password,
   IN  UINTN        SaltLength,
@@ -877,7 +843,7 @@ BOOLEAN
 **/
 typedef
 VOID *
-(EFIAPI *DhNewFunc)(
+(EFIAPI *SHARED_DH_NEW)(
   VOID
   );
 
@@ -888,7 +854,7 @@ VOID *
 **/
 typedef
 VOID
-(EFIAPI *DhFreeFunc)(
+(EFIAPI *SHARED_DH_FREE)(
   IN  VOID  *DhContext
   );
 
@@ -912,7 +878,7 @@ VOID
 **/
 typedef
 BOOLEAN
-(EFIAPI *DhGenerateParameterFunc)(
+(EFIAPI *SHARED_DH_GENERATE_PARAMETER)(
   IN OUT  VOID   *DhContext,
   IN      UINTN  Generator,
   IN      UINTN  PrimeLength,
@@ -939,7 +905,7 @@ BOOLEAN
 **/
 typedef
 BOOLEAN
-(EFIAPI *DhSetParameterFunc)(
+(EFIAPI *SHARED_DH_SET_PARAMETER)(
   IN OUT  VOID         *DhContext,
   IN      UINTN        Generator,
   IN      UINTN        PrimeLength,
@@ -972,7 +938,7 @@ If this interface is not supported, then return FALSE.
 **/
 typedef
 BOOLEAN
-(EFIAPI *DhGenerateKeyFunc)(
+(EFIAPI *SHARED_DH_GENERATE_KEY)(
   IN OUT  VOID   *DhContext,
   OUT     UINT8  *PublicKey,
   IN OUT  UINTN  *PublicKeySize
@@ -1006,7 +972,7 @@ BOOLEAN
 **/
 typedef
 BOOLEAN
-(EFIAPI *DhComputeKeyFunc)(
+(EFIAPI *SHARED_DH_COMPUTE_KEY)(
   IN OUT  VOID         *DhContext,
   IN      CONST UINT8  *PeerPublicKey,
   IN      UINTN        PeerPublicKeySize,
@@ -1034,7 +1000,7 @@ BOOLEAN
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *Pkcs1v2EncryptFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_ENCRYPT)(
   IN   CONST UINT8  *PublicKey,
   IN   UINTN        PublicKeySize,
   IN   UINT8        *InData,
@@ -1060,7 +1026,7 @@ typedef BOOLEAN (EFIAPI *Pkcs1v2EncryptFunc)(
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *Pkcs1v2DecryptFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_DECRYPT)(
   IN   CONST UINT8  *PrivateKey,
   IN   UINTN        PrivateKeySize,
   IN   UINT8        *EncryptedData,
@@ -1094,7 +1060,7 @@ typedef BOOLEAN (EFIAPI *Pkcs1v2DecryptFunc)(
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *RsaOaepEncryptFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_ENCRYPT)(
   IN   VOID         *RsaContext,
   IN   UINT8        *InData,
   IN   UINTN        InDataSize,
@@ -1126,7 +1092,7 @@ typedef BOOLEAN (EFIAPI *RsaOaepEncryptFunc)(
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *RsaOaepDecryptFunc)(
+typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_DECRYPT)(
   IN   VOID    *RsaContext,
   IN   UINT8   *EncryptedData,
   IN   UINTN   EncryptedDataSize,
@@ -1134,7 +1100,6 @@ typedef BOOLEAN (EFIAPI *RsaOaepDecryptFunc)(
   OUT  UINT8   **OutData,
   OUT  UINTN   *OutDataSize
   );
-
 
 typedef struct _SHARED_CRYPTO_PROTOCOL {
   // -------------------------------------------
@@ -1147,146 +1112,144 @@ typedef struct _SHARED_CRYPTO_PROTOCOL {
   // When initializing the protocol, the calle filling in the crypto functions will check the version
   // and attempt to provide the functions that match the version requested.
   //
-  GetVersionFunc                 GetVersion;
+  SHARED_GET_VERSION                     GetVersion;
 
   // Protocol Version 1 Functions [BEGIN] =================
   // --------------------------------------------
   // HMAC (Message Authentication Code) Primitive (14 Functions)
   // --------------------------------------------
   /// HMAC SHA-256 ------------------------------
-  HmacNewFunc                    HmacSha256New;
-  HmacFreeFunc                   HmacSha256Free;
-  HmacSetKeyFunc                 HmacSha256SetKey;
-  HmacDuplicateFunc              HmacSha256Duplicate;
-  HmacUpdateFunc                 HmacSha256Update;
-  HmacFinalFunc                  HmacSha256Final;
-  HmacAllFunc                    HmacSha256All;
+  SHARED_HMAC_NEW                        HmacSha256New;
+  SHARED_HMAC_FREE                       HmacSha256Free;
+  SHARED_HMAC_SET_KEY                    HmacSha256SetKey;
+  SHARED_HMAC_DUPLICATE                  HmacSha256Duplicate;
+  SHARED_HMAC_UPDATE                     HmacSha256Update;
+  SHARED_HMAC_FINAL                      HmacSha256Final;
+  SHARED_HMAC_ALL                        HmacSha256All;
   /// HMAC SHA-384 ------------------------------
-  HmacNewFunc                    HmacSha384New;
-  HmacFreeFunc                   HmacSha384Free;
-  HmacSetKeyFunc                 HmacSha384SetKey;
-  HmacDuplicateFunc              HmacSha384Duplicate;
-  HmacUpdateFunc                 HmacSha384Update;
-  HmacFinalFunc                  HmacSha384Final;
-  HmacAllFunc                    HmacSha384All;
+  SHARED_HMAC_NEW                        HmacSha384New;
+  SHARED_HMAC_FREE                       HmacSha384Free;
+  SHARED_HMAC_SET_KEY                    HmacSha384SetKey;
+  SHARED_HMAC_DUPLICATE                  HmacSha384Duplicate;
+  SHARED_HMAC_UPDATE                     HmacSha384Update;
+  SHARED_HMAC_FINAL                      HmacSha384Final;
+  SHARED_HMAC_ALL                        HmacSha384All;
 
   // --------------------------------------------
   //  One-Way Cryptographic Hash Primitives (30)
   // --------------------------------------------
   /// MD5 HASH ----------------------------------
-  HashGetContextSizeFunc         Md5GetContextSize;
-  HashInitFunc                   Md5Init;
-  HashUpdateFunc                 Md5Update;
-  HashFinalFunc                  Md5Final;
-  HashHashAllFunc                Md5HashAll;
-  HashDuplicateFunc              Md5Duplicate;
+  SHARED_HASH_GET_CONTEXT_SIZE           Md5GetContextSize;
+  SHARED_HASH_INIT                       Md5Init;
+  SHARED_HASH_UPDATE                     Md5Update;
+  SHARED_HASH_FINAL                      Md5Final;
+  SHARED_HASH_ALL                        Md5HashAll;
+  SHARED_HASH_DUPLICATE                  Md5Duplicate;
   /// SHA1 HASH ----------------------------------
-  HashGetContextSizeFunc         Sha1GetContextSize;
-  HashInitFunc                   Sha1Init;
-  HashUpdateFunc                 Sha1Update;
-  HashFinalFunc                  Sha1Final;
-  HashHashAllFunc                Sha1HashAll;
-  HashDuplicateFunc              Sha1Duplicate;
+  SHARED_HASH_GET_CONTEXT_SIZE           Sha1GetContextSize;
+  SHARED_HASH_INIT                       Sha1Init;
+  SHARED_HASH_UPDATE                     Sha1Update;
+  SHARED_HASH_FINAL                      Sha1Final;
+  SHARED_HASH_ALL                        Sha1HashAll;
+  SHARED_HASH_DUPLICATE                  Sha1Duplicate;
   /// SHA256  -------------------------------
-  HashGetContextSizeFunc         Sha256GetContextSize;
-  HashInitFunc                   Sha256Init;
-  HashUpdateFunc                 Sha256Update;
-  HashFinalFunc                  Sha256Final;
-  HashHashAllFunc                Sha256HashAll;
-  HashDuplicateFunc              Sha256Duplicate;
+  SHARED_HASH_GET_CONTEXT_SIZE           Sha256GetContextSize;
+  SHARED_HASH_INIT                       Sha256Init;
+  SHARED_HASH_UPDATE                     Sha256Update;
+  SHARED_HASH_FINAL                      Sha256Final;
+  SHARED_HASH_ALL                        Sha256HashAll;
+  SHARED_HASH_DUPLICATE                  Sha256Duplicate;
   /// SHA512 HASH -------------------------------
-  HashGetContextSizeFunc         Sha512GetContextSize;
-  HashInitFunc                   Sha512Init;
-  HashUpdateFunc                 Sha512Update;
-  HashFinalFunc                  Sha512Final;
-  HashHashAllFunc                Sha512HashAll;
-  HashDuplicateFunc              Sha512Duplicate;
+  SHARED_HASH_GET_CONTEXT_SIZE           Sha512GetContextSize;
+  SHARED_HASH_INIT                       Sha512Init;
+  SHARED_HASH_UPDATE                     Sha512Update;
+  SHARED_HASH_FINAL                      Sha512Final;
+  SHARED_HASH_ALL                        Sha512HashAll;
+  SHARED_HASH_DUPLICATE                  Sha512Duplicate;
   /// SM3 HASH ----------------------------------
-  HashGetContextSizeFunc         Sm3GetContextSize;
-  HashInitFunc                   Sm3Init;
-  HashUpdateFunc                 Sm3Update;
-  HashFinalFunc                  Sm3Final;
-  HashHashAllFunc                Sm3HashAll;
-  HashDuplicateFunc              Sm3Duplicate;
+  SHARED_HASH_GET_CONTEXT_SIZE           Sm3GetContextSize;
+  SHARED_HASH_INIT                       Sm3Init;
+  SHARED_HASH_UPDATE                     Sm3Update;
+  SHARED_HASH_FINAL                      Sm3Final;
+  SHARED_HASH_ALL                        Sm3HashAll;
+  SHARED_HASH_DUPLICATE                  Sm3Duplicate;
 
   // --------------------------------------------
   //  Symmetric Cryptography Primitive (6 Functions)
   // --------------------------------------------
-  AesGetContextSizeFunc          AesGetContextSize;
-  AesInitFunc                    AesInit;
-  AesCbcEncryptFunc              AesCbcEncrypt;
-  AesCbcDecryptFunc              AesCbcDecrypt;
-  AeadAesGcmEncryptFunc          AeadAesGcmEncrypt;
-  AeadAesGcmDecryptFunc          AeadAesGcmDecrypt;
+  AesGetContextSizeFunc                  AesGetContextSize;
+  AesInitFunc                            AesInit;
+  AesCbcEncryptFunc                      AesCbcEncrypt;
+  AesCbcDecryptFunc                      AesCbcDecrypt;
+  AeadAesGcmEncryptFunc                  AeadAesGcmEncrypt;
+  AeadAesGcmDecryptFunc                  AeadAesGcmDecrypt;
 
   // --------------------------------------------
   //  Big Number Primitives (26 Functions)
   // --------------------------------------------
-  BigNumInitFunc                 BigNumInit;
-  BigNumFromBinFunc              BigNumFromBin;
-  BigNumToBinFunc                BigNumToBin;
-  BigNumFreeFunc                 BigNumFree;
-  BigNumAddFunc                  BigNumAdd;
-  BigNumSubFunc                  BigNumSub;
-  BigNumModFunc                  BigNumMod;
-  BigNumExpModFunc               BigNumExpMod;
-  BigNumInverseModFunc           BigNumInverseMod;
-  BigNumDivFunc                  BigNumDiv;
-  BigNumMulModFunc               BigNumMulMod;
-  BigNumCmpFunc                  BigNumCmp;
-  BigNumBitsFunc                 BigNumBits;
-  BigNumBytesFunc                BigNumBytes;
-  BigNumIsWordFunc               BigNumIsWord;
-  BigNumIsOddFunc                BigNumIsOdd;
-  BigNumCopyFunc                 BigNumCopy;
-  BigNumValueOneFunc             BigNumValueOne;
-  BigNumRShiftFunc               BigNumRShift;
-  BigNumConstTimeFunc            BigNumConstTime;
-  BigNumSqrModFunc               BigNumSqrMod;
-  BigNumNewContextFunc           BigNumNewContext;
-  BigNumContextFreeFunc          BigNumContextFree;
-  BigNumSetUintFunc              BigNumSetUint;
-  BigNumAddModFunc               BigNumAddMod;
+  SHARED_BIG_NUM_INIT                    BigNumInit;
+  SHARED_BIG_NUM_FROM_BIN                BigNumFromBin;
+  SHARED_BIG_NUM_TO_BIN                  BigNumToBin;
+  SHARED_BIG_NUM_FREE                    BigNumFree;
+  SHARED_BIG_NUM_ADD                     BigNumAdd;
+  SHARED_BIG_NUM_SUB                     BigNumSub;
+  SHARED_BIG_NUM_MOD                     BigNumMod;
+  SHARED_BIG_NUM_EXP_MOD                 BigNumExpMod;
+  SHARED_BIG_NUM_INVERSE_MOD             BigNumInverseMod;
+  SHARED_BIG_NUM_DIV                     BigNumDiv;
+  SHARED_BIG_NUM_MUL_MOD                 BigNumMulMod;
+  SHARED_BIG_NUM_CMP                     BigNumCmp;
+  SHARED_BIG_NUM_BITS                    BigNumBits;
+  SHARED_BIG_NUM_BYTES                   BigNumBytes;
+  SHARED_BIG_NUM_IS_WORD                 BigNumIsWord;
+  SHARED_BIG_NUM_IS_ODD                  BigNumIsOdd;
+  SHARED_BIG_NUM_COPY                    BigNumCopy;
+  SHARED_BIG_NUM_VALUE_ONE               BigNumValueOne;
+  SHARED_BIG_NUM_R_SHIFT                 BigNumRShift;
+  SHARED_BIG_NUM_CONST_TIME              BigNumConstTime;
+  SHARED_BIG_NUM_SQR_MOD                 BigNumSqrMod;
+  SHARED_BIG_NUM_NEW_CONTEXT             BigNumNewContext;
+  SHARED_BIG_NUM_CONTEXT_FREE            BigNumContextFree;
+  SHARED_BIG_NUM_SET_UINT                BigNumSetUint;
+  SHARED_BIG_NUM_ADD_MOD                 BigNumAddMod;
 
   // --------------------------------------------
   //  Key Derivation Function Primitive (6 Functions)
   // --------------------------------------------
-  HkdfExtractAndExpandFunc       HkdfSha256ExtractAndExpand;
-  HkdfExtractFunc                HkdfSha256Extract;
-  HkdfExpandFunc                 HkdfSha256Expand;
-  HkdfExtractAndExpandFunc       HkdfSha384ExtractAndExpand;
-  HkdfExtractFunc                HkdfSha384Extract;
-  HkdfExpandFunc                 HkdfSha384Expand;
+  SHARED_HKDF_EXTRACT_AND_EXPAND         HkdfSha256ExtractAndExpand;
+  SHARED_HKDF_EXTRACT                    HkdfSha256Extract;
+  SHARED_HKDF_EXPAND                     HkdfSha256Expand;
+  SHARED_HKDF_EXTRACT_AND_EXPAND         HkdfSha384ExtractAndExpand;
+  SHARED_HKDF_EXTRACT                    HkdfSha384Extract;
+  SHARED_HKDF_EXPAND                     HkdfSha384Expand;
 
   // ---------------------------------------------
   // PEM
   // ---------------------------------------------
-  RsaGetPrivateKeyFromPemFunc    RsaGetPrivateKeyFromPem;
-  // RsaGetPublicKeyFromPemFunc RsaGetPublicKeyFromPem; TODO Where
-  EcGetPrivateKeyFromPemFunc     EcGetPrivateKeyFromPem;
-  // EcGetPublicKeyFromPemFunc  EcGetPublicKeyFromPem;
+  SHARED_RSA_GET_PRIVATE_KEY_FROM_PEM    RsaGetPrivateKeyFromPem;
+  SHARED_EC_GET_PRIVATE_KEY_FROM_PEM     EcGetPrivateKeyFromPem;
 
   // ---------------------------------------------
   // PK
   // ---------------------------------------------
   /// Authenticode  ------------------------------
-  AuthenticodeVerifyFunc         AuthenticodeVerify;
+  SHARED_AUTHENTICODE_VERIFY             AuthenticodeVerify;
   /// PKCS1v2 ------------------------------------
-  Pkcs1v2EncryptFunc             Pkcs1v2Encrypt;
-  Pkcs1v2DecryptFunc             Pkcs1v2Decrypt;
+  SHARED_PKCS1V2_ENCRYPT                 Pkcs1v2Encrypt;
+  SHARED_PKCS1V2_DECRYPT                 Pkcs1v2Decrypt;
   /// RSA OAEP -----------------------------------
-  RsaOaepEncryptFunc             RsaOaepEncrypt;
-  RsaOaepDecryptFunc             RsaOaepDecrypt;
+  SHARED_RSA_OAEP_ENCRYPT                RsaOaepEncrypt;
+  SHARED_RSA_OAEP_DECRYPT                RsaOaepDecrypt;
   /// PKCS5 --------------------------------------
-  Pkcs5HashPasswordFunc         Pkcs5HashPassword;
+  SHARED_PKCS5_HASH_PASSWORD             Pkcs5HashPassword;
   /// PKCS7 --------------------------------------
   /// DH -----------------------------------------
-  DhNewFunc                      DhNew;
-  DhFreeFunc                     DhFree;
-  DhGenerateParameterFunc        DhGenerateParameter;
-  DhSetParameterFunc             DhSetParameter;
-  DhGenerateKeyFunc              DhGenerateKey;
-  DhComputeKeyFunc               DhComputeKey;
+  SHARED_DH_NEW                          DhNew;
+  SHARED_DH_FREE                         DhFree;
+  SHARED_DH_GENERATE_PARAMETER           DhGenerateParameter;
+  SHARED_DH_SET_PARAMETER                DhSetParameter;
+  SHARED_DH_GENERATE_KEY                 DhGenerateKey;
+  SHARED_DH_COMPUTE_KEY                  DhComputeKey;
 
   // Protocol Version 1 Functions [END] ===================
 } SHARED_CRYPTO_PROTOCOL;
