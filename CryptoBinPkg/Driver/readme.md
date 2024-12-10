@@ -108,7 +108,8 @@ the process.
       - `CryptoRuntimeDxe` - `DxeRngLib` which uses the Crypto protocol to provide randmon numbers. This means a
         platform module must produce the protocol (`gEfiRngProtocolGuid`).
       - `CryptoStandaloneMm (AARCH64)` - `BaseRngLibTimerLib` is linked to the crypto binary.
-      - `CrytpStandaloneMm (X64)` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
+      - `CryptoStandaloneMm (X64)` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
+      - `CryptoMmSupervisorStandaloneMm (X64)` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
       - `CryptoSmm` - `BaseRngLib` is linked to the binary which will use the rndr instruction.
 
       Look for the `RngLib` instance in `CryptoBinPkg.dsc` to see the current random generation library being used.
@@ -147,16 +148,18 @@ the process.
 
     ```ini
     [Defines]
-        DEFINE PEI_CRYPTO_SERVICES          = TINY_SHA
-        DEFINE DXE_CRYPTO_SERVICES          = STANDARD
-        DEFINE RUNTIMEDXE_CRYPTO_SERVICES   = NONE
-        DEFINE SMM_CRYPTO_SERVICES          = STANDARD
-        DEFINE STANDALONEMM_CRYPTO_SERVICES = NONE
-        DEFINE PEI_CRYPTO_ARCH              = IA32
-        DEFINE DXE_CRYPTO_ARCH              = X64
-        DEFINE RUNTIMEDXE_CRYPTO_ARCH       = NONE
-        DEFINE SMM_CRYPTO_ARCH              = X64
-        DEFINE STANDALONEMM_CRYPTO_ARCH     = NONE
+        DEFINE PEI_CRYPTO_SERVICES                  = TINY_SHA
+        DEFINE DXE_CRYPTO_SERVICES                  = STANDARD
+        DEFINE RUNTIMEDXE_CRYPTO_SERVICES           = NONE
+        DEFINE SMM_CRYPTO_SERVICES                  = STANDARD
+        DEFINE STANDALONEMM_CRYPTO_SERVICES         = NONE
+        DEFINE STANDALONEMM_MMSUPV_CRYPTO_SERVICES  = NONE
+        DEFINE PEI_CRYPTO_ARCH                      = IA32
+        DEFINE DXE_CRYPTO_ARCH                      = X64
+        DEFINE RUNTIMEDXE_CRYPTO_ARCH               = NONE
+        DEFINE SMM_CRYPTO_ARCH                      = X64
+        DEFINE STANDALONEMM_CRYPTO_ARCH             = NONE
+        DEFINE STANDALONEMM_MMSUPV_CRYPTO_ARCH      = NONE
     ```
 
     The above example is for a standard Intel platform and the service levels or flavors available.
@@ -167,6 +170,15 @@ the process.
 
     `<PHASE>_CRYPTO_SERVICES` lines set to `NONE` do not need to be specified. Any `<PHASE>_CRYPTO_SERVICES` line set
     to a non-`NONE` value must set the corresponding `<PHASE>_CRYPTO_ARCH` value to a non-`NONE` value as well.
+
+    Two options are provided for Standalone MM. It is important to select the option based on the Standalone MM core
+    used on your platform:
+
+    - [`StandaloneMmPkg`](https://github.com/tianocore/edk2/tree/master/StandaloneMmPkg/Core) - Use `STANDALONEMM_CRYPTO_SERVICES`
+    - [`MmSupervisorPkg`](https://github.com/microsoft/mu_feature_mm_supv/tree/main/MmSupervisorPkg/Core) - Use `STANDALONEMM_MMSUPV_CRYPTO_SERVICES`
+
+    Since the MM Supervisor currently does not support `AARCH64`, only a `X64` MM Supervisor Standalone MM binary is
+    available.
 
 3. Add the DSC include
 

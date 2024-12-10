@@ -595,7 +595,8 @@ def get_crypto_dsc(options, functions):
     lines.append("  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = 254e0f83-c675-4578-bc16-d44111c34e01")
     lines.append("  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = c7ade7a2-3fc9-4762-9c9a-d7ae1ed2e9c3")
     lines.append("  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = be5b74af-e07f-456b-a9e4-296c8fee9502")
-    lines.append("  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = 9c6714d5-33da-4488-9a9c-2a7070635140")
+    lines.append("  DEFINE STANDALONEMM_MMSUPERVISOR_CRYPTO_DRIVER_FILE_GUID = 9c6714d5-33da-4488-9a9c-2a7070635140")
+    lines.append("  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = da9d63cb-c131-4e75-b7b5-a2de62b1c179")
     lines.append("")
 
     # set the file guid for the different flavors
@@ -604,13 +605,15 @@ def get_crypto_dsc(options, functions):
         pei_guid = guid[0:-2] + '01'
         dxe_guid = guid[0:-2] + '02'
         smm_guid = guid[0:-2] + '03'
-        standalone_mm_guid = guid[0:-2] + '04'
+        standalone_mm_mm_supv_guid = guid[0:-2] + '04'
         runtime_dxe_guid = guid[0:-2] + '05'
+        standalone_mm_guid = guid[0:-2] + '06'
         lines.append(f"!if $(CRYPTO_SERVICES) == {flavor}")
         lines.append(f"  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = {pei_guid}")
         lines.append(f"  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = {dxe_guid}")
         lines.append(f"  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = {runtime_dxe_guid}")
         lines.append(f"  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = {smm_guid}")
+        lines.append(f"  DEFINE STANDALONEMM_MMSUPERVISOR_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_mm_supv_guid}")
         lines.append(f"  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_guid}")
         lines.append("!endif\n")
 
@@ -692,7 +695,7 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
         out_dir = DEFAULT_OUTPUT_DIR
         verbose = False
     flavors = get_flavors()
-    phases = ["Pei", "Dxe", "RuntimeDxe", "Smm", "StandaloneMm"]
+    phases = ["Pei", "Dxe", "RuntimeDxe", "Smm", "StandaloneMm_MmSupv", "StandaloneMm"]
     # Arm is currently disabled
     arches = ["X64", "AARCH64", "IA32", ]  # "ARM"
     targets = ["DEBUG", "RELEASE"]
@@ -707,7 +710,9 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
                         continue
                     if arch in ["ARM","AARCH64"] and phase == "Smm":
                         continue
-                    if arch in ["ARM","IA32"] and phase == "StandaloneMm":
+                    if arch in ["ARM","IA32"] and "StandaloneMm" in phase:
+                        continue
+                    if arch == "AARCH64" and phase == "StandaloneMm_MmSupv":
                         continue
                     inf_files.append((flavor, phase, target, arch))
     print(f"Generating {len(inf_files)} inf files")
@@ -725,6 +730,7 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
             "RuntimeDxe": "DXE_RUNTIME_DRIVER",
             "Pei": "PEIM",
             "Smm": "DXE_SMM_DRIVER",
+            "StandaloneMm_MmSupv": "MM_STANDALONE",
             "StandaloneMm": "MM_STANDALONE"
         }
         mod_type = module_types[phase]
@@ -749,10 +755,12 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
             guid = guid[:-2] + "20"
         elif phase == "Smm":
             guid = guid[:-2] + "30"
-        elif phase == "StandaloneMm":
+        elif phase == "StandaloneMm_MmSupv":
             guid = guid[:-2] + "40"
         elif phase == "RuntimeDxe":
             guid = guid[:-2] + "50"
+        elif phase == "StandaloneMm":
+            guid = guid[:-2] + "60"
         if len(guid) != len(original_guid):
             raise ValueError(
                 f"{guid} is not long enough. {len(guid)} vs {len(original_guid)}")
@@ -768,23 +776,23 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
 
         inf_lines.extend(["[Defines]",
                           "  INF_VERSION                    = 0x0001001B",
-                          f"  BASE_NAME                      = BaseCryptoDriver{phase}{arch}",
+                          f"  BASE_NAME                      = BaseCryptoDriver{phase.replace('_', '')}{arch}",
                           "  MODULE_UNI_FILE                = Crypto.uni",
                           f"  FILE_GUID                      = {guid}",
                           f"  MODULE_TYPE                    = {mod_type}",
                           f"  VERSION_STRING                 = {inf_ver_string}",
                           "  PI_SPECIFICATION_VERSION       = 0x00010032",
-                          f"  ENTRY_POINT                    = Crypto{phase}Entry"])
+                          f"  ENTRY_POINT                    = Crypto{phase if phase != 'StandaloneMm_MmSupv' else 'StandaloneMm'}Entry"])
         inf_lines.append(f"\n[Binaries.{arch}]")
         inf_lines.append(
-            f"  PE32|../../{flavor}/{target}/{arch}/Crypto{phase}.efi|{target}")
+            f"  PE32|../../{flavor}/{target}/{arch}/Crypto{phase if phase != 'StandaloneMm_MmSupv' else 'MmSupervisorStandaloneMm'}.efi|{target}")
         depex_phase = phase.upper()
-        if phase == "StandaloneMm":
+        if phase == "StandaloneMm" or phase == "StandaloneMm_MmSupv":
             depex_phase = "SMM"
         if phase == "RuntimeDxe":
             depex_phase = "DXE"
         inf_lines.append(
-            f"  {depex_phase}_DEPEX|../../{flavor}/{target}/{arch}/Crypto{phase}.depex|{target}")
+            f"  {depex_phase}_DEPEX|../../{flavor}/{target}/{arch}/Crypto{phase if phase != 'StandaloneMm_MmSupv' else 'MmSupervisorStandaloneMm'}.depex|{target}")
         inf_lines.append("\n[Packages]")
         inf_lines.append("  CryptoPkg/CryptoPkg.dec")
         inf_lines.append("")
@@ -838,9 +846,11 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
             dsc_lines.append(
                 f"!if $({upper_phase}_CRYPTO_SERVICES) == {flavor}")
             for arch in arches:
-                if arch in ["ARM","IA32"] and phase == "StandaloneMm":
+                if arch in ["ARM","IA32"] and "StandaloneMm" in phase:
                     continue
                 if arch in ["ARM","AARCH64"] and phase == "Smm":
+                    continue
+                if arch == "AARCH64" and phase == "StandaloneMm_MmSupv":
                     continue
                 comp_str = f"Components.{arch}"
                 dsc_lines.append(
@@ -854,7 +864,7 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
             comp_str = "Components"
             dsc_lines.append(f" [{comp_str}]")
             dsc_lines.append(
-                f"   CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase}CryptLib.inf " + "{")
+                f"   CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase if phase != 'StandaloneMm_MmSupv' else 'StandaloneMm'}CryptLib.inf " + "{")
             dsc_lines.append("     <PcdsFixedAtBuild>")
             dsc_lines.append(
                 f"      !include $(SHARED_CRYPTO_PATH)/Driver/Bin/Crypto.pcd.{flavor}.inc.dsc")
@@ -867,18 +877,20 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
         comp_types = get_supported_library_types(phase)
         upper_phase = phase.upper()
         for arch in arches:
-            if arch in ["ARM","IA32"] and phase == "StandaloneMm":
+            if arch in ["ARM","IA32"] and "StandaloneMm" in phase:
                 continue
             if arch in ["ARM","AARCH64"] and phase == "Smm":
+                continue
+            if arch == "AARCH64" and phase == "StandaloneMm_MmSupv":
                 continue
             dsc_lines.append(f"!if $({upper_phase}_CRYPTO_ARCH) == {arch}")
             lib_class_str = ", ".join(map(lambda x: ".".join(
                 ["LibraryClasses", arch, x.upper()]), comp_types))
             dsc_lines.append(f"  [{lib_class_str}]")
             dsc_lines.append(
-                f"    BaseCryptLib|CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase}CryptLib.inf")
+                f"    BaseCryptLib|CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase if phase != 'StandaloneMm_MmSupv' else 'StandaloneMm'}CryptLib.inf")
             dsc_lines.append(
-                f"    TlsLib|CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase}CryptLib.inf")
+                f"    TlsLib|CryptoPkg/Library/BaseCryptLibOnProtocolPpi/{phase if phase != 'StandaloneMm_MmSupv' else 'StandaloneMm'}CryptLib.inf")
             dsc_lines.append("!endif\n")
 
     generate_file_replacement(
@@ -920,7 +932,7 @@ def get_supported_library_types(phase):
         return ["DXE_RUNTIME_DRIVER"]
     elif phase == "SMM":
         return ["DXE_SMM_DRIVER", "SMM_CORE"]
-    elif phase == "STANDALONEMM":
+    elif phase in {"STANDALONEMM", "STANDALONEMM_MMSUPV"}:
         return ["MM_STANDALONE", "MM_CORE_STANDALONE"]
     return ["", ]
 

@@ -1,6 +1,6 @@
 ## @file
 #  Produces the EDK II SMM Crypto Protocol using the library services from
-#  BaseCryptLib and TlsLib for Standalone MM.
+#  BaseCryptLib and TlsLib for Standalone MM with the MM Supervisor enabled.
 #
 #  Copyright (C) Microsoft Corporation. All rights reserved.
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -10,9 +10,9 @@
 [Defines]
   INF_VERSION                    = 0x0001001B
   PI_SPECIFICATION_VERSION       = 0x00010032
-  BASE_NAME                      = CryptoStandaloneMm
+  BASE_NAME                      = CryptoMmSupervisorStandaloneMm
   MODULE_UNI_FILE                = Crypto.uni
-  FILE_GUID                      = B7946FEA-15EF-43F4-9FF6-0F71E032ECF5
+  FILE_GUID                      = 2902DAEA-D67A-45B5-A904-ED3ECF7B5B2D
   MODULE_TYPE                    = MM_STANDALONE
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = CryptoStandaloneMmEntry
