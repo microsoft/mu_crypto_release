@@ -229,7 +229,7 @@
       FILE_GUID = $(RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID)
   }
 
-[Components.AARCH64, Components.X64]
+[Components.X64]
   # Note: MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf has instructions
   #       that are not supported in 32-bit. Only 64-bit is practically needed, so only build for 64-bit here.
   CryptoBinPkg/Driver/CryptoMmSupervisorStandaloneMm.inf {
@@ -245,6 +245,7 @@
       gEfiMdePkgTokenSpaceGuid.PcdStackCookieExceptionVector|0x0F
   }
 
+[Components.AARCH64, Components.X64]
   # Note: Only 64-bit is practically needed, so only build for 64-bit here.
   CryptoBinPkg/Driver/CryptoStandaloneMm.inf {
     <Defines>

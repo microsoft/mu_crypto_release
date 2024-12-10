@@ -712,6 +712,8 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
                         continue
                     if arch in ["ARM","IA32"] and "StandaloneMm" in phase:
                         continue
+                    if arch == "AARCH64" and phase == "StandaloneMm_MmSupv":
+                        continue
                     inf_files.append((flavor, phase, target, arch))
     print(f"Generating {len(inf_files)} inf files")
     # first delete any files that we don't need
@@ -848,6 +850,8 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
                     continue
                 if arch in ["ARM","AARCH64"] and phase == "Smm":
                     continue
+                if arch == "AARCH64" and phase == "StandaloneMm_MmSupv":
+                    continue
                 comp_str = f"Components.{arch}"
                 dsc_lines.append(
                     f" !if $({upper_phase}_CRYPTO_ARCH) == {arch}")
@@ -876,6 +880,8 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
             if arch in ["ARM","IA32"] and "StandaloneMm" in phase:
                 continue
             if arch in ["ARM","AARCH64"] and phase == "Smm":
+                continue
+            if arch == "AARCH64" and phase == "StandaloneMm_MmSupv":
                 continue
             dsc_lines.append(f"!if $({upper_phase}_CRYPTO_ARCH) == {arch}")
             lib_class_str = ", ".join(map(lambda x: ".".join(
