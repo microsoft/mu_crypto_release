@@ -19,16 +19,16 @@
   PACKAGE_GUID                   = 8823c3fc-32ca-4275-990a-8485f87e3c8c
   PACKAGE_VERSION                = 1.0
 
-[Includes.common.Private]
+[Includes.Common.Private]
   Private
   Library/Include
   Library/OpensslLib/openssl/include
 
-[LibraryClasses.common.Private]
+[LibraryClasses.Common.Private]
   ##  @libraryclass  Provides library functions from the openssl project.
   #
   OpensslLib|Private/Library/OpensslLib.h
-  
+
   ##  @libraryclass  Provides compiler intrinsic functions required to link openssl project.
   #
   InstrinsicLib|Private/Library/IntrinsicLib.h
