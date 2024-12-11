@@ -932,7 +932,7 @@ def get_supported_library_types(phase):
         return ["DXE_RUNTIME_DRIVER"]
     elif phase == "SMM":
         return ["DXE_SMM_DRIVER", "SMM_CORE"]
-    elif phase == "STANDALONEMM" or phase == "STANDALONEMM_MMSUPV":
+    elif phase in {"STANDALONEMM", "STANDALONEMM_MMSUPV"}:
         return ["MM_STANDALONE", "MM_CORE_STANDALONE"]
     return ["", ]
 
