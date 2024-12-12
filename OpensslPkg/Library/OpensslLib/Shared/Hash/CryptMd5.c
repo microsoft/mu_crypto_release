@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptHash.h"
+#include "InternalCryptLib.h"
 #include <openssl/md5.h>
 
 #ifdef ENABLE_MD5_DEPRECATED_INTERFACES
@@ -223,44 +223,6 @@ Md5HashAll (
   } else {
     return TRUE;
   }
-}
-
-VOID
-InitMd5Support (
-  SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (HashFuncs == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->Md5GetContextSize = MD5GetContextSize;
-  Crypto->Md5Init           = MD5Init;
-  Crypto->Md5Update         = MD5Update;
-  Crypto->Md5Final          = MD5Final;
-  Crypto->Md5Duplicate      = MD5Duplicate;
-  Crypto->Md5HashAll        = MD5HashAll;
-}
-
-#else
-
-VOID
-InitMd5Support (
-  OUT SHARED_CRYPTO_PROTOCOL *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->Md5HashAll        = NULL;
-  Crypto->Md5GetContextSize = NULL;
-  Crypto->Md5Init           = NULL;
-  Crypto->Md5Update         = NULL;
-  Crypto->Md5Final          = NULL;
-  Crypto->Md5Duplicate      = NULL;
 }
 
 #endif

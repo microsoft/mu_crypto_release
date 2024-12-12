@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptHkdf.h"
+#include "InternalCryptLib.h"
 #include <openssl/evp.h>
 #include <openssl/kdf.h>
 
@@ -418,23 +418,4 @@ HkdfSha384Expand (
   )
 {
   return HkdfMdExpand (EVP_sha384 (), Prk, PrkSize, Info, InfoSize, Out, OutSize);
-}
-
-VOID
-EFIAPI
-HkdfInstallFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->HkdfSha256Expand           = HkdfSha256Expand;
-  Crypto->HkdfSha256Extract          = HkdfSha256Extract;
-  Crypto->HkdfSha256ExtractAndExpand = HkdfSha256ExtractAndExpand;
-  Crypto->HkdfSha384Expand           = HkdfSha384Expand;
-  Crypto->HkdfSha384Extract          = HkdfSha384Extract;
-  Crypto->HkdfSha384ExtractAndExpand = HkdfSha384ExtractAndExpand;
 }

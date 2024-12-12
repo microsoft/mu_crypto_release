@@ -9,7 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptCipher.h"
+#include "InternalCryptLib.h"
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 
@@ -276,19 +276,4 @@ Done:
   }
 
   return RetValue;
-}
-
-VOID
-EFIAPI
-AeadAesGcmInitFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->AeadAesGcmEncrypt = AeadAesGcmEncrypt;
-  Crypto->AeadAesGcmDecrypt = AeadAesGcmDecrypt;
 }

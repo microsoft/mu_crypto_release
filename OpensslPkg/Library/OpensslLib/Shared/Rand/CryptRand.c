@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptRand.h"
+#include "InternalCryptLib.h"
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include "CrtLibSupport.h"

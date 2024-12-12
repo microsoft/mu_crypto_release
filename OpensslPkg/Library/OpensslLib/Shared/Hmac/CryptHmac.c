@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptHmac.h"
+#include "InternalCryptLib.h"
 #include <openssl/hmac.h>
 
 /**
@@ -633,42 +633,4 @@ HmacSha384All (
   )
 {
   return HmacMdAll (EVP_sha384 (), Data, DataSize, Key, KeySize, HmacValue);
-}
-
-/**
-  Initializes the HMAC function pointers in the HmacFunctions structure.
-
-  @param[out]  Funcs  Pointer to the structure that will hold the HMAC function pointers.
-**/
-VOID
-EFIAPI
-HmacInitFunctions (
-    SHARED_CRYPTO_PROTOCOL *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    return;
-  }
-
-  //
-  // Initialize HMAC-SHA256 function pointers
-  //
-  Crypto->HmacSha256New       = HmacSha256New;
-  Crypto->HmacSha256Free      = HmacSha256Free;
-  Crypto->HmacSha256SetKey    = HmacSha256SetKey;
-  Crypto->HmacSha256Duplicate = HmacSha256Duplicate;
-  Crypto->HmacSha256Update    = HmacSha256Update;
-  Crypto->HmacSha256Final     = HmacSha256Final;
-  Crypto->HmacSha256All       = HmacSha256All;
-
-  //
-  // Initialize HMAC-SHA384 function pointers
-  //
-  Crypto->HmacSha384New       = HmacSha384New;
-  Crypto->HmacSha384Free      = HmacSha384Free;
-  Crypto->HmacSha384SetKey    = HmacSha384SetKey;
-  Crypto->HmacSha384Duplicate = HmacSha384Duplicate;
-  Crypto->HmacSha384Update    = HmacSha384Update;
-  Crypto->HmacSha384Final     = HmacSha384Final;
-  Crypto->HmacSha384All       = HmacSha384All;
 }

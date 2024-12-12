@@ -5,7 +5,7 @@
 
 **/
 
-#include "CryptBn.h"
+#include "InternalCryptLib.h"
 #include <openssl/bn.h>
 
 /**
@@ -578,41 +578,4 @@ BigNumAddMod (
   BN_CTX_free (Ctx);
 
   return RetVal;
-}
-
-VOID
-EFIAPI
-BigNumInitFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    return;
-  }
-
-  Crypto->BigNumInit        = BigNumInit;
-  Crypto->BigNumFromBin     = BigNumFromBin;
-  Crypto->BigNumToBin       = BigNumToBin;
-  Crypto->BigNumFree        = BigNumFree;
-  Crypto->BigNumAdd         = BigNumAdd;
-  Crypto->BigNumSub         = BigNumSub;
-  Crypto->BigNumMod         = BigNumMod;
-  Crypto->BigNumExpMod      = BigNumExpMod;
-  Crypto->BigNumInverseMod  = BigNumInverseMod;
-  Crypto->BigNumDiv         = BigNumDiv;
-  Crypto->BigNumMulMod      = BigNumMulMod;
-  Crypto->BigNumCmp         = BigNumCmp;
-  Crypto->BigNumBits        = BigNumBits;
-  Crypto->BigNumBytes       = BigNumBytes;
-  Crypto->BigNumIsWord      = BigNumIsWord;
-  Crypto->BigNumIsOdd       = BigNumIsOdd;
-  Crypto->BigNumCopy        = BigNumCopy;
-  Crypto->BigNumValueOne    = BigNumValueOne;
-  Crypto->BigNumRShift      = BigNumRShift;
-  Crypto->BigNumConstTime   = BigNumConstTime;
-  Crypto->BigNumSqrMod      = BigNumSqrMod;
-  Crypto->BigNumNewContext  = BigNumNewContext;
-  Crypto->BigNumContextFree = BigNumContextFree;
-  Crypto->BigNumSetUint     = BigNumSetUint;
-  Crypto->BigNumAddMod      = BigNumAddMod;
 }

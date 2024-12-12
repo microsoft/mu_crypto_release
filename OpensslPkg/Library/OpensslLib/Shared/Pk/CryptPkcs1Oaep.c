@@ -8,7 +8,7 @@
 
 **/
 
-#include "CryptPk.h" // CrtLibSupport.h provides AllocatePool through SharedCrtLibSupport.h
+#include "InternalCryptLib.h"
 #include <openssl/objects.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
@@ -711,27 +711,4 @@ _Exit:
   }
 
   return Result;
-}
-
-
-/**
-  Installs PKCS1v2 (RSAES-OAEP) encryption/decryption functions into the shared crypto protocol.
-
-  @param[out]  Crypto  Pointer to the shared crypto protocol.
-
-**/
-VOID
-EFIAPI
-Pkcs1v2InstallFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    return;
-  }
-
-  Crypto->Pkcs1v2Encrypt = Pkcs1v2Encrypt;
-  Crypto->Pkcs1v2Decrypt = Pkcs1v2Decrypt;
-  Crypto->RsaOaepEncrypt = RsaOaepEncrypt;
-  Crypto->RsaOaepDecrypt = RsaOaepDecrypt;
 }

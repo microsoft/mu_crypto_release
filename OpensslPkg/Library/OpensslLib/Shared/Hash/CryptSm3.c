@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptHash.h"
+#include "InternalCryptLib.h"
 #include "crypto/sm3.h"
 
 /**
@@ -232,28 +232,4 @@ Sm3HashAll (
   sm3_final (HashValue, &Ctx);
 
   return TRUE;
-}
-
-/**
-  Initializes the function pointers for SHA-1 hashing operations.
-
-  @param[out]  Crypto  Pointer to the structure containing the function pointers.
-
-**/
-VOID
-InitSm3Support (
-  OUT SHARED_CRYPTO_PROTOCOL *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->Sm3GetContextSize = Sm3GetContextSize;
-  Crypto->Sm3Init           = Sm3Init;
-  Crypto->Sm3Update         = Sm3Update;
-  Crypto->Sm3Final          = Sm3Final;
-  Crypto->Sm3Duplicate      = Sm3Duplicate;
-  Crypto->Sm3HashAll        = Sm3HashAll;
 }
