@@ -31,10 +31,12 @@
   OpensslPkg/OpensslPkg.dec
 
 [Sources]
+  Shared/InternalCryptLib.h
   SharedCryptoBin.c
   Shared/SharedOpenssl.c
   Shared/SharedOpenssl.h
   Shared/SharedCryptoProtocol.h
+  Shared/SharedCryptDecl.h
   Shared/SharedCryptoCrt.c
   Shared/Syscall/CrtWrapper.c
   Shared/Syscall/BaseMemAllocation.c
@@ -42,15 +44,11 @@
   Shared/Math/DivS64x64Remainder.c
   # Big Number Crypto API
   Shared/BN/CryptBn.c
-  Shared/BN/CryptBn.h
   # Cipher Crypto API
-  Shared/Cipher/CryptCipher.h
   Shared/Cipher/CryptAeadAesGcm.c
   Shared/Cipher/CryptAes.c
 
   # Hash Crypto API
-  Shared/Hash/CryptHash.c
-  Shared/Hash/CryptHash.h
   Shared/Hash/CryptMd5.c
   Shared/Hash/CryptSha1.c
   Shared/Hash/CryptSha256.c
@@ -59,19 +57,14 @@
 
   # HMAC API
   Shared/Hmac/CryptHmac.c
-  Shared/Hmac/CryptHmac.h
 
   # KDF API
   Shared/Kdf/CryptHkdf.c
-  Shared/Kdf/CryptHkdf.h
 
   # PEM API
   Shared/Pem/CryptPem.c
-  Shared/Pem/CryptPem.h
 
   # PK API
-  Shared/Pk/CryptPk.h
-  Shared/Pk/CryptPk.c
   Shared/Pk/CryptAuthenticode.c
   Shared/Pk/CryptPkcs7VerifyCommon.c
   Shared/Pk/CryptDh.c

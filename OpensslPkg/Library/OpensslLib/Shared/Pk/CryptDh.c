@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptPk.h"
+#include "InternalCryptLib.h"
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 
@@ -312,28 +312,4 @@ DhComputeKey (
   *KeySize = Size;
   BN_free (Bn);
   return TRUE;
-}
-
-/**
-  Installs Diffie-Hellman functions into the shared crypto protocol.
-
-  @param[out]  Crypto  Pointer to the shared crypto protocol.
-
-**/
-VOID
-EFIAPI
-DhInstallFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    return;
-  }
-
-  Crypto->DhNew               = DhNew;
-  Crypto->DhFree              = DhFree;
-  Crypto->DhGenerateParameter = DhGenerateParameter;
-  Crypto->DhSetParameter      = DhSetParameter;
-  Crypto->DhGenerateKey       = DhGenerateKey;
-  Crypto->DhComputeKey        = DhComputeKey;
 }

@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptPk.h"
+#include "InternalCryptLib.h"
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 
@@ -95,24 +95,4 @@ Pkcs5HashPassword (
                     (int)KeyLength,
                     (unsigned char *)OutKey
                     );
-}
-
-
-/**
-  Installs PKCS#5 PBKDF2 functions into the shared crypto protocol.
-
-  @param[out]  Crypto  Pointer to the shared crypto protocol.
-
-**/
-VOID
-EFIAPI
-Pkcs5InstallFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    return;
-  }
-
-  Crypto->Pkcs5HashPassword = Pkcs5HashPassword;
 }
