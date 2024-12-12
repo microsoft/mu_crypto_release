@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptHash.h"
+#include "InternalCryptLib.h"
 #include <openssl/sha.h>
 
 #ifndef DISABLE_SHA1_DEPRECATED_INTERFACES
@@ -223,30 +223,6 @@ Sha1HashAll (
   } else {
     return TRUE;
   }
-}
-
-/**
-  Initializes the function pointers for SHA-1 hashing operations.
-
-  @param[out]  Crypto  Pointer to the structure containing the function pointers.
-
-**/
-VOID
-InitSha1Support (
-  OUT SHARED_CRYPTO_PROTOCOL *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->Sha1GetContextSize = Sha1GetContextSize;
-  Crypto->Sha1Init           = Sha1Init;
-  Crypto->Sha1Update         = Sha1Update;
-  Crypto->Sha1Final          = Sha1Final;
-  Crypto->Sha1Duplicate      = Sha1Duplicate;
-  Crypto->Sha1HashAll        = Sha1HashAll;
 }
 
 #endif

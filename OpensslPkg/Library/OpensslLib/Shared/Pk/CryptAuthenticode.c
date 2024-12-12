@@ -14,8 +14,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptPk.h"
-
+#include "InternalCryptLib.h"
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 #include <openssl/pkcs7.h>
@@ -192,18 +191,4 @@ _Exit:
   PKCS7_free (Pkcs7);
 
   return Status;
-}
-
-
-VOID
-EFIAPI
-AuthenticodeInstallFunctions(
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-) {
-
-  if (Crypto == NULL) {
-    return;
-  }
-
-  Crypto->AuthenticodeVerify = AuthenticodeVerify;
 }

@@ -209,7 +209,7 @@ typedef struct  _SHARED_DEPENDENCIES {
   ALLOCATE_POOL                 AllocatePool;
   FREE_POOL                     FreePool;
   COPY_MEM                      CopyMem;
-  ASSERT_T                      ASSERT; // TODO
+  ASSERT_T                      ASSERT;
   GET_TIME                      GetTime;
   DEBUG_PRINT                   DebugPrint;
   GET_RANDOM_NUMBER_64          GetRandomNumber64;

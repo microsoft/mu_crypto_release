@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "Shared/SharedCryptoProtocol.h"
+#include "SharedOpenssl.h"
 #include <openssl/pem.h>
 
 /**
@@ -208,25 +208,4 @@ _Exit:
   BIO_free (PemBio);
 
   return Status;
-}
-
-
-VOID
-EFIAPI
-PemInstallFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  //
-  // Check input parameter.
-  //
-  if (Crypto == NULL) {
-    return;
-  }
-
-  //
-  // Install PEM functions.
-  //
-  Crypto->RsaGetPrivateKeyFromPem = RsaGetPrivateKeyFromPem;
-  Crypto->EcGetPrivateKeyFromPem = EcGetPrivateKeyFromPem;
 }

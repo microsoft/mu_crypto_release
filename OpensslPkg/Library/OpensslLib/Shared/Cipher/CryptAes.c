@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptCipher.h"
+#include "InternalCryptLib.h"
 #include "CrtLibSupport.h"
 #include <openssl/aes.h>
 
@@ -203,26 +203,4 @@ AesCbcDecrypt (
   AES_cbc_encrypt (Input, Output, (UINT32)InputSize, AesKey + 1, IvecBuffer, AES_DECRYPT);
 
   return TRUE;
-}
-
-/**
-  Initializes the AES function pointers.
-
-  @param[out]  Funcs  Pointer to the structure that will hold the AES function pointers.
-
-**/
-VOID
-EFIAPI
-AesInitFunctions (
-  OUT SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    return;
-  }
-
-  Crypto->AesGetContextSize = AesGetContextSize;
-  Crypto->AesInit           = AesInit;
-  Crypto->AesCbcEncrypt     = AesCbcEncrypt;
-  Crypto->AesCbcDecrypt     = AesCbcDecrypt;
 }

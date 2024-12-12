@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "CryptHash.h"
+#include "InternalCryptLib.h"
 #include <openssl/sha.h>
 
 /**
@@ -439,28 +439,4 @@ Sha512HashAll (
   } else {
     return TRUE;
   }
-}
-
-/**
-  Initializes the function pointers for SHA-1 hashing operations.
-
-  @param[out]  Crypto  Pointer to the structure containing the function pointers.
-
-**/
-VOID
-InitSha512Support (
-  OUT SHARED_CRYPTO_PROTOCOL *Crypto
-  )
-{
-  if (Crypto == NULL) {
-    // TODO ASSERT
-    return;
-  }
-
-  Crypto->Sha512GetContextSize = Sha512GetContextSize;
-  Crypto->Sha512Init           = Sha512Init;
-  Crypto->Sha512Update         = Sha512Update;
-  Crypto->Sha512Final          = Sha512Final;
-  Crypto->Sha512Duplicate      = Sha512Duplicate;
-  Crypto->Sha512HashAll        = Sha512HashAll;
 }

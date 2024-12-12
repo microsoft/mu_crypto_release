@@ -23,7 +23,7 @@ EFI_STATUS
 EFIAPI
 Constructor (
   IN VOID   *Depends,
-  OUT VOID  *OutCrypto
+  OUT VOID  *RequestedCrypto
   )
 {
   //
@@ -35,7 +35,7 @@ Constructor (
   //
   // Build the Crypto
   //
-  CryptoInit (OutCrypto);
+  CryptoInit (RequestedCrypto);
 
   return EFI_SUCCESS;
 }

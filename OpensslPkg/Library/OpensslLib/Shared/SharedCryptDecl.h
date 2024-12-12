@@ -1,16 +1,8 @@
-#ifndef SHARED_CRYPTO_PROTOCOL_
-#define SHARED_CRYPTO_PROTOCOL_
+#ifndef _PROTOCOL_H_
+#define _PROTOCOL_H_
 
 #include <Uefi.h>
 
-/*
-This file cannot depend on anything but UEFI primatives.
-
-Any function typedef will be copied and transformed into function declarations.
-Any region marked COPY_REGION_BEGIN to COPY_REGION_END will be copied verbatim.
-*/
-
-// COPY_REGION_BEGIN
 #define VERSION_MAJOR     1ULL
 #define VERSION_MINOR     0ULL
 #define VERSION_REVISION  0ULL
@@ -82,38 +74,52 @@ Any region marked COPY_REGION_BEGIN to COPY_REGION_END will be copied verbatim.
     Minor = (UINT32)(((Version) >> 16) & 0xFFFF); \
     Revision = (UINT32)((Version) & 0xFFFF); \
   } while (0)
-// COPY_REGION_END
+
+
+///
+/// RSA Key Tags Definition used in RsaSetKey() function for key component identification.
+///
+typedef enum {
+  RsaKeyN,      ///< RSA public Modulus (N)
+  RsaKeyE,      ///< RSA Public exponent (e)
+  RsaKeyD,      ///< RSA Private exponent (d)
+  RsaKeyP,      ///< RSA secret prime factor of Modulus (p)
+  RsaKeyQ,      ///< RSA secret prime factor of Modules (q)
+  RsaKeyDp,     ///< p's CRT exponent (== d mod (p - 1))
+  RsaKeyDq,     ///< q's CRT exponent (== d mod (q - 1))
+  RsaKeyQInv    ///< The CRT coefficient (== 1/q mod p)
+} RSA_KEY_TAG;
+
 
 /**
     Retrieves the version of the shared crypto protocol.
 
     @return  The version of the shared crypto protocol.
 **/
-typedef UINT64 (EFIAPI *SHARED_GET_VERSION)(
-  VOID
-  );
-
-// =====================================================================================
-//    MAC (Message Authentication Code) Primitive
-// =====================================================================================
+UINT64
+EFIAPI
+GetVersion(
+  VOID);
 
 /**
   Creates a new HMAC context.
 
   @return  Pointer to the new HMAC context.
 **/
-typedef VOID *(EFIAPI *SHARED_HMAC_NEW)(
-  VOID
-  );
+VOID *
+EFIAPI
+HmacSha256New(
+  VOID);
 
 /**
   Frees an HMAC context.
 
   @param[in]  HmacCtx  Pointer to the HMAC context to be freed.
 **/
-typedef VOID (EFIAPI *SHARED_HMAC_FREE)(
-  VOID  *HmacCtx
-  );
+VOID
+EFIAPI
+HmacSha256Free(
+  VOID  *HmacCtx);
 
 /**
   Sets the key for an HMAC context.
@@ -125,11 +131,12 @@ typedef VOID (EFIAPI *SHARED_HMAC_FREE)(
   @retval TRUE   Key was set successfully.
   @retval FALSE  Failed to set the key.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HMAC_SET_KEY)(
+BOOLEAN
+EFIAPI
+HmacSha256SetKey(
   VOID         *HmacContext,
   CONST UINT8  *Key,
-  UINTN        KeySize
-  );
+  UINTN        KeySize);
 
 /**
   Duplicates an HMAC context.
@@ -140,10 +147,11 @@ typedef BOOLEAN (EFIAPI *SHARED_HMAC_SET_KEY)(
   @retval TRUE   Context was duplicated successfully.
   @retval FALSE  Failed to duplicate the context.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HMAC_DUPLICATE)(
+BOOLEAN
+EFIAPI
+HmacSha256Duplicate(
   CONST VOID  *HmacContext,
-  VOID        *NewHmacContext
-  );
+  VOID        *NewHmacContext);
 
 /**
   Updates the HMAC with data.
@@ -155,11 +163,12 @@ typedef BOOLEAN (EFIAPI *SHARED_HMAC_DUPLICATE)(
   @retval TRUE   Data was updated successfully.
   @retval FALSE  Failed to update the data.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HMAC_UPDATE)(
+BOOLEAN
+EFIAPI
+HmacSha256Update(
   VOID        *HmacContext,
   CONST VOID  *Data,
-  UINTN       DataSize
-  );
+  UINTN       DataSize);
 
 /**
   Finalizes the HMAC and produces the HMAC value.
@@ -170,10 +179,11 @@ typedef BOOLEAN (EFIAPI *SHARED_HMAC_UPDATE)(
   @retval TRUE   HMAC value was produced successfully.
   @retval FALSE  Failed to produce the HMAC value.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HMAC_FINAL)(
+BOOLEAN
+EFIAPI
+HmacSha256Final(
   VOID   *HmacContext,
-  UINT8  *HmacValue
-  );
+  UINT8  *HmacValue);
 
 /**
   Performs the entire HMAC operation in one step.
@@ -187,26 +197,129 @@ typedef BOOLEAN (EFIAPI *SHARED_HMAC_FINAL)(
   @retval TRUE   HMAC operation was performed successfully.
   @retval FALSE  Failed to perform the HMAC operation.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HMAC_ALL)(
+BOOLEAN
+EFIAPI
+HmacSha256All(
   CONST VOID   *Data,
   UINTN        DataSize,
   CONST UINT8  *Key,
   UINTN        KeySize,
-  UINT8        *HmacValue
-  );
+  UINT8        *HmacValue);
 
-// =====================================================================================
-//    Hashing Primitives (TODO)
-// =====================================================================================
+/**
+  Creates a new HMAC context.
+
+  @return  Pointer to the new HMAC context.
+**/
+VOID *
+EFIAPI
+HmacSha384New(
+  VOID);
+
+/**
+  Frees an HMAC context.
+
+  @param[in]  HmacCtx  Pointer to the HMAC context to be freed.
+**/
+VOID
+EFIAPI
+HmacSha384Free(
+  VOID  *HmacCtx);
+
+/**
+  Sets the key for an HMAC context.
+
+  @param[in]  HmacContext  Pointer to the HMAC context.
+  @param[in]  Key          Pointer to the key.
+  @param[in]  KeySize      Size of the key in bytes.
+
+  @retval TRUE   Key was set successfully.
+  @retval FALSE  Failed to set the key.
+**/
+BOOLEAN
+EFIAPI
+HmacSha384SetKey(
+  VOID         *HmacContext,
+  CONST UINT8  *Key,
+  UINTN        KeySize);
+
+/**
+  Duplicates an HMAC context.
+
+  @param[in]  HmacContext     Pointer to the source HMAC context.
+  @param[out] NewHmacContext  Pointer to the new HMAC context.
+
+  @retval TRUE   Context was duplicated successfully.
+  @retval FALSE  Failed to duplicate the context.
+**/
+BOOLEAN
+EFIAPI
+HmacSha384Duplicate(
+  CONST VOID  *HmacContext,
+  VOID        *NewHmacContext);
+
+/**
+  Updates the HMAC with data.
+
+  @param[in]  HmacContext  Pointer to the HMAC context.
+  @param[in]  Data         Pointer to the data.
+  @param[in]  DataSize     Size of the data in bytes.
+
+  @retval TRUE   Data was updated successfully.
+  @retval FALSE  Failed to update the data.
+**/
+BOOLEAN
+EFIAPI
+HmacSha384Update(
+  VOID        *HmacContext,
+  CONST VOID  *Data,
+  UINTN       DataSize);
+
+/**
+  Finalizes the HMAC and produces the HMAC value.
+
+  @param[in]  HmacContext  Pointer to the HMAC context.
+  @param[out] HmacValue    Pointer to the buffer that receives the HMAC value.
+
+  @retval TRUE   HMAC value was produced successfully.
+  @retval FALSE  Failed to produce the HMAC value.
+**/
+BOOLEAN
+EFIAPI
+HmacSha384Final(
+  VOID   *HmacContext,
+  UINT8  *HmacValue);
+
+/**
+  Performs the entire HMAC operation in one step.
+
+  @param[in]  Data       Pointer to the data.
+  @param[in]  DataSize   Size of the data in bytes.
+  @param[in]  Key        Pointer to the key.
+  @param[in]  KeySize    Size of the key in bytes.
+  @param[out] HmacValue  Pointer to the buffer that receives the HMAC value.
+
+  @retval TRUE   HMAC operation was performed successfully.
+  @retval FALSE  Failed to perform the HMAC operation.
+**/
+BOOLEAN
+EFIAPI
+HmacSha384All(
+  CONST VOID   *Data,
+  UINTN        DataSize,
+  CONST UINT8  *Key,
+  UINTN        KeySize,
+  UINT8        *HmacValue);
 
 /**
  * @typedef SHARED_HASH_GET_CONTEXT_SIZE
  * @brief Function pointer type for retrieving the size of the Hash context buffer.
  * @return The size, in bytes, of the context buffer required for hash operations.
  */
-typedef UINTN (EFIAPI *SHARED_HASH_GET_CONTEXT_SIZE)(
-  VOID
-  );
+UINTN
+EFIAPI
+Md5GetContextSize(
+  VOID);
 
 /**
  * @typedef SHARED_HASH_INIT
@@ -214,9 +327,10 @@ typedef UINTN (EFIAPI *SHARED_HASH_GET_CONTEXT_SIZE)(
  * @param[out] ContHashContextext Pointer to the Hash context being initialized.
  * @return TRUE if Hash context initialization succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_HASH_INIT)(
-  OUT VOID  *HashContext
-  );
+BOOLEAN
+EFIAPI
+Md5Init(
+  OUT VOID  *HashContext);
 
 /**
  * @typedef SHARED_HASH_UPDATE
@@ -226,11 +340,12 @@ typedef BOOLEAN (EFIAPI *SHARED_HASH_INIT)(
  * @param[in] DataSize Size of Data buffer in bytes.
  * @return TRUE if Hash data digest succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_HASH_UPDATE)(
+BOOLEAN
+EFIAPI
+Md5Update(
   IN OUT VOID    *HashContext,
   IN CONST VOID  *Data,
-  IN UINTN       DataSize
-  );
+  IN UINTN       DataSize);
 
 /**
  * @typedef SHARED_HASH_FINAL
@@ -239,10 +354,11 @@ typedef BOOLEAN (EFIAPI *SHARED_HASH_UPDATE)(
  * @param[in, out] HashContext Pointer to the Hash context.
  * @return TRUE if Hash finalization succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_HASH_FINAL)(
+BOOLEAN
+EFIAPI
+Md5Final(
   IN OUT  VOID   *HashContext,
-  OUT     UINT8  *HashDigest
-  );
+  OUT     UINT8  *HashDigest);
 
 /**
  * @typedef SHARED_HASH_ALL
@@ -252,11 +368,12 @@ typedef BOOLEAN (EFIAPI *SHARED_HASH_FINAL)(
  * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
  * @return TRUE if Hash hash succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_HASH_ALL)(
+BOOLEAN
+EFIAPI
+Md5HashAll(
   IN CONST VOID  *Data,
   IN UINTN       DataSize,
-  OUT UINT8      *HashDigest
-  );
+  OUT UINT8      *HashDigest);
 
 /**
  * @typedef SHARED_HASH_DUPLICATE
@@ -265,23 +382,329 @@ typedef BOOLEAN (EFIAPI *SHARED_HASH_ALL)(
  * @param[out] NewHashContext Pointer to new Hash context.
  * @return TRUE if Hash context copy succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_HASH_DUPLICATE)(
+BOOLEAN
+EFIAPI
+Md5Duplicate(
   IN CONST VOID  *HashContext,
-  OUT VOID       *NewHashContext
-  );
+  OUT VOID       *NewHashContext);
 
-// =====================================================================================
-//    Symmetric Cryptography Primitive
-// =====================================================================================
+/**
+ * @typedef SHARED_HASH_GET_CONTEXT_SIZE
+ * @brief Function pointer type for retrieving the size of the Hash context buffer.
+ * @return The size, in bytes, of the context buffer required for hash operations.
+ */
+UINTN
+EFIAPI
+Sha1GetContextSize(
+  VOID);
+
+/**
+ * @typedef SHARED_HASH_INIT
+ * @brief Function pointer type for initializing Hash context.
+ * @param[out] ContHashContextext Pointer to the Hash context being initialized.
+ * @return TRUE if Hash context initialization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha1Init(
+  OUT VOID  *HashContext);
+
+/**
+ * @typedef SHARED_HASH_UPDATE
+ * @brief Function pointer type for updating Hash context with input data.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @return TRUE if Hash data digest succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha1Update(
+  IN OUT VOID    *HashContext,
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize);
+
+/**
+ * @typedef SHARED_HASH_FINAL
+ * @brief Function pointer type for finalizing Hash context and retrieving the digest.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @return TRUE if Hash finalization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha1Final(
+  IN OUT  VOID   *HashContext,
+  OUT     UINT8  *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_ALL
+ * @brief Function pointer type for performing Hash hash on a data buffer.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @return TRUE if Hash hash succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha1HashAll(
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize,
+  OUT UINT8      *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_DUPLICATE
+ * @brief Function pointer type for duplicating an existing HASH context.
+ * @param[in] HashContext Pointer to Hash context being copied.
+ * @param[out] NewHashContext Pointer to new Hash context.
+ * @return TRUE if Hash context copy succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha1Duplicate(
+  IN CONST VOID  *HashContext,
+  OUT VOID       *NewHashContext);
+
+/**
+ * @typedef SHARED_HASH_GET_CONTEXT_SIZE
+ * @brief Function pointer type for retrieving the size of the Hash context buffer.
+ * @return The size, in bytes, of the context buffer required for hash operations.
+ */
+UINTN
+EFIAPI
+Sha256GetContextSize(
+  VOID);
+
+/**
+ * @typedef SHARED_HASH_INIT
+ * @brief Function pointer type for initializing Hash context.
+ * @param[out] ContHashContextext Pointer to the Hash context being initialized.
+ * @return TRUE if Hash context initialization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha256Init(
+  OUT VOID  *HashContext);
+
+/**
+ * @typedef SHARED_HASH_UPDATE
+ * @brief Function pointer type for updating Hash context with input data.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @return TRUE if Hash data digest succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha256Update(
+  IN OUT VOID    *HashContext,
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize);
+
+/**
+ * @typedef SHARED_HASH_FINAL
+ * @brief Function pointer type for finalizing Hash context and retrieving the digest.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @return TRUE if Hash finalization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha256Final(
+  IN OUT  VOID   *HashContext,
+  OUT     UINT8  *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_ALL
+ * @brief Function pointer type for performing Hash hash on a data buffer.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @return TRUE if Hash hash succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha256HashAll(
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize,
+  OUT UINT8      *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_DUPLICATE
+ * @brief Function pointer type for duplicating an existing HASH context.
+ * @param[in] HashContext Pointer to Hash context being copied.
+ * @param[out] NewHashContext Pointer to new Hash context.
+ * @return TRUE if Hash context copy succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha256Duplicate(
+  IN CONST VOID  *HashContext,
+  OUT VOID       *NewHashContext);
+
+/**
+ * @typedef SHARED_HASH_GET_CONTEXT_SIZE
+ * @brief Function pointer type for retrieving the size of the Hash context buffer.
+ * @return The size, in bytes, of the context buffer required for hash operations.
+ */
+UINTN
+EFIAPI
+Sha512GetContextSize(
+  VOID);
+
+/**
+ * @typedef SHARED_HASH_INIT
+ * @brief Function pointer type for initializing Hash context.
+ * @param[out] ContHashContextext Pointer to the Hash context being initialized.
+ * @return TRUE if Hash context initialization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha512Init(
+  OUT VOID  *HashContext);
+
+/**
+ * @typedef SHARED_HASH_UPDATE
+ * @brief Function pointer type for updating Hash context with input data.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @return TRUE if Hash data digest succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha512Update(
+  IN OUT VOID    *HashContext,
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize);
+
+/**
+ * @typedef SHARED_HASH_FINAL
+ * @brief Function pointer type for finalizing Hash context and retrieving the digest.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @return TRUE if Hash finalization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha512Final(
+  IN OUT  VOID   *HashContext,
+  OUT     UINT8  *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_ALL
+ * @brief Function pointer type for performing Hash hash on a data buffer.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @return TRUE if Hash hash succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha512HashAll(
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize,
+  OUT UINT8      *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_DUPLICATE
+ * @brief Function pointer type for duplicating an existing HASH context.
+ * @param[in] HashContext Pointer to Hash context being copied.
+ * @param[out] NewHashContext Pointer to new Hash context.
+ * @return TRUE if Hash context copy succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sha512Duplicate(
+  IN CONST VOID  *HashContext,
+  OUT VOID       *NewHashContext);
+
+/**
+ * @typedef SHARED_HASH_GET_CONTEXT_SIZE
+ * @brief Function pointer type for retrieving the size of the Hash context buffer.
+ * @return The size, in bytes, of the context buffer required for hash operations.
+ */
+UINTN
+EFIAPI
+Sm3GetContextSize(
+  VOID);
+
+/**
+ * @typedef SHARED_HASH_INIT
+ * @brief Function pointer type for initializing Hash context.
+ * @param[out] ContHashContextext Pointer to the Hash context being initialized.
+ * @return TRUE if Hash context initialization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sm3Init(
+  OUT VOID  *HashContext);
+
+/**
+ * @typedef SHARED_HASH_UPDATE
+ * @brief Function pointer type for updating Hash context with input data.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @return TRUE if Hash data digest succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sm3Update(
+  IN OUT VOID    *HashContext,
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize);
+
+/**
+ * @typedef SHARED_HASH_FINAL
+ * @brief Function pointer type for finalizing Hash context and retrieving the digest.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @param[in, out] HashContext Pointer to the Hash context.
+ * @return TRUE if Hash finalization succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sm3Final(
+  IN OUT  VOID   *HashContext,
+  OUT     UINT8  *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_ALL
+ * @brief Function pointer type for performing Hash hash on a data buffer.
+ * @param[in] Data Pointer to the buffer containing the data to be hashed.
+ * @param[in] DataSize Size of Data buffer in bytes.
+ * @param[out] HashDigest Pointer to a buffer that receives the Hash digest value.
+ * @return TRUE if Hash hash succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sm3HashAll(
+  IN CONST VOID  *Data,
+  IN UINTN       DataSize,
+  OUT UINT8      *HashDigest);
+
+/**
+ * @typedef SHARED_HASH_DUPLICATE
+ * @brief Function pointer type for duplicating an existing HASH context.
+ * @param[in] HashContext Pointer to Hash context being copied.
+ * @param[out] NewHashContext Pointer to new Hash context.
+ * @return TRUE if Hash context copy succeeded, FALSE otherwise.
+ */
+BOOLEAN
+EFIAPI
+Sm3Duplicate(
+  IN CONST VOID  *HashContext,
+  OUT VOID       *NewHashContext);
 
 /**
  * @typedef SHARED_AES_GET_CONTEXT_SIZE
  * @brief Function pointer type for retrieving the size of the AES context buffer.
  * @return The size, in bytes, of the context buffer required for AES operations.
  */
-typedef UINTN (EFIAPI *SHARED_AES_GET_CONTEXT_SIZE)(
-  VOID
-  );
+UINTN
+EFIAPI
+AesGetContextSize(
+  VOID);
 
 /**
  * @typedef SHARED_AES_INIT
@@ -291,11 +714,12 @@ typedef UINTN (EFIAPI *SHARED_AES_GET_CONTEXT_SIZE)(
  * @param[in] KeyLength Length of AES key in bits.
  * @return TRUE if AES context initialization succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_AES_INIT)(
+BOOLEAN
+EFIAPI
+AesInit(
   OUT VOID        *AesContext,
   IN CONST UINT8  *Key,
-  IN UINTN        KeyLength
-  );
+  IN UINTN        KeyLength);
 
 /**
  * @typedef SHARED_AES_CBC_ENCRYPT
@@ -307,13 +731,14 @@ typedef BOOLEAN (EFIAPI *SHARED_AES_INIT)(
  * @param[out] Output Pointer to a buffer that receives the AES encryption output.
  * @return TRUE if AES encryption succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_AES_CBC_ENCRYPT)(
+BOOLEAN
+EFIAPI
+AesCbcEncrypt(
   IN VOID         *AesContext,
   IN CONST UINT8  *Input,
   IN UINTN        InputSize,
   IN CONST UINT8  *Ivec,
-  OUT UINT8       *Output
-  );
+  OUT UINT8       *Output);
 
 /**
  * @typedef SHARED_AES_CBC_DECRYPT
@@ -325,13 +750,14 @@ typedef BOOLEAN (EFIAPI *SHARED_AES_CBC_ENCRYPT)(
  * @param[out] Output Pointer to a buffer that receives the AES decryption output.
  * @return TRUE if AES decryption succeeded, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_AES_CBC_DECRYPT)(
+BOOLEAN
+EFIAPI
+AesCbcDecrypt(
   IN VOID         *AesContext,
   IN CONST UINT8  *Input,
   IN UINTN        InputSize,
   IN CONST UINT8  *Ivec,
-  OUT UINT8       *Output
-  );
+  OUT UINT8       *Output);
 
 /**
  * @typedef SHARED_AEAD_AES_GCM_ENCRYPT
@@ -350,7 +776,9 @@ typedef BOOLEAN (EFIAPI *SHARED_AES_CBC_DECRYPT)(
  * @param TagSize The size of the authentication tag.
  * @return TRUE if the encryption was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_AEAD_AES_GCM_ENCRYPT)(
+BOOLEAN
+EFIAPI
+AeadAesGcmEncrypt(
   IN   CONST UINT8  *Key,
   IN   UINTN        KeySize,
   IN   CONST UINT8  *Iv,
@@ -362,8 +790,7 @@ typedef BOOLEAN (EFIAPI *SHARED_AEAD_AES_GCM_ENCRYPT)(
   OUT  UINT8        *TagOut,
   IN   UINTN        TagSize,
   OUT  UINT8        *DataOut,
-  OUT  UINTN        *DataOutSize
-  );
+  OUT  UINTN        *DataOutSize);
 
 /**
  * @typedef SHARED_AEAD_AES_GCM_DECRYPT
@@ -382,7 +809,9 @@ typedef BOOLEAN (EFIAPI *SHARED_AEAD_AES_GCM_ENCRYPT)(
  * @param TagSize The size of the authentication tag.
  * @return TRUE if the decryption was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_AEAD_AES_GCM_DECRYPT)(
+BOOLEAN
+EFIAPI
+AeadAesGcmDecrypt(
   IN   CONST UINT8  *Key,
   IN   UINTN        KeySize,
   IN   CONST UINT8  *Iv,
@@ -394,21 +823,17 @@ typedef BOOLEAN (EFIAPI *SHARED_AEAD_AES_GCM_DECRYPT)(
   IN   CONST UINT8  *Tag,
   IN   UINTN        TagSize,
   OUT  UINT8        *DataOut,
-  OUT  UINTN        *DataOutSize
-  );
-
-// =====================================================================================
-//  Big Number Primitives
-// =====================================================================================
+  OUT  UINTN        *DataOutSize);
 
 /**
  * @typedef BIG_NUM_INIT
  * @brief Function pointer type for initializing a big number.
  * @return A pointer to the initialized big number.
  */
-typedef VOID *(EFIAPI *SHARED_BIG_NUM_INIT)(
-  VOID
-  );
+VOID *
+EFIAPI
+BigNumInit(
+  VOID);
 
 /**
  * @typedef SHARED_BIG_NUM_FROM_BIN
@@ -417,10 +842,11 @@ typedef VOID *(EFIAPI *SHARED_BIG_NUM_INIT)(
  * @param Len The length of the binary buffer.
  * @return A pointer to the created big number.
  */
-typedef VOID *(EFIAPI *SHARED_BIG_NUM_FROM_BIN)(
+VOID *
+EFIAPI
+BigNumFromBin(
   IN CONST UINT8  *Buf,
-  IN UINTN        Len
-  );
+  IN UINTN        Len);
 
 /**
  * @typedef SHARED_BIG_NUM_TO_BIN
@@ -429,10 +855,11 @@ typedef VOID *(EFIAPI *SHARED_BIG_NUM_FROM_BIN)(
  * @param Buf The output binary buffer.
  * @return The length of the binary buffer.
  */
-typedef INTN (EFIAPI *SHARED_BIG_NUM_TO_BIN)(
+INTN
+EFIAPI
+BigNumToBin(
   IN CONST VOID  *Bn,
-  OUT UINT8      *Buf
-  );
+  OUT UINT8      *Buf);
 
 /**
  * @typedef SHARED_BIG_NUM_FREE
@@ -440,10 +867,11 @@ typedef INTN (EFIAPI *SHARED_BIG_NUM_TO_BIN)(
  * @param Bn The big number to free.
  * @param Clear Whether to clear the memory before freeing.
  */
-typedef VOID (EFIAPI *SHARED_BIG_NUM_FREE)(
+VOID
+EFIAPI
+BigNumFree(
   IN VOID     *Bn,
-  IN BOOLEAN  Clear
-  );
+  IN BOOLEAN  Clear);
 
 /**
  * @typedef SHARED_BIG_NUM_ADD
@@ -453,11 +881,12 @@ typedef VOID (EFIAPI *SHARED_BIG_NUM_FREE)(
  * @param BnRes The result of the addition.
  * @return TRUE if the addition was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_ADD)(
+BOOLEAN
+EFIAPI
+BigNumAdd(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_SUB
@@ -467,11 +896,12 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_ADD)(
  * @param BnRes The result of the subtraction.
  * @return TRUE if the subtraction was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_SUB)(
+BOOLEAN
+EFIAPI
+BigNumSub(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_MOD
@@ -481,11 +911,12 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_SUB)(
  * @param BnRes The result of the modulus operation.
  * @return TRUE if the modulus operation was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_MOD)(
+BOOLEAN
+EFIAPI
+BigNumMod(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_EXP_MOD
@@ -496,12 +927,13 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_MOD)(
  * @param BnRes The result of the modular exponentiation.
  * @return TRUE if the modular exponentiation was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_EXP_MOD)(
+BOOLEAN
+EFIAPI
+BigNumExpMod(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnP,
   IN CONST VOID  *BnM,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_INVERSE_MOD
@@ -511,11 +943,12 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_EXP_MOD)(
  * @param BnRes The result of the modular inverse.
  * @return TRUE if the modular inverse was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_INVERSE_MOD)(
+BOOLEAN
+EFIAPI
+BigNumInverseMod(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnM,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_DIV
@@ -525,11 +958,12 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_INVERSE_MOD)(
  * @param BnRes The result of the division.
  * @return TRUE if the division was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_DIV)(
+BOOLEAN
+EFIAPI
+BigNumDiv(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_MUL_MOD
@@ -540,12 +974,13 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_DIV)(
  * @param BnRes The result of the modular multiplication.
  * @return TRUE if the modular multiplication was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_MUL_MOD)(
+BOOLEAN
+EFIAPI
+BigNumMulMod(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   IN CONST VOID  *BnM,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_CMP
@@ -554,10 +989,11 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_MUL_MOD)(
  * @param BnB The second big number.
  * @return A negative value if BnA < BnB, zero if BnA == BnB, and a positive value if BnA > BnB.
  */
-typedef INTN (EFIAPI *SHARED_BIG_NUM_CMP)(
+INTN
+EFIAPI
+BigNumCmp(
   IN CONST VOID  *BnA,
-  IN CONST VOID  *BnB
-  );
+  IN CONST VOID  *BnB);
 
 /**
  * @typedef SHARED_BIG_NUM_BITS
@@ -565,9 +1001,10 @@ typedef INTN (EFIAPI *SHARED_BIG_NUM_CMP)(
  * @param Bn The big number.
  * @return The number of bits in the big number.
  */
-typedef UINTN (EFIAPI *SHARED_BIG_NUM_BITS)(
-  IN CONST VOID  *Bn
-  );
+UINTN
+EFIAPI
+BigNumBits(
+  IN CONST VOID  *Bn);
 
 /**
  * @typedef SHARED_BIG_NUM_BYTES
@@ -575,9 +1012,10 @@ typedef UINTN (EFIAPI *SHARED_BIG_NUM_BITS)(
  * @param Bn The big number.
  * @return The number of bytes in the big number.
  */
-typedef UINTN (EFIAPI *SHARED_BIG_NUM_BYTES)(
-  IN CONST VOID  *Bn
-  );
+UINTN
+EFIAPI
+BigNumBytes(
+  IN CONST VOID  *Bn);
 
 /**
  * @typedef SHARED_BIG_NUM_IS_WORD
@@ -586,10 +1024,11 @@ typedef UINTN (EFIAPI *SHARED_BIG_NUM_BYTES)(
  * @param Num The word to compare against.
  * @return TRUE if the big number is equal to the word, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_IS_WORD)(
+BOOLEAN
+EFIAPI
+BigNumIsWord(
   IN CONST VOID  *Bn,
-  IN UINTN       Num
-  );
+  IN UINTN       Num);
 
 /**
  * @typedef SHARED_BIG_NUM_IS_ODD
@@ -597,9 +1036,10 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_IS_WORD)(
  * @param Bn The big number.
  * @return TRUE if the big number is odd, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_IS_ODD)(
-  IN CONST VOID  *Bn
-  );
+BOOLEAN
+EFIAPI
+BigNumIsOdd(
+  IN CONST VOID  *Bn);
 
 /**
  * @typedef SHARED_BIG_NUM_COPY
@@ -608,19 +1048,21 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_IS_ODD)(
  * @param BnSrc The source big number.
  * @return A pointer to the destination big number.
  */
-typedef VOID *(EFIAPI *SHARED_BIG_NUM_COPY)(
+VOID *
+EFIAPI
+BigNumCopy(
   OUT VOID       *BnDst,
-  IN CONST VOID  *BnSrc
-  );
+  IN CONST VOID  *BnSrc);
 
 /**
  * @typedef SHARED_BIG_NUM_VALUE_ONE
  * @brief Function pointer type for getting a big number representing the value one.
  * @return A pointer to the big number representing the value one.
  */
-typedef CONST VOID *(EFIAPI *SHARED_BIG_NUM_VALUE_ONE)(
-  VOID
-  );
+CONST VOID *
+EFIAPI
+BigNumValueOne(
+  VOID);
 
 /**
  * @typedef SHARED_BIG_NUM_R_SHIFT
@@ -630,20 +1072,22 @@ typedef CONST VOID *(EFIAPI *SHARED_BIG_NUM_VALUE_ONE)(
  * @param BnRes The result of the right shift.
  * @return TRUE if the right shift was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_R_SHIFT)(
+BOOLEAN
+EFIAPI
+BigNumRShift(
   IN CONST VOID  *Bn,
   IN UINTN       N,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_CONST_TIME
  * @brief Function pointer type for performing a constant-time operation on a big number.
  * @param Bn The big number.
  */
-typedef VOID (EFIAPI *SHARED_BIG_NUM_CONST_TIME)(
-  IN VOID  *Bn
-  );
+VOID
+EFIAPI
+BigNumConstTime(
+  IN VOID  *Bn);
 
 /**
  * @typedef SHARED_BIG_NUM_SQR_MOD
@@ -653,29 +1097,32 @@ typedef VOID (EFIAPI *SHARED_BIG_NUM_CONST_TIME)(
  * @param BnRes The result of the modular square.
  * @return TRUE if the modular square was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_SQR_MOD)(
+BOOLEAN
+EFIAPI
+BigNumSqrMod(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnM,
-  OUT VOID       *BnRes
-  );
+  OUT VOID       *BnRes);
 
 /**
  * @typedef SHARED_BIG_NUM_NEW_CONTEXT
  * @brief Function pointer type for creating a new big number context.
  * @return A pointer to the new big number context.
  */
-typedef VOID *(EFIAPI *SHARED_BIG_NUM_NEW_CONTEXT)(
-  VOID
-  );
+VOID *
+EFIAPI
+BigNumNewContext(
+  VOID);
 
 /**
  * @typedef SHARED_BIG_NUM_CONTEXT_FREE
  * @brief Function pointer type for freeing a big number context.
  * @param BnCtx The big number context to free.
  */
-typedef VOID (EFIAPI *SHARED_BIG_NUM_CONTEXT_FREE)(
-  IN VOID  *BnCtx
-  );
+VOID
+EFIAPI
+BigNumContextFree(
+  IN VOID  *BnCtx);
 
 /**
  * @typedef SHARED_BIG_NUM_SET_UINT
@@ -684,10 +1131,11 @@ typedef VOID (EFIAPI *SHARED_BIG_NUM_CONTEXT_FREE)(
  * @param Val The unsigned integer value.
  * @return TRUE if the operation was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_SET_UINT)(
+BOOLEAN
+EFIAPI
+BigNumSetUint(
   IN VOID   *Bn,
-  IN UINTN  Val
-  );
+  IN UINTN  Val);
 
 /**
  * @typedef SHARED_BIG_NUM_ADD_MOD
@@ -698,16 +1146,13 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_SET_UINT)(
  * @param BnRes The result of the modular addition.
  * @return TRUE if the modular addition was successful, FALSE otherwise.
  */
-typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_ADD_MOD)(
+BOOLEAN
+EFIAPI
+BigNumAddMod(
   IN CONST VOID  *BnA,
   IN CONST VOID  *BnB,
   IN CONST VOID  *BnM,
-  OUT VOID       *BnRes
-  );
-
-// =====================================================================================
-//    Key Derivation Function Primitive
-// =====================================================================================
+  OUT VOID       *BnRes);
 
 /**
   Derive key data using HMAC-SHA* based KDF.
@@ -724,7 +1169,9 @@ typedef BOOLEAN (EFIAPI *SHARED_BIG_NUM_ADD_MOD)(
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT_AND_EXPAND)(
+BOOLEAN
+EFIAPI
+HkdfSha256ExtractAndExpand(
   IN   CONST UINT8  *Key,
   IN   UINTN        KeySize,
   IN   CONST UINT8  *Salt,
@@ -732,8 +1179,7 @@ typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT_AND_EXPAND)(
   IN   CONST UINT8  *Info,
   IN   UINTN        InfoSize,
   OUT  UINT8        *Out,
-  IN   UINTN        OutSize
-  );
+  IN   UINTN        OutSize);
 
 /**
   Derive HMAC-SHA*-based Extract key Derivation Function (HKDF).
@@ -748,14 +1194,15 @@ typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT_AND_EXPAND)(
   @retval true   Hkdf generated successfully.
   @retval false  Hkdf generation failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT)(
+BOOLEAN
+EFIAPI
+HkdfSha256Extract(
   IN CONST UINT8  *Key,
   IN UINTN        KeySize,
   IN CONST UINT8  *Salt,
   IN UINTN        SaltSize,
   OUT UINT8       *PrkOut,
-  UINTN           PrkOutSize
-  );
+  UINTN           PrkOutSize);
 
 /**
   Derive HMAC-SHA*-based Expand Key Derivation Function (HKDF).
@@ -770,16 +1217,88 @@ typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXTRACT)(
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXPAND)(
+BOOLEAN
+EFIAPI
+HkdfSha256Expand(
   IN   CONST UINT8  *Prk,
   IN   UINTN        PrkSize,
   IN   CONST UINT8  *Info,
   IN   UINTN        InfoSize,
   OUT  UINT8        *Out,
-  IN   UINTN        OutSize
-  );
+  IN   UINTN        OutSize);
 
-// =====================================================================================
+/**
+  Derive key data using HMAC-SHA* based KDF.
+
+  @param[in]   Key              Pointer to the user-supplied key.
+  @param[in]   KeySize          Key size in bytes.
+  @param[in]   Salt             Pointer to the salt(non-secret) value.
+  @param[in]   SaltSize         Salt size in bytes.
+  @param[in]   Info             Pointer to the application specific info.
+  @param[in]   InfoSize         Info size in bytes.
+  @param[out]  Out              Pointer to buffer to receive hkdf value.
+  @param[in]   OutSize          Size of hkdf bytes to generate.
+
+  @retval TRUE   Hkdf generated successfully.
+  @retval FALSE  Hkdf generation failed.
+**/
+BOOLEAN
+EFIAPI
+HkdfSha384ExtractAndExpand(
+  IN   CONST UINT8  *Key,
+  IN   UINTN        KeySize,
+  IN   CONST UINT8  *Salt,
+  IN   UINTN        SaltSize,
+  IN   CONST UINT8  *Info,
+  IN   UINTN        InfoSize,
+  OUT  UINT8        *Out,
+  IN   UINTN        OutSize);
+
+/**
+  Derive HMAC-SHA*-based Extract key Derivation Function (HKDF).
+
+  @param[in]   Key              Pointer to the user-supplied key.
+  @param[in]   KeySize          key size in bytes.
+  @param[in]   Salt             Pointer to the salt(non-secret) value.
+  @param[in]   SaltSize         salt size in bytes.
+  @param[out]  PrkOut           Pointer to buffer to receive hkdf value.
+  @param[in]   PrkOutSize       size of hkdf bytes to generate.
+
+  @retval true   Hkdf generated successfully.
+  @retval false  Hkdf generation failed.
+**/
+BOOLEAN
+EFIAPI
+HkdfSha384Extract(
+  IN CONST UINT8  *Key,
+  IN UINTN        KeySize,
+  IN CONST UINT8  *Salt,
+  IN UINTN        SaltSize,
+  OUT UINT8       *PrkOut,
+  UINTN           PrkOutSize);
+
+/**
+  Derive HMAC-SHA*-based Expand Key Derivation Function (HKDF).
+
+  @param[in]   Prk              Pointer to the user-supplied key.
+  @param[in]   PrkSize          Key size in bytes.
+  @param[in]   Info             Pointer to the application specific info.
+  @param[in]   InfoSize         Info size in bytes.
+  @param[out]  Out              Pointer to buffer to receive hkdf value.
+  @param[in]   OutSize          Size of hkdf bytes to generate.
+
+  @retval TRUE   Hkdf generated successfully.
+  @retval FALSE  Hkdf generation failed.
+**/
+BOOLEAN
+EFIAPI
+HkdfSha384Expand(
+  IN   CONST UINT8  *Prk,
+  IN   UINTN        PrkSize,
+  IN   CONST UINT8  *Info,
+  IN   UINTN        InfoSize,
+  OUT  UINT8        *Out,
+  IN   UINTN        OutSize);
 
 /**
   Retrieve the Private Key from the password-protected PEM key data.
@@ -793,12 +1312,13 @@ typedef BOOLEAN (EFIAPI *SHARED_HKDF_EXPAND)(
   @retval  TRUE   Private Key was retrieved successfully.
   @retval  FALSE  Invalid PEM key data or incorrect password.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_RSA_GET_PRIVATE_KEY_FROM_PEM)(
+BOOLEAN
+EFIAPI
+RsaGetPrivateKeyFromPem(
   IN   CONST UINT8  *PemData,
   IN   UINTN        PemSize,
   IN   CONST CHAR8  *Password,
-  OUT  VOID         **RsaContext
-  );
+  OUT  VOID         **RsaContext);
 
 /**
   Retrieve the Private Key from the password-protected PEM key data.
@@ -812,14 +1332,13 @@ typedef BOOLEAN (EFIAPI *SHARED_RSA_GET_PRIVATE_KEY_FROM_PEM)(
   @retval  TRUE   Private Key was retrieved successfully.
   @retval  FALSE  Invalid PEM key data or incorrect password.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_EC_GET_PRIVATE_KEY_FROM_PEM)(
+BOOLEAN
+EFIAPI
+EcGetPrivateKeyFromPem(
   IN   CONST UINT8  *PemData,
   IN   UINTN        PemSize,
   IN   CONST CHAR8  *Password,
-  OUT  VOID         **EcContext
-  );
-
-// ==================================== TODO
+  OUT  VOID         **EcContext);
 
 /**
   Verifies the validity of an Authenticode Signature.
@@ -838,191 +1357,15 @@ typedef BOOLEAN (EFIAPI *SHARED_EC_GET_PRIVATE_KEY_FROM_PEM)(
   @retval  TRUE   The specified Authenticode Signature is valid.
   @retval  FALSE  Invalid Authenticode Signature.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_AUTHENTICODE_VERIFY)(
+BOOLEAN
+EFIAPI
+AuthenticodeVerify(
   IN  CONST UINT8  *AuthData,
   IN  UINTN        DataSize,
   IN  CONST UINT8  *TrustedCert,
   IN  UINTN        CertSize,
   IN  CONST UINT8  *ImageHash,
-  IN  UINTN        HashSize
-  );
-
-// =============================================================================
-//     PKCS functions
-// =============================================================================
-
-/**
-  Derives a key from a password using a salt and iteration count, based on PKCS#5 v2.0
-  password based encryption key derivation function PBKDF2, as specified in RFC 2898.
-  If Password or Salt or OutKey is NULL, then return FALSE.
-  If the hash algorithm could not be determined, then return FALSE.
-  If this interface is not supported, then return FALSE.
-  @param[in]  PasswordLength  Length of input password in bytes.
-  @param[in]  Password        Pointer to the array for the password.
-  @param[in]  SaltLength      Size of the Salt in bytes.
-  @param[in]  Salt            Pointer to the Salt.
-  @param[in]  IterationCount  Number of iterations to perform. Its value should be
-                              greater than or equal to 1.
-  @param[in]  DigestSize      Size of the message digest to be used (eg. SHA256_DIGEST_SIZE).
-                              NOTE: DigestSize will be used to determine the hash algorithm.
-                                    Only SHA1_DIGEST_SIZE or SHA256_DIGEST_SIZE is supported.
-  @param[in]  KeyLength       Size of the derived key buffer in bytes.
-  @param[out] OutKey          Pointer to the output derived key buffer.
-  @retval  TRUE   A key was derived successfully.
-  @retval  FALSE  One of the pointers was NULL or one of the sizes was too large.
-  @retval  FALSE  The hash algorithm could not be determined from the digest size.
-  @retval  FALSE  The key derivation operation failed.
-  @retval  FALSE  This interface is not supported.
-**/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS5_HASH_PASSWORD)(
-  IN  UINTN        PasswordLength,
-  IN  CONST CHAR8  *Password,
-  IN  UINTN        SaltLength,
-  IN  CONST UINT8  *Salt,
-  IN  UINTN        IterationCount,
-  IN  UINTN        DigestSize,
-  IN  UINTN        KeyLength,
-  OUT UINT8        *OutKey
-  );
-
-// =============================================================================
-//     DH functions
-// =============================================================================
-
-/**
-  Allocates and Initializes one Diffie-Hellman Context for subsequent use.
-  @return  Pointer to the Diffie-Hellman Context that has been initialized.
-           If the allocations fails, DhNew() returns NULL.
-           If the interface is not supported, DhNew() returns NULL.
-**/
-typedef VOID *(EFIAPI *SHARED_DH_NEW)(
-  VOID
-  );
-
-/**
-  Release the specified DH context.
-  If the interface is not supported, then ASSERT().
-  @param[in]  DhContext  Pointer to the DH context to be released.
-**/
-typedef VOID (EFIAPI *SHARED_DH_FREE)(
-  IN  VOID  *DhContext
-  );
-
-/**
-  Generates DH parameter.
-  Given generator g, and length of prime number p in bits, this function generates p,
-  and sets DH context according to value of g and p.
-  Before this function can be invoked, pseudorandom number generator must be correctly
-  initialized by RandomSeed().
-  If DhContext is NULL, then return FALSE.
-  If Prime is NULL, then return FALSE.
-  If this interface is not supported, then return FALSE.
-  @param[in, out]  DhContext    Pointer to the DH context.
-  @param[in]       Generator    Value of generator.
-  @param[in]       PrimeLength  Length in bits of prime to be generated.
-  @param[out]      Prime        Pointer to the buffer to receive the generated prime number.
-  @retval TRUE   DH parameter generation succeeded.
-  @retval FALSE  Value of Generator is not supported.
-  @retval FALSE  PRNG fails to generate random prime number with PrimeLength.
-  @retval FALSE  This interface is not supported.
-**/
-typedef BOOLEAN (EFIAPI *SHARED_DH_GENERATE_PARAMETER)(
-  IN OUT  VOID   *DhContext,
-  IN      UINTN  Generator,
-  IN      UINTN  PrimeLength,
-  OUT     UINT8  *Prime
-  );
-
-/**
-  Sets generator and prime parameters for DH.
-  Given generator g, and prime number p, this function and sets DH
-  context accordingly.
-  If DhContext is NULL, then return FALSE.
-  If Prime is NULL, then return FALSE.
-  If this interface is not supported, then return FALSE.
-  @param[in, out]  DhContext    Pointer to the DH context.
-  @param[in]       Generator    Value of generator.
-  @param[in]       PrimeLength  Length in bits of prime to be generated.
-  @param[in]       Prime        Pointer to the prime number.
-  @retval TRUE   DH parameter setting succeeded.
-  @retval FALSE  Value of Generator is not supported.
-  @retval FALSE  Value of Generator is not suitable for the Prime.
-  @retval FALSE  Value of Prime is not a prime number.
-  @retval FALSE  Value of Prime is not a safe prime number.
-  @retval FALSE  This interface is not supported.
-**/
-typedef BOOLEAN (EFIAPI *SHARED_DH_SET_PARAMETER)(
-  IN OUT  VOID         *DhContext,
-  IN      UINTN        Generator,
-  IN      UINTN        PrimeLength,
-  IN      CONST UINT8  *Prime
-  );
-
-/**
-Generates DH public key.
-
-This function generates random secret exponent, and computes the public key, which is
-returned via parameter PublicKey and PublicKeySize. DH context is updated accordingly.
-If the PublicKey buffer is too small to hold the public key, FALSE is returned and
-PublicKeySize is set to the required buffer size to obtain the public key.
-
-If DhContext is NULL, then return FALSE.
-If PublicKeySize is NULL, then return FALSE.
-If PublicKeySize is large enough but PublicKey is NULL, then return FALSE.
-If this interface is not supported, then return FALSE.
-
-@param[in, out]  DhContext      Pointer to the DH context.
-@param[out]      PublicKey      Pointer to the buffer to receive generated public key.
-@param[in, out]  PublicKeySize  On input, the size of PublicKey buffer in bytes.
-                               On output, the size of data returned in PublicKey buffer in bytes.
-
-@retval TRUE   DH public key generation succeeded.
-@retval FALSE  DH public key generation failed.
-@retval FALSE  PublicKeySize is not large enough.
-@retval FALSE  This interface is not supported.
-
-**/
-typedef BOOLEAN (EFIAPI *SHARED_DH_GENERATE_KEY)(
-  IN OUT  VOID   *DhContext,
-  OUT     UINT8  *PublicKey,
-  IN OUT  UINTN  *PublicKeySize
-  );
-
-/**
-  Computes exchanged common key.
-
-  Given peer's public key, this function computes the exchanged common key, based on its own
-  context including value of prime modulus and random secret exponent.
-
-  If DhContext is NULL, then return FALSE.
-  If PeerPublicKey is NULL, then return FALSE.
-  If KeySize is NULL, then return FALSE.
-  If Key is NULL, then return FALSE.
-  If KeySize is not large enough, then return FALSE.
-  If this interface is not supported, then return FALSE.
-
-  @param[in, out]  DhContext          Pointer to the DH context.
-  @param[in]       PeerPublicKey      Pointer to the peer's public key.
-  @param[in]       PeerPublicKeySize  Size of peer's public key in bytes.
-  @param[out]      Key                Pointer to the buffer to receive generated key.
-  @param[in, out]  KeySize            On input, the size of Key buffer in bytes.
-                                     On output, the size of data returned in Key buffer in bytes.
-
-  @retval TRUE   DH exchanged key generation succeeded.
-  @retval FALSE  DH exchanged key generation failed.
-  @retval FALSE  KeySize is not large enough.
-  @retval FALSE  This interface is not supported.
-
-**/
-typedef
-BOOLEAN
-(EFIAPI *SHARED_DH_COMPUTE_KEY)(
-  IN OUT  VOID         *DhContext,
-  IN      CONST UINT8  *PeerPublicKey,
-  IN      UINTN        PeerPublicKeySize,
-  OUT     UINT8        *Key,
-  IN OUT  UINTN        *KeySize
-  );
+  IN  UINTN        HashSize);
 
 /**
   Encrypts a blob using PKCS1v2 (RSAES-OAEP) schema. On success, will return the
@@ -1044,7 +1387,9 @@ BOOLEAN
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_ENCRYPT)(
+BOOLEAN
+EFIAPI
+Pkcs1v2Encrypt(
   IN   CONST UINT8  *PublicKey,
   IN   UINTN        PublicKeySize,
   IN   UINT8        *InData,
@@ -1052,8 +1397,7 @@ typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_ENCRYPT)(
   IN   CONST UINT8  *PrngSeed   OPTIONAL,
   IN   UINTN        PrngSeedSize   OPTIONAL,
   OUT  UINT8        **EncryptedData,
-  OUT  UINTN        *EncryptedDataSize
-  );
+  OUT  UINTN        *EncryptedDataSize);
 
 /**
   Decrypts a blob using PKCS1v2 (RSAES-OAEP) schema. On success, will return the
@@ -1070,14 +1414,15 @@ typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_ENCRYPT)(
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_DECRYPT)(
+BOOLEAN
+EFIAPI
+Pkcs1v2Decrypt(
   IN   CONST UINT8  *PrivateKey,
   IN   UINTN        PrivateKeySize,
   IN   UINT8        *EncryptedData,
   IN   UINTN        EncryptedDataSize,
   OUT  UINT8        **OutData,
-  OUT  UINTN        *OutDataSize
-  );
+  OUT  UINTN        *OutDataSize);
 
 /**
   Encrypts a blob using PKCS1v2 (RSAES-OAEP) schema. On success, will return the
@@ -1104,7 +1449,9 @@ typedef BOOLEAN (EFIAPI *SHARED_PKCS1V2_DECRYPT)(
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_ENCRYPT)(
+BOOLEAN
+EFIAPI
+RsaOaepEncrypt(
   IN   VOID         *RsaContext,
   IN   UINT8        *InData,
   IN   UINTN        InDataSize,
@@ -1112,8 +1459,7 @@ typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_ENCRYPT)(
   IN   UINTN        PrngSeedSize   OPTIONAL,
   IN   UINT16       DigestLen OPTIONAL,
   OUT  UINT8        **EncryptedData,
-  OUT  UINTN        *EncryptedDataSize
-  );
+  OUT  UINTN        *EncryptedDataSize);
 
 /**
   Decrypts a blob using PKCS1v2 (RSAES-OAEP) schema. On success, will return the
@@ -1136,18 +1482,50 @@ typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_ENCRYPT)(
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_DECRYPT)(
+BOOLEAN
+EFIAPI
+RsaOaepDecrypt(
   IN   VOID    *RsaContext,
   IN   UINT8   *EncryptedData,
   IN   UINTN   EncryptedDataSize,
   IN   UINT16  DigestLen OPTIONAL,
   OUT  UINT8   **OutData,
-  OUT  UINTN   *OutDataSize
-  );
+  OUT  UINTN   *OutDataSize);
 
-// =============================================================================
-// PKCS7 functions
-// =============================================================================
+/**
+  Derives a key from a password using a salt and iteration count, based on PKCS#5 v2.0
+  password based encryption key derivation function PBKDF2, as specified in RFC 2898.
+  If Password or Salt or OutKey is NULL, then return FALSE.
+  If the hash algorithm could not be determined, then return FALSE.
+  If this interface is not supported, then return FALSE.
+  @param[in]  PasswordLength  Length of input password in bytes.
+  @param[in]  Password        Pointer to the array for the password.
+  @param[in]  SaltLength      Size of the Salt in bytes.
+  @param[in]  Salt            Pointer to the Salt.
+  @param[in]  IterationCount  Number of iterations to perform. Its value should be
+                              greater than or equal to 1.
+  @param[in]  DigestSize      Size of the message digest to be used (eg. SHA256_DIGEST_SIZE).
+                              NOTE: DigestSize will be used to determine the hash algorithm.
+                                    Only SHA1_DIGEST_SIZE or SHA256_DIGEST_SIZE is supported.
+  @param[in]  KeyLength       Size of the derived key buffer in bytes.
+  @param[out] OutKey          Pointer to the output derived key buffer.
+  @retval  TRUE   A key was derived successfully.
+  @retval  FALSE  One of the pointers was NULL or one of the sizes was too large.
+  @retval  FALSE  The hash algorithm could not be determined from the digest size.
+  @retval  FALSE  The key derivation operation failed.
+  @retval  FALSE  This interface is not supported.
+**/
+BOOLEAN
+EFIAPI
+Pkcs5HashPassword(
+  IN  UINTN        PasswordLength,
+  IN  CONST CHAR8  *Password,
+  IN  UINTN        SaltLength,
+  IN  CONST UINT8  *Salt,
+  IN  UINTN        IterationCount,
+  IN  UINTN        DigestSize,
+  IN  UINTN        KeyLength,
+  OUT UINT8        *OutKey);
 
 /**
   Get the signer's certificates from PKCS#7 signed data as described in "PKCS #7:
@@ -1171,23 +1549,25 @@ typedef BOOLEAN (EFIAPI *SHARED_RSA_OAEP_DECRYPT)(
   @retval  FALSE           Error occurs during the operation.
   @retval  FALSE           This interface is not supported.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS7_GET_SIGNERS)(
+BOOLEAN
+EFIAPI
+Pkcs7GetSigners(
   IN  CONST UINT8  *P7Data,
   IN  UINTN        P7Length,
   OUT UINT8        **CertStack,
   OUT UINTN        *StackLength,
   OUT UINT8        **TrustedCert,
-  OUT UINTN        *CertLength
-  );
+  OUT UINTN        *CertLength);
 
 /**
 Wrap function to use free() to free allocated memory for certificates.
 If this interface is not supported, then ASSERT().
 @param[in]  Certs        Pointer to the certificates to be freed.
 **/
-typedef VOID (EFIAPI *SHARED_PKCS7_FREE_SIGNERS)(
-  IN  UINT8  *Certs
-  );
+VOID
+EFIAPI
+Pkcs7FreeSigners(
+  IN  UINT8  *Certs);
 
 /**
   Retrieves all embedded certificates from PKCS#7 signed data as described in "PKCS #7:
@@ -1208,14 +1588,15 @@ typedef VOID (EFIAPI *SHARED_PKCS7_FREE_SIGNERS)(
   @retval  TRUE         The operation is finished successfully.
   @retval  FALSE        Error occurs during the operation.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS7_GET_CERTIFICATES_LIST)(
+BOOLEAN
+EFIAPI
+Pkcs7GetCertificatesList(
   IN  CONST UINT8  *P7Data,
   IN  UINTN        P7Length,
   OUT UINT8        **SignerChainCerts,
   OUT UINTN        *ChainLength,
   OUT UINT8        **UnchainCerts,
-  OUT UINTN        *UnchainLength
-  );
+  OUT UINTN        *UnchainLength);
 
 /**
   Creates a PKCS#7 signedData as described in "PKCS #7: Cryptographic Message
@@ -1241,7 +1622,9 @@ typedef BOOLEAN (EFIAPI *SHARED_PKCS7_GET_CERTIFICATES_LIST)(
   @retval     FALSE            PKCS#7 data signing failed.
   @retval     FALSE            This interface is not supported.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS7_SIGN)(
+BOOLEAN
+EFIAPI
+Pkcs7Sign(
   IN   CONST UINT8  *PrivateKey,
   IN   UINTN        PrivateKeySize,
   IN   CONST UINT8  *KeyPassword,
@@ -1251,16 +1634,20 @@ typedef BOOLEAN (EFIAPI *SHARED_PKCS7_SIGN)(
   IN   UINTN        SignCertSize,
   IN   UINT8        *OtherCerts      OPTIONAL,
   OUT  UINT8        **SignedData,
-  OUT  UINTN        *SignedDataSize
-  );
+  OUT  UINTN        *SignedDataSize);
 
 /**
   Verifies the validity of a PKCS#7 signed data as described in "PKCS #7:
   Cryptographic Message Syntax Standard". The input signed data could be wrapped
   in a ContentInfo structure.
+
   If P7Data, TrustedCert or InData is NULL, then return FALSE.
   If P7Length, CertLength or DataLength overflow, then return FALSE.
-  If this interface is not supported, then return FALSE.
+
+  Caution: This function may receive untrusted input.
+  UEFI Authenticated Variable is external input, so this function will do basic
+  check for PKCS#7 data structure.
+
   @param[in]  P7Data       Pointer to the PKCS#7 message to verify.
   @param[in]  P7Length     Length of the PKCS#7 message in bytes.
   @param[in]  TrustedCert  Pointer to a trusted/root certificate encoded in DER, which
@@ -1268,20 +1655,20 @@ typedef BOOLEAN (EFIAPI *SHARED_PKCS7_SIGN)(
   @param[in]  CertLength   Length of the trusted certificate in bytes.
   @param[in]  InData       Pointer to the content to be verified.
   @param[in]  DataLength   Length of InData in bytes.
+
   @retval  TRUE  The specified PKCS#7 signed data is valid.
   @retval  FALSE Invalid PKCS#7 signed data.
-  @retval  FALSE This interface is not supported.
+
 **/
-typedef
 BOOLEAN
-(EFIAPI *SHARED_PKCS7_VERIFY)(
+EFIAPI
+Pkcs7Verify(
   IN  CONST UINT8  *P7Data,
   IN  UINTN        P7Length,
   IN  CONST UINT8  *TrustedCert,
   IN  UINTN        CertLength,
   IN  CONST UINT8  *InData,
-  IN  UINTN        DataLength
-  );
+  IN  UINTN        DataLength);
 
 /**
   This function receives a PKCS7 formatted signature, and then verifies that
@@ -1311,13 +1698,14 @@ BOOLEAN
   @retval EFI_INVALID_PARAMETER    A parameter was invalid.
   @retval EFI_NOT_FOUND            One or more EKU's were not found in the signature.
 **/
-typedef RETURN_STATUS (EFIAPI *SHARED_VERIFY_EKUS_IN_PKCS7_SIGNATURE)(
+RETURN_STATUS
+EFIAPI
+VerifyEKUsInPkcs7Signature(
   IN  CONST UINT8   *Pkcs7Signature,
   IN  CONST UINT32  SignatureSize,
   IN  CONST CHAR8   *RequiredEKUs[],
   IN  CONST UINT32  RequiredEKUsSize,
-  IN  BOOLEAN       RequireAllPresent
-  );
+  IN  BOOLEAN       RequireAllPresent);
 
 /**
   Extracts the attached content from a PKCS#7 signed data if existed. The input signed
@@ -1334,210 +1722,151 @@ typedef RETURN_STATUS (EFIAPI *SHARED_VERIFY_EKUS_IN_PKCS7_SIGNATURE)(
   @retval     TRUE          The P7Data was correctly formatted for processing.
   @retval     FALSE         The P7Data was not correctly formatted for processing.
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS7_GET_ATTACHED_CONTENT)(
+BOOLEAN
+EFIAPI
+Pkcs7GetAttachedContent(
   IN  CONST UINT8  *P7Data,
   IN  UINTN        P7Length,
   OUT VOID         **Content,
-  OUT UINTN        *ContentSize
-  );
+  OUT UINTN        *ContentSize);
 
 /**
-  Verifies the validity of a PKCS#7 signed data as described in "PKCS #7:
-  Cryptographic Message Syntax Standard". The input signed data could be wrapped
-  in a ContentInfo structure.
+  Allocates and Initializes one Diffie-Hellman Context for subsequent use.
+  @return  Pointer to the Diffie-Hellman Context that has been initialized.
+           If the allocations fails, DhNew() returns NULL.
+           If the interface is not supported, DhNew() returns NULL.
+**/
+VOID *
+EFIAPI
+DhNew(
+  VOID);
 
-  If P7Data, TrustedCert or InData is NULL, then return FALSE.
-  If P7Length, CertLength or DataLength overflow, then return FALSE.
+/**
+  Release the specified DH context.
+  If the interface is not supported, then ASSERT().
+  @param[in]  DhContext  Pointer to the DH context to be released.
+**/
+VOID
+EFIAPI
+DhFree(
+  IN  VOID  *DhContext);
 
-  Caution: This function may receive untrusted input.
-  UEFI Authenticated Variable is external input, so this function will do basic
-  check for PKCS#7 data structure.
+/**
+  Generates DH parameter.
+  Given generator g, and length of prime number p in bits, this function generates p,
+  and sets DH context according to value of g and p.
+  Before this function can be invoked, pseudorandom number generator must be correctly
+  initialized by RandomSeed().
+  If DhContext is NULL, then return FALSE.
+  If Prime is NULL, then return FALSE.
+  If this interface is not supported, then return FALSE.
+  @param[in, out]  DhContext    Pointer to the DH context.
+  @param[in]       Generator    Value of generator.
+  @param[in]       PrimeLength  Length in bits of prime to be generated.
+  @param[out]      Prime        Pointer to the buffer to receive the generated prime number.
+  @retval TRUE   DH parameter generation succeeded.
+  @retval FALSE  Value of Generator is not supported.
+  @retval FALSE  PRNG fails to generate random prime number with PrimeLength.
+  @retval FALSE  This interface is not supported.
+**/
+BOOLEAN
+EFIAPI
+DhGenerateParameter(
+  IN OUT  VOID   *DhContext,
+  IN      UINTN  Generator,
+  IN      UINTN  PrimeLength,
+  OUT     UINT8  *Prime);
 
-  @param[in]  P7Data       Pointer to the PKCS#7 message to verify.
-  @param[in]  P7Length     Length of the PKCS#7 message in bytes.
-  @param[in]  TrustedCert  Pointer to a trusted/root certificate encoded in DER, which
-                           is used for certificate chain verification.
-  @param[in]  CertLength   Length of the trusted certificate in bytes.
-  @param[in]  InData       Pointer to the content to be verified.
-  @param[in]  DataLength   Length of InData in bytes.
+/**
+  Sets generator and prime parameters for DH.
+  Given generator g, and prime number p, this function and sets DH
+  context accordingly.
+  If DhContext is NULL, then return FALSE.
+  If Prime is NULL, then return FALSE.
+  If this interface is not supported, then return FALSE.
+  @param[in, out]  DhContext    Pointer to the DH context.
+  @param[in]       Generator    Value of generator.
+  @param[in]       PrimeLength  Length in bits of prime to be generated.
+  @param[in]       Prime        Pointer to the prime number.
+  @retval TRUE   DH parameter setting succeeded.
+  @retval FALSE  Value of Generator is not supported.
+  @retval FALSE  Value of Generator is not suitable for the Prime.
+  @retval FALSE  Value of Prime is not a prime number.
+  @retval FALSE  Value of Prime is not a safe prime number.
+  @retval FALSE  This interface is not supported.
+**/
+BOOLEAN
+EFIAPI
+DhSetParameter(
+  IN OUT  VOID         *DhContext,
+  IN      UINTN        Generator,
+  IN      UINTN        PrimeLength,
+  IN      CONST UINT8  *Prime);
 
-  @retval  TRUE  The specified PKCS#7 signed data is valid.
-  @retval  FALSE Invalid PKCS#7 signed data.
+/**
+Generates DH public key.
+
+This function generates random secret exponent, and computes the public key, which is
+returned via parameter PublicKey and PublicKeySize. DH context is updated accordingly.
+If the PublicKey buffer is too small to hold the public key, FALSE is returned and
+PublicKeySize is set to the required buffer size to obtain the public key.
+
+If DhContext is NULL, then return FALSE.
+If PublicKeySize is NULL, then return FALSE.
+If PublicKeySize is large enough but PublicKey is NULL, then return FALSE.
+If this interface is not supported, then return FALSE.
+
+@param[in, out]  DhContext      Pointer to the DH context.
+@param[out]      PublicKey      Pointer to the buffer to receive generated public key.
+@param[in, out]  PublicKeySize  On input, the size of PublicKey buffer in bytes.
+                               On output, the size of data returned in PublicKey buffer in bytes.
+
+@retval TRUE   DH public key generation succeeded.
+@retval FALSE  DH public key generation failed.
+@retval FALSE  PublicKeySize is not large enough.
+@retval FALSE  This interface is not supported.
 
 **/
-typedef BOOLEAN (EFIAPI *SHARED_PKCS7_VERIFY)(
-  IN  CONST UINT8  *P7Data,
-  IN  UINTN        P7Length,
-  IN  CONST UINT8  *TrustedCert,
-  IN  UINTN        CertLength,
-  IN  CONST UINT8  *InData,
-  IN  UINTN        DataLength
-  );
+BOOLEAN
+EFIAPI
+DhGenerateKey(
+  IN OUT  VOID   *DhContext,
+  OUT     UINT8  *PublicKey,
+  IN OUT  UINTN  *PublicKeySize);
 
-typedef struct _SHARED_CRYPTO_PROTOCOL {
-  // -------------------------------------------
-  // Versioning [IMPORTANT]
-  // Major - Breaking change to this structure
-  // Minor - Functions added to the end of this structure
-  // Revision - Some non breaking change
-  //
-  // The caller should fill in with a function that provides the version of the protocol they are expecting.
-  // When initializing the protocol, the calle filling in the crypto functions will check the version
-  // and attempt to provide the functions that match the version requested.
-  //
-  SHARED_GET_VERSION                       GetVersion;
+/**
+  Computes exchanged common key.
 
-  // Protocol Version 1 Functions [BEGIN] =================
-  // --------------------------------------------
-  // HMAC (Message Authentication Code) Primitive (14 Functions)
-  // --------------------------------------------
-  /// HMAC SHA-256 ------------------------------
-  SHARED_HMAC_NEW                          HmacSha256New;
-  SHARED_HMAC_FREE                         HmacSha256Free;
-  SHARED_HMAC_SET_KEY                      HmacSha256SetKey;
-  SHARED_HMAC_DUPLICATE                    HmacSha256Duplicate;
-  SHARED_HMAC_UPDATE                       HmacSha256Update;
-  SHARED_HMAC_FINAL                        HmacSha256Final;
-  SHARED_HMAC_ALL                          HmacSha256All;
-  /// HMAC SHA-384 ------------------------------
-  SHARED_HMAC_NEW                          HmacSha384New;
-  SHARED_HMAC_FREE                         HmacSha384Free;
-  SHARED_HMAC_SET_KEY                      HmacSha384SetKey;
-  SHARED_HMAC_DUPLICATE                    HmacSha384Duplicate;
-  SHARED_HMAC_UPDATE                       HmacSha384Update;
-  SHARED_HMAC_FINAL                        HmacSha384Final;
-  SHARED_HMAC_ALL                          HmacSha384All;
+  Given peer's public key, this function computes the exchanged common key, based on its own
+  context including value of prime modulus and random secret exponent.
 
-  // --------------------------------------------
-  //  One-Way Cryptographic Hash Primitives (30)
-  // --------------------------------------------
-  /// MD5 HASH ----------------------------------
-  SHARED_HASH_GET_CONTEXT_SIZE             Md5GetContextSize;
-  SHARED_HASH_INIT                         Md5Init;
-  SHARED_HASH_UPDATE                       Md5Update;
-  SHARED_HASH_FINAL                        Md5Final;
-  SHARED_HASH_ALL                          Md5HashAll;
-  SHARED_HASH_DUPLICATE                    Md5Duplicate;
-  /// SHA1 HASH ----------------------------------
-  SHARED_HASH_GET_CONTEXT_SIZE             Sha1GetContextSize;
-  SHARED_HASH_INIT                         Sha1Init;
-  SHARED_HASH_UPDATE                       Sha1Update;
-  SHARED_HASH_FINAL                        Sha1Final;
-  SHARED_HASH_ALL                          Sha1HashAll;
-  SHARED_HASH_DUPLICATE                    Sha1Duplicate;
-  /// SHA256  -------------------------------
-  SHARED_HASH_GET_CONTEXT_SIZE             Sha256GetContextSize;
-  SHARED_HASH_INIT                         Sha256Init;
-  SHARED_HASH_UPDATE                       Sha256Update;
-  SHARED_HASH_FINAL                        Sha256Final;
-  SHARED_HASH_ALL                          Sha256HashAll;
-  SHARED_HASH_DUPLICATE                    Sha256Duplicate;
-  /// SHA512 HASH -------------------------------
-  SHARED_HASH_GET_CONTEXT_SIZE             Sha512GetContextSize;
-  SHARED_HASH_INIT                         Sha512Init;
-  SHARED_HASH_UPDATE                       Sha512Update;
-  SHARED_HASH_FINAL                        Sha512Final;
-  SHARED_HASH_ALL                          Sha512HashAll;
-  SHARED_HASH_DUPLICATE                    Sha512Duplicate;
-  /// SM3 HASH ----------------------------------
-  SHARED_HASH_GET_CONTEXT_SIZE             Sm3GetContextSize;
-  SHARED_HASH_INIT                         Sm3Init;
-  SHARED_HASH_UPDATE                       Sm3Update;
-  SHARED_HASH_FINAL                        Sm3Final;
-  SHARED_HASH_ALL                          Sm3HashAll;
-  SHARED_HASH_DUPLICATE                    Sm3Duplicate;
+  If DhContext is NULL, then return FALSE.
+  If PeerPublicKey is NULL, then return FALSE.
+  If KeySize is NULL, then return FALSE.
+  If Key is NULL, then return FALSE.
+  If KeySize is not large enough, then return FALSE.
+  If this interface is not supported, then return FALSE.
 
-  // --------------------------------------------
-  //  Symmetric Cryptography Primitive (6 Functions)
-  // --------------------------------------------
-  SHARED_AES_GET_CONTEXT_SIZE              AesGetContextSize;
-  SHARED_AES_INIT                          AesInit;
-  SHARED_AES_CBC_ENCRYPT                   AesCbcEncrypt;
-  SHARED_AES_CBC_DECRYPT                   AesCbcDecrypt;
-  SHARED_AEAD_AES_GCM_ENCRYPT              AeadAesGcmEncrypt;
-  SHARED_AEAD_AES_GCM_DECRYPT              AeadAesGcmDecrypt;
+  @param[in, out]  DhContext          Pointer to the DH context.
+  @param[in]       PeerPublicKey      Pointer to the peer's public key.
+  @param[in]       PeerPublicKeySize  Size of peer's public key in bytes.
+  @param[out]      Key                Pointer to the buffer to receive generated key.
+  @param[in, out]  KeySize            On input, the size of Key buffer in bytes.
+                                     On output, the size of data returned in Key buffer in bytes.
 
-  // --------------------------------------------
-  //  Big Number Primitives (26 Functions)
-  // --------------------------------------------
-  SHARED_BIG_NUM_INIT                      BigNumInit;
-  SHARED_BIG_NUM_FROM_BIN                  BigNumFromBin;
-  SHARED_BIG_NUM_TO_BIN                    BigNumToBin;
-  SHARED_BIG_NUM_FREE                      BigNumFree;
-  SHARED_BIG_NUM_ADD                       BigNumAdd;
-  SHARED_BIG_NUM_SUB                       BigNumSub;
-  SHARED_BIG_NUM_MOD                       BigNumMod;
-  SHARED_BIG_NUM_EXP_MOD                   BigNumExpMod;
-  SHARED_BIG_NUM_INVERSE_MOD               BigNumInverseMod;
-  SHARED_BIG_NUM_DIV                       BigNumDiv;
-  SHARED_BIG_NUM_MUL_MOD                   BigNumMulMod;
-  SHARED_BIG_NUM_CMP                       BigNumCmp;
-  SHARED_BIG_NUM_BITS                      BigNumBits;
-  SHARED_BIG_NUM_BYTES                     BigNumBytes;
-  SHARED_BIG_NUM_IS_WORD                   BigNumIsWord;
-  SHARED_BIG_NUM_IS_ODD                    BigNumIsOdd;
-  SHARED_BIG_NUM_COPY                      BigNumCopy;
-  SHARED_BIG_NUM_VALUE_ONE                 BigNumValueOne;
-  SHARED_BIG_NUM_R_SHIFT                   BigNumRShift;
-  SHARED_BIG_NUM_CONST_TIME                BigNumConstTime;
-  SHARED_BIG_NUM_SQR_MOD                   BigNumSqrMod;
-  SHARED_BIG_NUM_NEW_CONTEXT               BigNumNewContext;
-  SHARED_BIG_NUM_CONTEXT_FREE              BigNumContextFree;
-  SHARED_BIG_NUM_SET_UINT                  BigNumSetUint;
-  SHARED_BIG_NUM_ADD_MOD                   BigNumAddMod;
+  @retval TRUE   DH exchanged key generation succeeded.
+  @retval FALSE  DH exchanged key generation failed.
+  @retval FALSE  KeySize is not large enough.
+  @retval FALSE  This interface is not supported.
 
-  // --------------------------------------------
-  //  Key Derivation Function Primitive (6 Functions)
-  // --------------------------------------------
-  SHARED_HKDF_EXTRACT_AND_EXPAND           HkdfSha256ExtractAndExpand;
-  SHARED_HKDF_EXTRACT                      HkdfSha256Extract;
-  SHARED_HKDF_EXPAND                       HkdfSha256Expand;
-  SHARED_HKDF_EXTRACT_AND_EXPAND           HkdfSha384ExtractAndExpand;
-  SHARED_HKDF_EXTRACT                      HkdfSha384Extract;
-  SHARED_HKDF_EXPAND                       HkdfSha384Expand;
+**/
+BOOLEAN
+EFIAPI
+DhComputeKey(
+  IN OUT  VOID         *DhContext,
+  IN      CONST UINT8  *PeerPublicKey,
+  IN      UINTN        PeerPublicKeySize,
+  OUT     UINT8        *Key,
+  IN OUT  UINTN        *KeySize);
 
-  // ---------------------------------------------
-  // PEM (2)
-  // ---------------------------------------------
-  /// RSA --------------------------------------- (13) // TODO
-  SHARED_RSA_GET_PRIVATE_KEY_FROM_PEM      RsaGetPrivateKeyFromPem;
-  /// EC ---------------------------------------- (23) // TODO
-  SHARED_EC_GET_PRIVATE_KEY_FROM_PEM       EcGetPrivateKeyFromPem;
-
-  // ---------------------------------------------
-  // PK ()
-  // ---------------------------------------------
-  /// Authenticode  ------------------------------
-  SHARED_AUTHENTICODE_VERIFY               AuthenticodeVerify;
-  /// PKCS1v2 ------------------------------------
-  SHARED_PKCS1V2_ENCRYPT                   Pkcs1v2Encrypt;
-  SHARED_PKCS1V2_DECRYPT                   Pkcs1v2Decrypt;
-  /// RSA OAEP -----------------------------------
-  SHARED_RSA_OAEP_ENCRYPT                  RsaOaepEncrypt;
-  SHARED_RSA_OAEP_DECRYPT                  RsaOaepDecrypt;
-  /// PKCS5 --------------------------------------
-  SHARED_PKCS5_HASH_PASSWORD               Pkcs5HashPassword;
-  /// PKCS7 --------------------------------------
-  SHARED_PKCS7_GET_SIGNERS                 Pkcs7GetSigners;            // TODO
-  SHARED_PKCS7_FREE_SIGNERS                Pkcs7FreeSigners;           // TODO
-  SHARED_PKCS7_GET_CERTIFICATES_LIST       Pkcs7GetCertificatesList;   // TODO
-  SHARED_PKCS7_SIGN                        Pkcs7Sign;                  // TODO
-  SHARED_PKCS7_VERIFY                      Pkcs7Verify;                // TODO
-  SHARED_VERIFY_EKUS_IN_PKCS7_SIGNATURE    VerifyEKUsInPkcs7Signature; // TODO
-  SHARED_PKCS7_GET_ATTACHED_CONTENT        Pkcs7GetAttachedContent;    // TODO
-  /// DH -----------------------------------------
-  SHARED_DH_NEW                            DhNew;
-  SHARED_DH_FREE                           DhFree;
-  SHARED_DH_GENERATE_PARAMETER             DhGenerateParameter;
-  SHARED_DH_SET_PARAMETER                  DhSetParameter;
-  SHARED_DH_GENERATE_KEY                   DhGenerateKey;
-  SHARED_DH_COMPUTE_KEY                    DhComputeKey;
-
-  // ---------------------------------------------
-  // TLS TODO Expected (41) //TODO
-  // ---------------------------------------------
-
-  // Protocol Version 1 Functions [END] ===================
-} SHARED_CRYPTO_PROTOCOL;
-
-#endif // SHARED_CRYPTO_PROTOCOL_
+#endif

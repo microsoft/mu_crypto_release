@@ -1,5 +1,4 @@
-#include <CrtLibSupport.h>
-
+#include "InternalCryptLib.h"
 
 INT64
 EFIAPI
