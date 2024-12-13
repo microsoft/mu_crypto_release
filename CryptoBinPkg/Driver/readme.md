@@ -129,7 +129,7 @@ the process.
      "type": "nuget",
      "name": "edk2-basecrypto-driver-bin",
      "source": "https://pkgs.dev.azure.com/projectmu/mu/_packaging/Mu-Public/nuget/v3/index.json",
-     "version": "2023.2.9",
+     "version": "1.0.0",
      "flags": ["set_build_var"],
      "var_name": "BLD_*_SHARED_CRYPTO_PATH"
    }
@@ -277,7 +277,7 @@ file.
   MODULE_UNI_FILE                = Crypto.uni
   FILE_GUID                      = bdee011f-87f2-4a7f-bc5e-44b6b61f2D20
   MODULE_TYPE                    = DXE_DRIVER
-  VERSION_STRING                 = 18.2023.12.3
+  VERSION_STRING                 = 18.1.0.0
   PI_SPECIFICATION_VERSION       = 0x00010032
   ENTRY_POINT                    = CryptoDxeEntry
 ```
@@ -299,4 +299,9 @@ An example:
 Currently, this indicates:
 
 - The "EDK2 Crypto Version" is `18`. This is the version of the crypto protocol interface.
-- The Shared Crypto build version is `2023.12.3`
+- The Shared Crypto build version is `1.0.0`
+  - Note: Shared Crypto follows [semantic versioning](https://semver.org/). The version number is incremented based on
+    the type of changes made to the shared crypto binaries. The version number is not tied to the version of the
+    underlying crypto provider.
+  - Note: Prior to adopting semantic versinoning in the `1.0.0` release, the version number followed a form of
+    `YYYY.MM.PATCH`. The `1.0.0` release was the first to use semantic versioning and proceeds any of those versions.
