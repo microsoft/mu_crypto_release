@@ -905,6 +905,14 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
         fdf_bb_lines.append(f"!ifndef {upper_phase}_CRYPTO_SERVICES")
         fdf_bb_lines.append(f"!error You need to define {upper_phase}_CRYPTO_SERVICES")
         fdf_bb_lines.append("!endif")
+        if phase in {"StandaloneMm", "StandaloneMm_MmSupv"}:
+            fdf_bb_lines.append(f"!if {upper_phase}_CRYPTO_SERVICES == NONE")
+            fdf_bb_lines.append(f"!error You included CryptoDriver.{upper_phase}.inc.fdf but {upper_phase}_CRYPTO_SERVICES is set to NONE.")
+            fdf_bb_lines.append("!endif")
+            other_mm_phase_upper = ({"StandaloneMm", "StandaloneMm_MmSupv"} - {phase}).pop().upper()
+            fdf_bb_lines.append(f"!if {other_mm_phase_upper}_CRYPTO_SERVICES != NONE")
+            fdf_bb_lines.append(f"!error You included CryptoDriver.{upper_phase}.inc.fdf but {other_mm_phase_upper}_CRYPTO_SERVICES is not set to NONE. These are mutually exclusive.")
+            fdf_bb_lines.append("!endif")
         for flavor in flavors:
             fdf_bb_lines.append(f"!if $({upper_phase}_CRYPTO_SERVICES) == {flavor}")
             for target in targets:

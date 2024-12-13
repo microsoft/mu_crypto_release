@@ -178,7 +178,8 @@ the process.
     - [`MmSupervisorPkg`](https://github.com/microsoft/mu_feature_mm_supv/tree/main/MmSupervisorPkg/Core) - Use `STANDALONEMM_MMSUPV_CRYPTO_SERVICES`
 
     Since the MM Supervisor currently does not support `AARCH64`, only a `X64` MM Supervisor Standalone MM binary is
-    available.
+    available. A platform should not have both `STANDALONEMM_CRYPTO_SERVICES` and `STANDALONEMM_MMSUPV_CRYPTO_SERVICES`
+    set to non-`NONE` values.
 
 3. Add the DSC include
 
