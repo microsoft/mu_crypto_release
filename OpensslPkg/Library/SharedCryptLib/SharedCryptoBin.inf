@@ -1,0 +1,83 @@
+## @file
+#  This module provides OpenSSL Binary implementation.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SharedCryptoBin
+  FILE_GUID                      = 76ABA88D-9D16-49A2-AA3A-DB6112FAC5CB
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UefiMain
+
+  DEFINE OPENSSL_PATH            = openssl
+  DEFINE OPENSSL_FLAGS           = -DL_ENDIAN -DOPENSSL_SMALL_FOOTPRINT -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DOPENSSL_NO_ASM
+  DEFINE OPENSSL_FLAGS_CONFIG    =
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+#
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  IntrinsicLib
+  BaseLib
+  OpensslLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  OpensslPkg/OpensslPkg.dec
+
+[Sources]
+  InternalCryptLib.h
+  SharedCryptoBin.c
+  SharedCryptoProtocol.h
+  SharedCryptDecl.h
+  SharedCryptoCrt.c
+  Shared/SharedOpenssl.c
+  Shared/SharedOpenssl.h
+  Shared/Syscall/CrtWrapper.c
+  Shared/Syscall/BaseMemAllocation.c
+  Shared/Syscall/TimerWrapper.c
+  Shared/Math/DivS64x64Remainder.c
+  # Big Number Crypto API
+  Shared/BN/CryptBn.c
+  # Cipher Crypto API
+  Shared/Cipher/CryptAeadAesGcm.c
+  Shared/Cipher/CryptAes.c
+
+  # Hash Crypto API
+  Shared/Hash/CryptMd5.c
+  Shared/Hash/CryptSha1.c
+  Shared/Hash/CryptSha256.c
+  Shared/Hash/CryptSha512.c
+  Shared/Hash/CryptSm3.c
+
+  # HMAC API
+  Shared/Hmac/CryptHmac.c
+
+  # KDF API
+  Shared/Kdf/CryptHkdf.c
+
+  # PEM API
+  Shared/Pem/CryptPem.c
+
+  # PK API
+  Shared/Pk/CryptAuthenticode.c
+  Shared/Pk/CryptPkcs7VerifyCommon.c
+  Shared/Pk/CryptDh.c
+  Shared/Pk/CryptPkcs5Pbkdf2.c
+  Shared/Pk/CryptPkcs1Oaep.c
+
+  # Random Crypto API
+  Shared/Rand/CryptRand.h
+  Shared/Rand/CryptRand.c
+
+
+
+[BuildOptions]
+  MSFT:*_*_*_DLINK_FLAGS  = /DLL /SUBSYSTEM:CONSOLE /VERSION:1.0
+  MSFT:*_*_*_GENFW_FLAGS = --keepoptionalheader
