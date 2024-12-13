@@ -203,7 +203,7 @@ CryptoInit (
   // The Caller should provide a GetVersion function that returns the version that the caller is expecting.
   // and this function should use that to ensure that the crypto functionality is compatible with the caller.
   //
-  UINT16  RequestedMajor;
+  UINT32  RequestedMajor;
   UINT16  RequestedMinor;
   UINT16  RequestedRevision;
 
