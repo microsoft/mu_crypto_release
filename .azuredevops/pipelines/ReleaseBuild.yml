@@ -16,9 +16,9 @@ parameters:
   type: boolean
   default: false
 - name: version_major_minor
-  displayName: Major and Minor Version
+  displayName: Major and Minor Version (semantic versioning)
   type: string
-  default: 2023.02
+  default: 1.0
 - name: version_patch
   displayName: Patch Version (0-65535)
   type: number
