@@ -3,7 +3,7 @@
 
 #include <Uefi.h>
 #include "CrtLibSupport.h"
-#include "Shared/SharedCryptoProtocol.h"
+#include "SharedCryptoProtocol.h"
 
 VOID
 EFIAPI

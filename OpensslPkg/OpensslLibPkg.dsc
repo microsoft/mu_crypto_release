@@ -40,6 +40,7 @@
   UefiApplicationEntryPoint|MdePkg/Library/UefiApplicationEntryPoint/UefiApplicationEntryPoint.inf # Required for UEFI applications
   UefiBootServicesTableLib|MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf # Required for UEFI applications
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
+  OpensslLib|OpensslPkg/Library/OpensslLib/OpenssLibShared.inf
 
 
 [LibraryClasses.common.UEFI_APPLICATION]
@@ -65,7 +66,7 @@
 #
 ###################################################################################################
 [Components]
-  OpensslPkg/Library/OpensslLib/SharedCryptoBin.inf
+  OpensslPkg/Library/SharedCryptLib/SharedCryptoBin.inf
 
 
 [BuildOptions]
