@@ -140,9 +140,9 @@ InitAvailableCrypto (
   Crypto->Sm3Duplicate         = Sm3Duplicate;
   Crypto->Sm3HashAll           = Sm3HashAll;
 
-  //
-  // TODO
-  //
+  // ========================================================================================================
+  // HMAC based Key Derivation Functions
+  // ========================================================================================================
   Crypto->HkdfSha256Expand           = HkdfSha256Expand;
   Crypto->HkdfSha256Extract          = HkdfSha256Extract;
   Crypto->HkdfSha256ExtractAndExpand = HkdfSha256ExtractAndExpand;
@@ -150,15 +150,9 @@ InitAvailableCrypto (
   Crypto->HkdfSha384Extract          = HkdfSha384Extract;
   Crypto->HkdfSha384ExtractAndExpand = HkdfSha384ExtractAndExpand;
 
-  //
-  // TODO
-  //
-  Crypto->RsaGetPrivateKeyFromPem = RsaGetPrivateKeyFromPem;
-  Crypto->EcGetPrivateKeyFromPem  = EcGetPrivateKeyFromPem;
-
-  //
+  // ========================================================================================================
   // PK
-  //
+  // ========================================================================================================
   Crypto->AuthenticodeVerify  = AuthenticodeVerify;
   Crypto->DhNew               = DhNew;
   Crypto->DhFree              = DhFree;
@@ -171,6 +165,75 @@ InitAvailableCrypto (
   Crypto->Pkcs1v2Decrypt      = Pkcs1v2Decrypt;
   Crypto->RsaOaepEncrypt      = RsaOaepEncrypt;
   Crypto->RsaOaepDecrypt      = RsaOaepDecrypt;
+
+  // ========================================================================================================
+  // Basic Elliptic Curve Primitives
+  // ========================================================================================================
+  Crypto->EcGroupInit                     = EcGroupInit;
+  Crypto->EcGroupGetCurve                 = EcGroupGetCurve;
+  Crypto->EcGroupGetOrder                 = EcGroupGetOrder;
+  Crypto->EcGroupFree                     = EcGroupFree;
+  Crypto->EcPointInit                     = EcPointInit;
+  Crypto->EcPointDeInit                   = EcPointDeInit;
+  Crypto->EcPointGetAffineCoordinates     = EcPointGetAffineCoordinates;
+  Crypto->EcPointSetAffineCoordinates     = EcPointSetAffineCoordinates;
+  Crypto->EcPointAdd                      = EcPointAdd;
+  Crypto->EcPointMul                      = EcPointMul;
+  Crypto->EcPointInvert                   = EcPointInvert;
+  Crypto->EcPointIsOnCurve                = EcPointIsOnCurve;
+  Crypto->EcPointIsAtInfinity             = EcPointIsAtInfinity;
+  Crypto->EcPointEqual                    = EcPointEqual;
+  Crypto->EcPointSetCompressedCoordinates = EcPointSetCompressedCoordinates;
+
+  // ========================================================================================================
+  // Elliptic Curve Diffie Hellman Primitives
+  // ========================================================================================================
+
+  Crypto->EcNewByNid             = EcNewByNid;
+  Crypto->EcFree                 = EcFree;
+  Crypto->EcGenerateKey          = EcGenerateKey;
+  Crypto->EcGetPubKey            = EcGetPubKey;
+  Crypto->EcDhComputeKey         = EcDhComputeKey;
+  Crypto->EcGetPrivateKeyFromPem = EcGetPrivateKeyFromPem;
+  Crypto->EcGetPublicKeyFromX509 = EcGetPublicKeyFromX509;
+  Crypto->EcDsaSign              = EcDsaSign;
+  Crypto->EcDsaVerify            = EcDsaVerify;
+
+  // ========================================================================================================
+  // RSA Primitives
+  // ========================================================================================================
+  Crypto->RsaNew                  = RsaNew;
+  Crypto->RsaFree                 = RsaFree;
+  Crypto->RsaSetKey               = RsaSetKey;
+  Crypto->RsaGetKey               = RsaGetKey;
+  Crypto->RsaGenerateKey          = RsaGenerateKey;
+  Crypto->RsaCheckKey             = RsaCheckKey;
+  Crypto->RsaPkcs1Sign            = RsaPkcs1Sign;
+  Crypto->RsaPkcs1Verify          = RsaPkcs1Verify;
+  Crypto->RsaPssSign              = RsaPssSign;
+  Crypto->RsaPssVerify            = RsaPssVerify;
+  Crypto->RsaGetPrivateKeyFromPem = RsaGetPrivateKeyFromPem;
+  Crypto->RsaGetPublicKeyFromX509 = RsaGetPublicKeyFromX509;
+
+  // ========================================================================================================
+  // X509 Certificate Primitives
+  // ========================================================================================================
+  Crypto->X509GetSubjectName             = X509GetSubjectName;
+  Crypto->X509GetCommonName              = X509GetCommonName;
+  Crypto->X509GetOrganizationName        = X509GetOrganizationName;
+  Crypto->X509VerifyCert                 = X509VerifyCert;
+  Crypto->X509ConstructCertificate       = X509ConstructCertificate;
+  Crypto->X509ConstructCertificateStackV = X509ConstructCertificateStackV;
+  Crypto->X509ConstructCertificateStack  = X509ConstructCertificateStack;
+  Crypto->X509Free                       = X509Free;
+  Crypto->X509StackFree                  = X509StackFree;
+  Crypto->X509GetTBSCert                 = X509GetTBSCert;
+
+  // ========================================================================================================
+  // Random Number Generation
+  // ========================================================================================================
+  Crypto->RandomSeed  = RandomSeed;
+  Crypto->RandomBytes = RandomBytes;
 
   return;
 }

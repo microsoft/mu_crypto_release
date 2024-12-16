@@ -67,10 +67,21 @@
 
   # PK API
   Shared/Pk/CryptAuthenticode.c
-  Shared/Pk/CryptPkcs7VerifyCommon.c
   Shared/Pk/CryptDh.c
-  Shared/Pk/CryptPkcs5Pbkdf2.c
+  Shared/Pk/CryptEc.c
   Shared/Pk/CryptPkcs1Oaep.c
+  Shared/Pk/CryptPkcs5Pbkdf2.c
+  Shared/Pk/CryptPkcs7Sign.c
+  Shared/Pk/CryptPkcs7VerifyBase.c
+  Shared/Pk/CryptPkcs7VerifyCommon.c
+  Shared/Pk/CryptPkcs7VerifyEku.c
+  Shared/Pk/CryptPkcs7VerifyEkuRuntime.c
+  Shared/Pk/CryptPkcs7VerifyRuntime.c
+  Shared/Pk/CryptRsaBasic.c
+  Shared/Pk/CryptRsaExt.c
+  Shared/Pk/CryptRsaPss.c
+  Shared/Pk/CryptRsaPssSign.c
+  Shared/Pk/CryptX509.c
 
   # Random Crypto API
   Shared/Rand/CryptRand.h
