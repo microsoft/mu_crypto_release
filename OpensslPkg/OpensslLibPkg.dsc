@@ -41,7 +41,7 @@
   UefiBootServicesTableLib|MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf # Required for UEFI applications
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   OpensslLib|OpensslPkg/Library/OpensslLib/OpenssLibShared.inf
-
+  SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
 
 [LibraryClasses.common.UEFI_APPLICATION]
   NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
