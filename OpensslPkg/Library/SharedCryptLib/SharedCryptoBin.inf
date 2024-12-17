@@ -25,6 +25,7 @@
   IntrinsicLib
   BaseLib
   OpensslLib
+  SafeIntLib
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -87,8 +88,16 @@
   Shared/Rand/CryptRand.h
   Shared/Rand/CryptRand.c
 
+  # TLS API
+  InternalTlsLib.h
+  Shared/Tls/TlsConfig.c
+  Shared/Tls/TlsInit.c
+  Shared/Tls/TlsProcess.c
+  Shared/Syscall/inet_pton.c
 
 
 [BuildOptions]
   MSFT:*_*_*_DLINK_FLAGS  = /DLL /SUBSYSTEM:CONSOLE /VERSION:1.0
   MSFT:*_*_*_GENFW_FLAGS = --keepoptionalheader
+
+  MSFT:*_*_*_CC_FLAGS = -D SHARED_CRYPTO_ENVIRONMENT
