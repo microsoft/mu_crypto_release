@@ -1,5 +1,14 @@
 #include "InternalCryptLib.h"
+#include <Library/SafeIntLib.h>
 
+extern INT64
+EFIAPI
+InternalMathDivRemS64x64 (
+  IN      INT64  Dividend,
+  IN      INT64  Divisor,
+  OUT     INT64  *Remainder  OPTIONAL
+  );
+/*
 INT64
 EFIAPI
 InternalMathDivRemS64x64 (
@@ -13,7 +22,7 @@ InternalMathDivRemS64x64 (
   }
 
   return Dividend / Divisor;
-}
+}*/
 
 INT64
 EFIAPI
