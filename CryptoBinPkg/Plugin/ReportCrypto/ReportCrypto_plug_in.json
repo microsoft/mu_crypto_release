@@ -1,0 +1,5 @@
+{
+  "scope": "crypto-report",
+  "name": "Report Crypto Contents",
+  "module": "ReportCrypto"
+}

@@ -61,6 +61,9 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
                                default=False,
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
+        parserObj.add_argument("-r", "--report", dest="report", action="store_true",
+                               default=False,
+                               help="produces a report regarding the built crpyto binaries.")
 
     def RetrieveCommandLineOptions(self, args):
         self.arch = args.arch
@@ -68,6 +71,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.flavor = args.flavor
         self.stop = args.stop
         self.bundle = args.bundle
+        self.report = args.report
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -116,6 +120,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                     params += ["-a", ",".join(arches)]
                     if self.bundle:
                         params += ["-b"]
+                    if self.report:
+                        params += ["-r"]
 
                     current_build = f"{flavor} {target}"
                     logging.log(edk2_logging.SECTION, f"Building {current_build}")
@@ -136,6 +142,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                     params += ["-a", "AARCH64"]
                     if self.bundle:
                         params += ["-b"]
+                    if self.report:
+                        params += ["-r"]
 
                     current_build = f"{flavor} {target}"
                     logging.log(edk2_logging.SECTION, f"Building {current_build}")

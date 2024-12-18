@@ -42,6 +42,9 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
                                default=False,
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
+        parserObj.add_argument("-r", "--report", dest="report", action="store_true",
+                               default=False,
+                               help="produces a report regarding the built crpyto binaries.")
 
 
     def RetrieveCommandLineOptions(self, args):
@@ -49,6 +52,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.target = args.target
         self.arch = args.arch
         self.bundle = args.bundle
+        self.report = args.report
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -61,7 +65,9 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
     def GetActiveScopes(self):
         ''' return tuple containing scopes that should be active for this process '''
         if self.bundle:
-            return CommonPlatform.Scopes + ("crypto-bundle",)
+            CommonPlatform.Scopes = CommonPlatform.Scopes + ("crypto-bundle",)
+        if self.report:
+            CommonPlatform.Scopes = CommonPlatform.Scopes + ("crypto-report",)
         return CommonPlatform.Scopes
 
     def GetBaseName(self):
