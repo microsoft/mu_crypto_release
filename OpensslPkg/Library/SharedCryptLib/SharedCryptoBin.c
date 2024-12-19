@@ -9,7 +9,7 @@
 #include <Uefi.h>
 #include <Library/UefiApplicationEntryPoint.h>
 #include "Shared/SharedOpenssl.h"
-#include "SharedCrtLibSupport.h"
+#include <SharedCrtLibSupport.h>
 
 // #if defined(_MSC_VER)
 #define COMMON_EXPORT_API  __declspec(dllexport)

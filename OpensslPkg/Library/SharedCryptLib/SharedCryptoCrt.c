@@ -8,7 +8,7 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
-#include "SharedCrtLibSupport.h"
+#include <SharedCrtLibSupport.h>
 
 /**
   Copies a source buffer to a destination buffer.

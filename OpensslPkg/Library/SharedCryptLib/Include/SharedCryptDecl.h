@@ -1,5 +1,19 @@
-#ifndef _PROTOCOL_H_
-#define _PROTOCOL_H_
+/**
+  @file SharedCryptDecls.h // TODO change this name
+  @brief This file contains the declarations for the shared crypto protocol.
+  @defgroup SharedCrypt Shared Cryptography Protocol
+  @brief Provides functions for cryptographic operations.
+
+  Register functions for cryptographic operations here. This file will be used to
+  generate the shared crypto protocol. All functions must include the `EFIAPI`
+  calling convention, have a `@since` tag to indicate the version in which the
+  function was introduced, and be grouped according to their functionality
+  using `@ingroup`.
+
+  @{
+**/
+#ifndef SHARED_CRYPT_DECLS_H_
+#define SHARED_CRYPT_DECLS_H_
 
 #include <Uefi.h>
 
@@ -5023,5 +5037,5 @@ TlsGetExportKey (
   );
 
 /** @} */ // end of TLS group
-
-#endif
+/** @} */ // end of SharedCrypt group
+#endif // SHARED_CRYPT_DECL_H_
