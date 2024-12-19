@@ -92,9 +92,19 @@ typedef enum {
 } RSA_KEY_TAG;
 
 /**
-    Retrieves the version of the shared crypto protocol.
+  @defgroup Info Information Functions
+  @brief Functions related to retrieving information.
 
-    @return  The version of the shared crypto protocol.
+  @{
+**/
+
+/**
+  Retrieves the version of the shared crypto protocol.
+
+  @return  The version of the shared crypto protocol.
+
+  @since 1.0.0
+  @ingroup Info
 **/
 UINT64
 EFIAPI
@@ -102,10 +112,22 @@ GetVersion (
   VOID
   );
 
+/** @} */ // end of Info group
+
+/**
+  @defgroup HMAC hash-based message authentication
+  @brief Provides functions for generating and verifying HMACs.
+
+  @{
+ */
+
 /**
   Creates a new HMAC context.
 
   @return  Pointer to the new HMAC context.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 VOID *
 EFIAPI
@@ -117,6 +139,9 @@ HmacSha256New (
   Frees an HMAC context.
 
   @param[in]  HmacCtx  Pointer to the HMAC context to be freed.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 VOID
 EFIAPI
@@ -133,6 +158,9 @@ HmacSha256Free (
 
   @retval TRUE   Key was set successfully.
   @retval FALSE  Failed to set the key.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -150,6 +178,9 @@ HmacSha256SetKey (
 
   @retval TRUE   Context was duplicated successfully.
   @retval FALSE  Failed to duplicate the context.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -167,6 +198,9 @@ HmacSha256Duplicate (
 
   @retval TRUE   Data was updated successfully.
   @retval FALSE  Failed to update the data.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -184,6 +218,9 @@ HmacSha256Update (
 
   @retval TRUE   HMAC value was produced successfully.
   @retval FALSE  Failed to produce the HMAC value.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -203,6 +240,9 @@ HmacSha256Final (
 
   @retval TRUE   HMAC operation was performed successfully.
   @retval FALSE  Failed to perform the HMAC operation.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -218,6 +258,9 @@ HmacSha256All (
   Creates a new HMAC context.
 
   @return  Pointer to the new HMAC context.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 VOID *
 EFIAPI
@@ -229,6 +272,9 @@ HmacSha384New (
   Frees an HMAC context.
 
   @param[in]  HmacCtx  Pointer to the HMAC context to be freed.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 VOID
 EFIAPI
@@ -245,6 +291,9 @@ HmacSha384Free (
 
   @retval TRUE   Key was set successfully.
   @retval FALSE  Failed to set the key.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -262,6 +311,9 @@ HmacSha384SetKey (
 
   @retval TRUE   Context was duplicated successfully.
   @retval FALSE  Failed to duplicate the context.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -279,6 +331,9 @@ HmacSha384Duplicate (
 
   @retval TRUE   Data was updated successfully.
   @retval FALSE  Failed to update the data.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -296,6 +351,9 @@ HmacSha384Update (
 
   @retval TRUE   HMAC value was produced successfully.
   @retval FALSE  Failed to produce the HMAC value.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -315,6 +373,9 @@ HmacSha384Final (
 
   @retval TRUE   HMAC operation was performed successfully.
   @retval FALSE  Failed to perform the HMAC operation.
+
+  @since 1.0.0
+  @ingroup HMAC
 **/
 BOOLEAN
 EFIAPI
@@ -326,6 +387,15 @@ HmacSha384All (
   UINT8        *HmacValue
   );
 
+/** @} */ // end of HMAC group
+
+/**
+  @defgroup Hashing Hashing Functions
+  @brief Functions for performing various hashing operations.
+
+  @{
+**/
+
 /**
   Retrieves the size, in bytes, of the context buffer required for MD5 hash operations.
 
@@ -334,6 +404,8 @@ HmacSha384All (
   @return  The size, in bytes, of the context buffer required for MD5 hash operations.
   @retval  0   This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 UINTN
 EFIAPI
@@ -354,6 +426,8 @@ Md5GetContextSize (
   @retval FALSE  MD5 context initialization failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -380,6 +454,8 @@ Md5Init (
   @retval FALSE  MD5 data digest failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -410,6 +486,8 @@ Md5Update (
   @retval FALSE  MD5 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -435,6 +513,8 @@ Md5Final (
   @retval FALSE  MD5 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -458,6 +538,8 @@ Md5HashAll (
   @retval FALSE  MD5 context copy failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -474,6 +556,8 @@ Md5Duplicate (
   @return  The size, in bytes, of the context buffer required for SHA-1 hash operations.
   @retval  0   This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 UINTN
 EFIAPI
@@ -494,6 +578,8 @@ Sha1GetContextSize (
   @retval FALSE  SHA-1 context initialization failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -520,6 +606,8 @@ Sha1Init (
   @retval FALSE  SHA-1 data digest failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -550,6 +638,8 @@ Sha1Update (
   @retval FALSE  SHA-1 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -575,6 +665,8 @@ Sha1Final (
   @retval FALSE  SHA-1 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -598,6 +690,8 @@ Sha1HashAll (
   @retval FALSE  SHA-1 context copy failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -611,6 +705,8 @@ Sha1Duplicate (
 
   @return  The size, in bytes, of the context buffer required for SHA-256 hash operations.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 UINTN
 EFIAPI
@@ -629,6 +725,8 @@ Sha256GetContextSize (
   @retval TRUE   SHA-256 context initialization succeeded.
   @retval FALSE  SHA-256 context initialization failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -653,6 +751,8 @@ Sha256Init (
   @retval TRUE   SHA-256 data digest succeeded.
   @retval FALSE  SHA-256 data digest failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -681,6 +781,8 @@ Sha256Update (
   @retval TRUE   SHA-256 digest computation succeeded.
   @retval FALSE  SHA-256 digest computation failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -706,6 +808,8 @@ Sha256Final (
   @retval FALSE  SHA-256 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -729,6 +833,8 @@ Sha256HashAll (
   @retval FALSE  SHA-256 context copy failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -742,6 +848,8 @@ Sha256Duplicate (
 
   @return  The size, in bytes, of the context buffer required for SHA-512 hash operations.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 UINTN
 EFIAPI
@@ -760,6 +868,8 @@ Sha512GetContextSize (
   @retval TRUE   SHA-512 context initialization succeeded.
   @retval FALSE  SHA-512 context initialization failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -781,6 +891,8 @@ Sha512Init (
   @retval FALSE  SHA-512 context copy failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -806,6 +918,8 @@ Sha512Duplicate (
   @retval TRUE   SHA-512 data digest succeeded.
   @retval FALSE  SHA-512 data digest failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -834,6 +948,8 @@ Sha512Update (
   @retval TRUE   SHA-512 digest computation succeeded.
   @retval FALSE  SHA-512 digest computation failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -859,6 +975,8 @@ Sha512Final (
   @retval FALSE  SHA-512 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -873,6 +991,8 @@ Sha512HashAll (
 
   @return  The size, in bytes, of the context buffer required for SM3 hash operations.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 UINTN
 EFIAPI
@@ -891,6 +1011,8 @@ Sm3GetContextSize (
   @retval TRUE   SM3 context initialization succeeded.
   @retval FALSE  SM3 context initialization failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -912,6 +1034,8 @@ Sm3Init (
   @retval FALSE  SM3 context copy failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -937,6 +1061,8 @@ Sm3Duplicate (
   @retval TRUE   SM3 data digest succeeded.
   @retval FALSE  SM3 data digest failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -965,6 +1091,8 @@ Sm3Update (
   @retval TRUE   SM3 digest computation succeeded.
   @retval FALSE  SM3 digest computation failed.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -990,6 +1118,8 @@ Sm3Final (
   @retval FALSE  SM3 digest computation failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Hashing
 **/
 BOOLEAN
 EFIAPI
@@ -999,6 +1129,15 @@ Sm3HashAll (
   OUT  UINT8       *HashValue
   );
 
+/** @} */ // end of Hashing group
+
+/**
+  @defgroup AES Advanced Encryption Standard
+  @brief Functions for performing symmetric encryption.
+
+  @{
+**/
+
 /**
   Retrieves the size, in bytes, of the context buffer required for AES operations.
 
@@ -1007,6 +1146,8 @@ Sm3HashAll (
   @return  The size, in bytes, of the context buffer required for AES operations.
   @retval  0   This interface is not supported.
 
+  @since 1.0.0
+  @ingroup AES
 **/
 UINTN
 EFIAPI
@@ -1035,6 +1176,8 @@ AesGetContextSize (
   @retval FALSE  AES context initialization failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup AES
 **/
 BOOLEAN
 EFIAPI
@@ -1072,6 +1215,8 @@ AesInit (
   @retval FALSE  AES encryption failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup AES
 **/
 BOOLEAN
 EFIAPI
@@ -1111,6 +1256,8 @@ AesCbcEncrypt (
   @retval FALSE  AES decryption failed.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup AES
 **/
 BOOLEAN
 EFIAPI
@@ -1145,6 +1292,8 @@ AesCbcDecrypt (
   @retval TRUE   AEAD AES-GCM authenticated encryption succeeded.
   @retval FALSE  AEAD AES-GCM authenticated encryption failed.
 
+  @since 1.0.0
+  @ingroup AES
 **/
 BOOLEAN
 EFIAPI
@@ -1187,6 +1336,8 @@ AeadAesGcmEncrypt (
   @retval TRUE   AEAD AES-GCM authenticated decryption succeeded.
   @retval FALSE  AEAD AES-GCM authenticated decryption failed.
 
+  @since 1.0.0
+  @ingroup AES
 **/
 BOOLEAN
 EFIAPI
@@ -1205,10 +1356,22 @@ AeadAesGcmDecrypt (
   OUT  UINTN        *DataOutSize
   );
 
+/** @} */ // end of Aes group
+
+/**
+  @defgroup BN Big Number
+  @brief Functions for operating on big numbers.
+
+  @{
+**/
+
 /**
   Allocate new Big Number.
 
   @retval New BigNum opaque structure or NULL on failure.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID *
 EFIAPI
@@ -1223,6 +1386,9 @@ BigNumInit (
   @param[in]   Len    Buffer length.
 
   @retval New BigNum opaque structure or NULL on failure.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID *
 EFIAPI
@@ -1239,6 +1405,9 @@ BigNumFromBin (
   @param[out]  Buf    Output buffer.
 
   @retval The length of the big-endian number placed at Buf or -1 on error.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 INTN
 EFIAPI
@@ -1252,6 +1421,9 @@ BigNumToBin (
 
   @param[in]   Bn      Big number to free.
   @param[in]   Clear   TRUE if the buffer should be cleared.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID
 EFIAPI
@@ -1271,6 +1443,9 @@ BigNumFree (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1291,6 +1466,9 @@ BigNumAdd (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1311,6 +1489,9 @@ BigNumSub (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1332,6 +1513,9 @@ BigNumMod (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1353,6 +1537,9 @@ BigNumExpMod (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1373,6 +1560,9 @@ BigNumInverseMod (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1394,6 +1584,9 @@ BigNumDiv (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1413,6 +1606,9 @@ BigNumMulMod (
   @retval 0          BnA == BnB.
   @retval 1          BnA > BnB.
   @retval -1         BnA < BnB.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 INTN
 EFIAPI
@@ -1427,6 +1623,9 @@ BigNumCmp (
   @param[in]   Bn     Big number.
 
   @retval Number of bits.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 UINTN
 EFIAPI
@@ -1440,6 +1639,9 @@ BigNumBits (
   @param[in]   Bn     Big number.
 
   @retval Number of bytes.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 UINTN
 EFIAPI
@@ -1455,6 +1657,9 @@ BigNumBytes (
 
   @retval TRUE   iff Bn == Num.
   @retval FALSE  otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1470,6 +1675,9 @@ BigNumIsWord (
 
   @retval TRUE   Bn is odd (Bn % 2 == 1).
   @retval FALSE  otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1485,6 +1693,9 @@ BigNumIsOdd (
 
   @retval BnDst on success.
   @retval NULL otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID *
 EFIAPI
@@ -1498,6 +1709,9 @@ BigNumCopy (
   This may be used to save expensive allocations.
 
   @retval Big Number with value of 1.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 CONST VOID *
 EFIAPI
@@ -1516,6 +1730,9 @@ BigNumValueOne (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1531,6 +1748,9 @@ BigNumRShift (
   performed on the given Big number.
 
   @param[in]   Bn     Big number.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID
 EFIAPI
@@ -1549,6 +1769,9 @@ BigNumConstTime (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1564,6 +1787,9 @@ BigNumSqrMod (
   needed to optimize calculations and expensive allocations.
 
   @retval Big Number context struct or NULL on failure.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID *
 EFIAPI
@@ -1575,6 +1801,9 @@ BigNumNewContext (
   Free Big Number context that was allocated with BigNumNewContext().
 
   @param[in]   BnCtx     Big number context to free.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 VOID
 EFIAPI
@@ -1590,6 +1819,9 @@ BigNumContextFree (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1608,6 +1840,9 @@ BigNumSetUint (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup BN
 **/
 BOOLEAN
 EFIAPI
@@ -1617,6 +1852,15 @@ BigNumAddMod (
   IN CONST VOID  *BnM,
   OUT VOID       *BnRes
   );
+
+/** @} */ // end of BN group
+
+/**
+  @defgroup HKDF HMAC-based Extract-and-Expand Key Derivation Function
+  @brief Functions for operating on big numbers.
+
+  @{
+**/
 
 /**
   Derive key data using HMAC-SHA* based KDF.
@@ -1632,6 +1876,9 @@ BigNumAddMod (
 
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
+
+  @since 1.0.0
+  @ingroup HKDF
 **/
 BOOLEAN
 EFIAPI
@@ -1658,6 +1905,9 @@ HkdfSha256ExtractAndExpand (
 
   @retval true   Hkdf generated successfully.
   @retval false  Hkdf generation failed.
+
+  @since 1.0.0
+  @ingroup HKDF
 **/
 BOOLEAN
 EFIAPI
@@ -1682,6 +1932,9 @@ HkdfSha256Extract (
 
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
+
+  @since 1.0.0
+  @ingroup HKDF
 **/
 BOOLEAN
 EFIAPI
@@ -1708,6 +1961,9 @@ HkdfSha256Expand (
 
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
+
+  @since 1.0.0
+  @ingroup HKDF
 **/
 BOOLEAN
 EFIAPI
@@ -1734,6 +1990,9 @@ HkdfSha384ExtractAndExpand (
 
   @retval true   Hkdf generated successfully.
   @retval false  Hkdf generation failed.
+
+  @since 1.0.0
+  @ingroup HKDF
 **/
 BOOLEAN
 EFIAPI
@@ -1758,6 +2017,9 @@ HkdfSha384Extract (
 
   @retval TRUE   Hkdf generated successfully.
   @retval FALSE  Hkdf generation failed.
+
+  @since 1.0.0
+  @ingroup HKDF
 **/
 BOOLEAN
 EFIAPI
@@ -1769,6 +2031,15 @@ HkdfSha384Expand (
   OUT  UINT8        *Out,
   IN   UINTN        OutSize
   );
+
+/** @} */ // end of HKDF group
+
+/**
+  @defgroup PKCS Public Key Cryptography Standards
+  @brief Functions for Public Key Cryptography Standards.
+
+  @{
+**/
 
 /**
   Verifies the validity of an Authenticode Signature.
@@ -1786,6 +2057,9 @@ HkdfSha384Expand (
 
   @retval  TRUE   The specified Authenticode Signature is valid.
   @retval  FALSE  Invalid Authenticode Signature.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -1817,6 +2091,9 @@ AuthenticodeVerify (
 
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -1845,6 +2122,9 @@ Pkcs1v2Encrypt (
 
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -1881,6 +2161,9 @@ Pkcs1v2Decrypt (
 
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -1915,6 +2198,9 @@ RsaOaepEncrypt (
 
   @retval     TRUE                Encryption was successful.
   @retval     FALSE               Encryption failed.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -1949,6 +2235,9 @@ RsaOaepDecrypt (
   @retval  FALSE  The hash algorithm could not be determined from the digest size.
   @retval  FALSE  The key derivation operation failed.
   @retval  FALSE  This interface is not supported.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -1984,6 +2273,9 @@ Pkcs5HashPassword (
   @retval  TRUE            The operation is finished successfully.
   @retval  FALSE           Error occurs during the operation.
   @retval  FALSE           This interface is not supported.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -2000,6 +2292,9 @@ Pkcs7GetSigners (
 Wrap function to use free() to free allocated memory for certificates.
 If this interface is not supported, then ASSERT().
 @param[in]  Certs        Pointer to the certificates to be freed.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 VOID
 EFIAPI
@@ -2025,6 +2320,9 @@ Pkcs7FreeSigners (
   @param[out] UnchainLength     Length of the unchained certificates list buffer in bytes.
   @retval  TRUE         The operation is finished successfully.
   @retval  FALSE        Error occurs during the operation.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -2060,6 +2358,9 @@ Pkcs7GetCertificatesList (
   @retval     TRUE             PKCS#7 data signing succeeded.
   @retval     FALSE            PKCS#7 data signing failed.
   @retval     FALSE            This interface is not supported.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -2099,6 +2400,9 @@ Pkcs7Sign (
   @retval  TRUE  The specified PKCS#7 signed data is valid.
   @retval  FALSE Invalid PKCS#7 signed data.
 
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -2138,6 +2442,9 @@ Pkcs7Verify (
   @retval EFI_SUCCESS              The required EKUs were found in the signature.
   @retval EFI_INVALID_PARAMETER    A parameter was invalid.
   @retval EFI_NOT_FOUND            One or more EKU's were not found in the signature.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 RETURN_STATUS
 EFIAPI
@@ -2163,6 +2470,9 @@ VerifyEKUsInPkcs7Signature (
   @param[out]  ContentSize  The size of the extracted content in bytes.
   @retval     TRUE          The P7Data was correctly formatted for processing.
   @retval     FALSE         The P7Data was not correctly formatted for processing.
+
+  @since 1.0.0
+  @ingroup PKCS
 **/
 BOOLEAN
 EFIAPI
@@ -2173,11 +2483,23 @@ Pkcs7GetAttachedContent (
   OUT UINTN        *ContentSize
   );
 
+/** @} */ // end of PKCS group
+
+/**
+  @defgroup DH Diffie-Hellman
+  @brief Functions for Diffie-Hellman key exchange.
+
+  @{
+**/
+
 /**
   Allocates and Initializes one Diffie-Hellman Context for subsequent use.
   @return  Pointer to the Diffie-Hellman Context that has been initialized.
            If the allocations fails, DhNew() returns NULL.
            If the interface is not supported, DhNew() returns NULL.
+
+  @since 1.0.0
+  @ingroup DH
 **/
 VOID *
 EFIAPI
@@ -2189,6 +2511,9 @@ DhNew (
   Release the specified DH context.
   If the interface is not supported, then ASSERT().
   @param[in]  DhContext  Pointer to the DH context to be released.
+
+  @since 1.0.0
+  @ingroup DH
 **/
 VOID
 EFIAPI
@@ -2213,6 +2538,9 @@ DhFree (
   @retval FALSE  Value of Generator is not supported.
   @retval FALSE  PRNG fails to generate random prime number with PrimeLength.
   @retval FALSE  This interface is not supported.
+
+  @since 1.0.0
+  @ingroup DH
 **/
 BOOLEAN
 EFIAPI
@@ -2240,6 +2568,9 @@ DhGenerateParameter (
   @retval FALSE  Value of Prime is not a prime number.
   @retval FALSE  Value of Prime is not a safe prime number.
   @retval FALSE  This interface is not supported.
+
+  @since 1.0.0
+  @ingroup DH
 **/
 BOOLEAN
 EFIAPI
@@ -2273,6 +2604,9 @@ If this interface is not supported, then return FALSE.
 @retval FALSE  PublicKeySize is not large enough.
 @retval FALSE  This interface is not supported.
 
+
+  @since 1.0.0
+  @ingroup DH
 **/
 BOOLEAN
 EFIAPI
@@ -2307,6 +2641,9 @@ DhGenerateKey (
   @retval FALSE  KeySize is not large enough.
   @retval FALSE  This interface is not supported.
 
+
+  @since 1.0.0
+  @ingroup DH
 **/
 BOOLEAN
 EFIAPI
@@ -2317,6 +2654,15 @@ DhComputeKey (
   OUT     UINT8        *Key,
   IN OUT  UINTN        *KeySize
   );
+
+/** @} */ // end of DH group
+
+/**
+  @defgroup EC Elliptic Curve
+  @brief Functions for Elliptic Curve Cryptography.
+
+  @{
+**/
 
 // =====================================================================================
 //    Basic Elliptic Curve Primitives
@@ -2332,6 +2678,9 @@ DhComputeKey (
 
   @retval EcGroup object  On success.
   @retval NULL            On failure.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 VOID *
 EFIAPI
@@ -2353,6 +2702,9 @@ EcGroupInit (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2375,6 +2727,9 @@ EcGroupGetCurve (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2387,6 +2742,9 @@ EcGroupGetOrder (
   Free previously allocated EC group object using EcGroupInit().
 
   @param[in]  EcGroup   EC group object to free.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 VOID
 EFIAPI
@@ -2402,6 +2760,9 @@ EcGroupFree (
 
   @retval EC Point object  On success.
   @retval NULL             On failure.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 VOID *
 EFIAPI
@@ -2414,6 +2775,9 @@ EcPointInit (
 
   @param[in]  EcPoint   EC Point to free.
   @param[in]  Clear     TRUE iff the memory should be cleared.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 VOID
 EFIAPI
@@ -2436,6 +2800,9 @@ EcPointDeInit (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2458,6 +2825,9 @@ EcPointGetAffineCoordinates (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2481,6 +2851,9 @@ EcPointSetAffineCoordinates (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2504,6 +2877,9 @@ EcPointAdd (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2524,6 +2900,9 @@ EcPointMul (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2542,6 +2921,9 @@ EcPointInvert (
 
   @retval TRUE          On curve.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2559,6 +2941,9 @@ EcPointIsOnCurve (
 
   @retval TRUE          At infinity.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2577,6 +2962,9 @@ EcPointIsAtInfinity (
 
   @retval TRUE          A == B.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2603,6 +2991,9 @@ EcPointEqual (
 
   @retval TRUE          On success.
   @retval FALSE         Otherwise.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2625,6 +3016,9 @@ EcPointSetCompressedCoordinates (
   @param[in]  Nid cipher NID
   @return     Pointer to the Elliptic Curve Context that has been initialized.
               If the allocations fails, EcNewByNid() returns NULL.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 VOID *
 EFIAPI
@@ -2636,6 +3030,9 @@ EcNewByNid (
   Release the specified EC context.
 
   @param[in]  EcContext  Pointer to the EC context to be released.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 VOID
 EFIAPI
@@ -2668,6 +3065,9 @@ EcFree (
   @retval TRUE   EC public X,Y generation succeeded.
   @retval FALSE  EC public X,Y generation failed.
   @retval FALSE  PublicKeySize is not large enough.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2690,6 +3090,9 @@ EcGenerateKey (
                                   On output, the size of data returned in Public buffer in bytes.
   @retval  TRUE   EC key component was retrieved successfully.
   @retval  FALSE  Invalid EC key component.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2723,6 +3126,9 @@ EcGetPubKey (
   @retval TRUE   EC exchanged key generation succeeded.
   @retval FALSE  EC exchanged key generation failed.
   @retval FALSE  KeySize is not large enough.
+
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2751,6 +3157,8 @@ EcDhComputeKey (
   @retval  TRUE   EC Private Key was retrieved successfully.
   @retval  FALSE  Invalid PEM key data or incorrect password.
 
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2776,6 +3184,8 @@ EcGetPrivateKeyFromPem (
   @retval  TRUE   EC Public Key was retrieved successfully.
   @retval  FALSE  Fail to retrieve EC public key from X509 certificate.
 
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2813,6 +3223,8 @@ EcGetPublicKeyFromX509 (
   @retval  FALSE  Signature generation failed.
   @retval  FALSE  SigSize is too small.
 
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2847,6 +3259,8 @@ EcDsaSign (
   @retval  TRUE   Valid signature encoded in EC-DSA.
   @retval  FALSE  Invalid signature or invalid EC context.
 
+  @since 1.0.0
+  @ingroup EC
 **/
 BOOLEAN
 EFIAPI
@@ -2859,6 +3273,15 @@ EcDsaVerify (
   IN  UINTN        SigSize
   );
 
+/** @} */ // end of EC group
+
+/**
+  @defgroup RSA Public Key Cryptography
+  @brief Functions for RSA public key cryptography.
+
+  @{
+**/
+
 // =====================================================================================
 //    Asymmetric Cryptography Primitive
 // =====================================================================================
@@ -2869,6 +3292,8 @@ EcDsaVerify (
   @return  Pointer to the RSA context that has been initialized.
            If the allocations fails, RsaNew() returns NULL.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 VOID *
 EFIAPI
@@ -2883,6 +3308,8 @@ RsaNew (
 
   @param[in]  RsaContext  Pointer to the RSA context to be released.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 VOID
 EFIAPI
@@ -2911,6 +3338,8 @@ RsaFree (
   @retval  TRUE   RSA key component was set successfully.
   @retval  FALSE  Invalid RSA key component tag.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -2948,6 +3377,8 @@ RsaSetKey (
   @retval  FALSE  BnSize is too small.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -2980,6 +3411,8 @@ RsaGetKey (
   @retval  FALSE  Invalid RSA key component tag.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3010,6 +3443,8 @@ RsaGenerateKey (
   @retval  FALSE  RSA key components are not valid.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3043,6 +3478,8 @@ RsaCheckKey (
   @retval  FALSE  SigSize is too small.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3072,6 +3509,8 @@ RsaPkcs1Sign (
   @retval  TRUE   Valid signature encoded in PKCS1-v1_5.
   @retval  FALSE  Invalid signature or invalid RSA context.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3114,6 +3553,8 @@ RsaPkcs1Verify (
   @retval  FALSE  SigSize is too small.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3144,6 +3585,8 @@ RsaPssSign (
   @retval  TRUE   Valid signature encoded in RSASSA-PSS.
   @retval  FALSE  Invalid signature or invalid RSA context.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3175,6 +3618,8 @@ RsaPssVerify (
   @retval  FALSE  Invalid PEM key data or incorrect password.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3202,6 +3647,8 @@ RsaGetPrivateKeyFromPem (
   @retval  FALSE  Fail to retrieve RSA public key from X509 certificate.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup RSA
 **/
 BOOLEAN
 EFIAPI
@@ -3210,6 +3657,15 @@ RsaGetPublicKeyFromX509 (
   IN   UINTN        CertSize,
   OUT  VOID         **RsaContext
   );
+
+/** @} */ // end of RSA group
+
+/**
+  @defgroup X509 X.509 Certificate
+  @brief Functions for X.509 certificate manipulation.
+
+  @{
+**/
 
 /**
   Retrieve the subject bytes from one X.509 certificate.
@@ -3229,6 +3685,8 @@ RsaGetPublicKeyFromX509 (
                   The SubjectSize will be updated with the required size.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 BOOLEAN
 EFIAPI
@@ -3264,6 +3722,8 @@ X509GetSubjectName (
                                    CommonNameSize parameter.
   @retval RETURN_UNSUPPORTED       The operation is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 RETURN_STATUS
 EFIAPI
@@ -3299,6 +3759,8 @@ X509GetCommonName (
                                    CommonNameSize parameter.
   @retval RETURN_UNSUPPORTED       The operation is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 RETURN_STATUS
 EFIAPI
@@ -3326,6 +3788,8 @@ X509GetOrganizationName (
                   trusted CA.
   @retval  FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 BOOLEAN
 EFIAPI
@@ -3351,6 +3815,8 @@ X509VerifyCert (
   @retval     FALSE           The operation failed.
   @retval     FALSE           This interface is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 BOOLEAN
 EFIAPI
@@ -3378,6 +3844,8 @@ X509ConstructCertificate (
   @retval     FALSE           The construction operation failed.
   @retval     FALSE           This interface is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 BOOLEAN
 EFIAPI
@@ -3403,6 +3871,8 @@ X509ConstructCertificateStackV (
   @retval     FALSE           The construction operation failed.
   @retval     FALSE           This interface is not supported.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 BOOLEAN
 EFIAPI
@@ -3418,6 +3888,8 @@ X509ConstructCertificateStack (
 
   @param[in]  X509Cert  Pointer to the X509 object to be released.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 VOID
 EFIAPI
@@ -3432,6 +3904,8 @@ X509Free (
 
   @param[in]  X509Stack  Pointer to the X509 stack object to be released.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 VOID
 EFIAPI
@@ -3455,6 +3929,8 @@ X509StackFree (
   @retval  TRUE   The TBSCertificate was retrieved successfully.
   @retval  FALSE  Invalid X.509 certificate.
 
+  @since 1.0.0
+  @ingroup X509
 **/
 BOOLEAN
 EFIAPI
@@ -3464,6 +3940,15 @@ X509GetTBSCert (
   OUT UINT8        **TBSCert,
   OUT UINTN        *TBSCertSize
   );
+
+/** @} */ // end of X509 group
+
+/**
+  @defgroup Random Pseudo-Random Generation Primitives
+  @brief Functions for Pseudo-Random number generation.
+
+  @{
+**/
 
 // =====================================================================================
 //    Pseudo-Random Generation Primitive
@@ -3486,6 +3971,8 @@ X509GetTBSCert (
   @retval FALSE  Pseudorandom number generator does not have enough entropy for random generation.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Random
 **/
 BOOLEAN
 EFIAPI
@@ -3507,6 +3994,8 @@ RandomSeed (
   @retval FALSE  Pseudorandom number generator fails to generate due to lack of entropy.
   @retval FALSE  This interface is not supported.
 
+  @since 1.0.0
+  @ingroup Random
 **/
 BOOLEAN
 EFIAPI
@@ -3514,6 +4003,15 @@ RandomBytes (
   OUT  UINT8  *Output,
   IN   UINTN  Size
   );
+
+/** @} */ // end of Random group
+
+/**
+  @defgroup TLS Transport Layer Security
+  @brief Functions for TSL based network communication.
+
+  @{
+**/
 
 /**
   Initializes the OpenSSL library.
@@ -3525,6 +4023,8 @@ RandomBytes (
   @retval TRUE   The OpenSSL library has been initialized.
   @retval FALSE  Failed to initialize the OpenSSL library.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 BOOLEAN
 EFIAPI
@@ -3537,6 +4037,8 @@ TlsInitialize (
 
   @param[in]  TlsCtx    Pointer to the SSL_CTX object to be released.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID
 EFIAPI
@@ -3554,6 +4056,8 @@ TlsCtxFree (
   @return  Pointer to an allocated SSL_CTX object.
            If the creation failed, TlsCtxNew() returns NULL.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID *
 EFIAPI
@@ -3570,6 +4074,8 @@ TlsCtxNew (
 
   @param[in]  Tls    Pointer to the TLS object to be freed.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID
 EFIAPI
@@ -3589,6 +4095,8 @@ TlsFree (
   @return  Pointer to an allocated SSL object.
            If the creation failed, TlsNew() returns NULL.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID *
 EFIAPI
@@ -3606,6 +4114,8 @@ TlsNew (
   @retval  TRUE     The TLS handshake was done.
   @retval  FALSE    The TLS handshake was not done.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 BOOLEAN
 EFIAPI
@@ -3638,6 +4148,8 @@ TlsInHandshake (
   @retval EFI_BUFFER_TOO_SMALL    BufferOutSize is too small to hold the response packet.
   @retval EFI_ABORTED             Something wrong during handshake.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3673,6 +4185,8 @@ TlsDoHandshake (
   @retval EFI_ABORTED             An error occurred.
   @retval EFI_BUFFER_TOO_SMALL    BufferOutSize is too small to hold the response packet.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3701,6 +4215,8 @@ TlsHandleAlert (
                                   Buffer is NULL if *BufferSize is not zero.
   @retval EFI_BUFFER_TOO_SMALL    BufferSize is too small to hold the response packet.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3723,6 +4239,8 @@ TlsCloseNotify (
   @retval  >0    The amount of data successfully read from the TLS object.
   @retval  <=0   No data was successfully read.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 INTN
 EFIAPI
@@ -3745,6 +4263,8 @@ TlsCtrlTrafficOut (
   @retval  >0    The amount of data successfully written to the TLS object.
   @retval <=0    No data was successfully written.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 INTN
 EFIAPI
@@ -3768,6 +4288,8 @@ TlsCtrlTrafficIn (
                  number of bytes actually read from the TLS connection.
   @retval  <=0   The read operation was not successful.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 INTN
 EFIAPI
@@ -3791,6 +4313,8 @@ TlsRead (
                  number of bytes actually written to the TLS connection.
   @retval <=0    The write operation was not successful.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 INTN
 EFIAPI
@@ -3812,6 +4336,9 @@ TlsWrite (
   @retval EFI_SUCCESS             The TLS is shutdown successfully.
   @retval EFI_INVALID_PARAMETER   Tls is NULL.
   @retval EFI_PROTOCOL_ERROR      Some other error occurred.
+
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3832,6 +4359,8 @@ TlsShutdown (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_UNSUPPORTED       Unsupported TLS/SSL method.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3853,6 +4382,8 @@ TlsSetVersion (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_UNSUPPORTED       Unsupported TLS/SSL work mode.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3878,6 +4409,8 @@ TlsSetConnectionEnd (
   @retval  EFI_UNSUPPORTED       No supported TLS cipher was found in CipherId.
   @retval  EFI_OUT_OF_RESOURCES  Memory allocation failed.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3898,6 +4431,9 @@ TlsSetCipherList (
                               set successfully.
   @retval  EFI_UNSUPPORTED    Unsupported compression method.
 
+
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3913,6 +4449,8 @@ TlsSetCompressionMethod (
   @param[in]  Tls           Pointer to the TLS object.
   @param[in]  VerifyMode    A set of logically or'ed verification mode flags.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID
 EFIAPI
@@ -3932,6 +4470,8 @@ TlsSetVerify (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_ABORTED           Invalid HostName setting.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3955,6 +4495,8 @@ TlsSetVerifyHost (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_UNSUPPORTED       No available session for ID setting.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -3980,6 +4522,8 @@ TlsSetSessionId (
   @retval  EFI_OUT_OF_RESOURCES    Required resources could not be allocated.
   @retval  EFI_ABORTED             Invalid X.509 certificate.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4005,6 +4549,8 @@ TlsSetCaCertificate (
   @retval  EFI_OUT_OF_RESOURCES    Required resources could not be allocated.
   @retval  EFI_ABORTED             Invalid X.509 certificate.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4031,6 +4577,8 @@ TlsSetHostPublicCert (
   @retval  EFI_UNSUPPORTED This function is not supported.
   @retval  EFI_ABORTED     Invalid private key data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4056,6 +4604,8 @@ TlsSetHostPrivateKeyEx (
   @retval  EFI_UNSUPPORTED This function is not supported.
   @retval  EFI_ABORTED     Invalid private key data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4078,6 +4628,8 @@ TlsSetHostPrivateKey (
   @retval  EFI_UNSUPPORTED This function is not supported.
   @retval  EFI_ABORTED     Invalid CRL data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4102,6 +4654,8 @@ TlsSetCertRevocationList (
   @retval  EFI_UNSUPPORTED       No supported TLS signature algorithm was found in SignatureAlgoList
   @retval  EFI_OUT_OF_RESOURCES  Memory allocation failed.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4124,6 +4678,8 @@ TlsSetSignatureAlgoList (
   @retval  EFI_INVALID_PARAMETER The parameters are invalid.
   @retval  EFI_UNSUPPORTED       The requested TLS EC curve is not supported
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4145,6 +4701,8 @@ TlsSetEcCurve (
 
   @return  The protocol version of the specified TLS connection.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 UINT16
 EFIAPI
@@ -4164,6 +4722,8 @@ TlsGetVersion (
 
   @return  The connection end used by the specified TLS connection.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 UINT8
 EFIAPI
@@ -4184,6 +4744,8 @@ TlsGetConnectionEnd (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_UNSUPPORTED       Unsupported cipher suite.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4207,6 +4769,8 @@ TlsGetCurrentCipher (
   @retval  EFI_ABORTED           Invalid Compression method.
   @retval  EFI_UNSUPPORTED       This function is not supported.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4227,6 +4791,8 @@ TlsGetCurrentCompressionId (
 
   @return  The verification mode set in the specified TLS connection.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 UINT32
 EFIAPI
@@ -4248,6 +4814,8 @@ TlsGetVerify (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_UNSUPPORTED       Invalid TLS/SSL session.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4267,6 +4835,8 @@ TlsGetSessionId (
   @param[in,out]  ClientRandom    Buffer to contain the returned client
                                   random data (32 bytes).
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID
 EFIAPI
@@ -4285,6 +4855,8 @@ TlsGetClientRandom (
   @param[in,out]  ServerRandom    Buffer to contain the returned server
                                   random data (32 bytes).
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 VOID
 EFIAPI
@@ -4306,6 +4878,8 @@ TlsGetServerRandom (
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
   @retval  EFI_UNSUPPORTED       Invalid TLS/SSL session.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4329,6 +4903,8 @@ TlsGetKeyMaterial (
   @retval  EFI_UNSUPPORTED         This function is not supported.
   @retval  EFI_BUFFER_TOO_SMALL    The Data is too small to hold the data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4354,6 +4930,8 @@ TlsGetCaCertificate (
   @retval  EFI_NOT_FOUND           The certificate is not found.
   @retval  EFI_BUFFER_TOO_SMALL    The Data is too small to hold the data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4378,6 +4956,8 @@ TlsGetHostPublicCert (
   @retval  EFI_UNSUPPORTED         This function is not supported.
   @retval  EFI_BUFFER_TOO_SMALL    The Data is too small to hold the data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4401,6 +4981,8 @@ TlsGetHostPrivateKey (
   @retval  EFI_UNSUPPORTED         This function is not supported.
   @retval  EFI_BUFFER_TOO_SMALL    The Data is too small to hold the data.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4426,6 +5008,8 @@ TlsGetCertRevocationList (
   @retval  EFI_INVALID_PARAMETER   The TLS object is invalid.
   @retval  EFI_PROTOCOL_ERROR      Some other error occurred.
 
+  @since 1.0.0
+  @ingroup TLS
 **/
 EFI_STATUS
 EFIAPI
@@ -4438,5 +5022,6 @@ TlsGetExportKey (
   IN     UINTN       KeyBufferLen
   );
 
+/** @} */ // end of TLS group
 
 #endif
