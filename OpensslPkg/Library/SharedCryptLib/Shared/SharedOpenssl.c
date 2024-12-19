@@ -1,7 +1,7 @@
 #include "SharedOpenssl.h"
-#include "SharedCryptoProtocol.h"
-#include "SharedCryptDecl.h"
-#include "CrtLibSupport.h"
+#include <SharedCryptoProtocol.h>
+#include <SharedCryptDecl.h>
+#include <CrtLibSupport.h>
 #include <Uefi.h>
 
 /**
@@ -238,49 +238,48 @@ InitAvailableCrypto (
   // ========================================================================================================
   // TLS Primitives // TODO TLS should not directly be referencing OpenSSL. We should shim that
   // ========================================================================================================
-  Crypto->TlsInitialize                = TlsInitialize;
-  Crypto->TlsCtxFree                   = TlsCtxFree;
-  Crypto->TlsCtxNew                    = TlsCtxNew;
-  Crypto->TlsFree                      = TlsFree;
-  Crypto->TlsNew                       = TlsNew;
-  Crypto->TlsInHandshake               = TlsInHandshake;
-  Crypto->TlsDoHandshake               = TlsDoHandshake;
-  Crypto->TlsHandleAlert               = TlsHandleAlert;
-  Crypto->TlsCloseNotify               = TlsCloseNotify;
-  Crypto->TlsCtrlTrafficOut            = TlsCtrlTrafficOut;
-  Crypto->TlsCtrlTrafficIn             = TlsCtrlTrafficIn;
-  Crypto->TlsRead                      = TlsRead;
-  Crypto->TlsWrite                     = TlsWrite;
-  Crypto->TlsShutdown                  = TlsShutdown;
-  Crypto->TlsSetVersion                = TlsSetVersion;
-  Crypto->TlsSetConnectionEnd          = TlsSetConnectionEnd;
-  Crypto->TlsSetCipherList             = TlsSetCipherList;
-  Crypto->TlsSetCompressionMethod      = TlsSetCompressionMethod;
-  Crypto->TlsSetVerify                 = TlsSetVerify;
-  Crypto->TlsSetVerifyHost             = TlsSetVerifyHost;
-  Crypto->TlsSetSessionId              = TlsSetSessionId;
-  Crypto->TlsSetCaCertificate          = TlsSetCaCertificate;
-  Crypto->TlsSetHostPublicCert         = TlsSetHostPublicCert;
-  Crypto->TlsSetHostPrivateKeyEx       = TlsSetHostPrivateKeyEx;
-  Crypto->TlsSetHostPrivateKey         = TlsSetHostPrivateKey;
-  Crypto->TlsSetCertRevocationList     = TlsSetCertRevocationList;
-  Crypto->TlsSetSignatureAlgoList      = TlsSetSignatureAlgoList;
-  Crypto->TlsSetEcCurve                = TlsSetEcCurve;
-  Crypto->TlsGetVersion                = TlsGetVersion;
-  Crypto->TlsGetConnectionEnd          = TlsGetConnectionEnd;
-  Crypto->TlsGetCurrentCipher          = TlsGetCurrentCipher;
-  Crypto->TlsGetCurrentCompressionId   = TlsGetCurrentCompressionId;
-  Crypto->TlsGetVerify                 = TlsGetVerify;
-  Crypto->TlsGetSessionId              = TlsGetSessionId;
-  Crypto->TlsGetClientRandom           = TlsGetClientRandom;
-  Crypto->TlsGetServerRandom           = TlsGetServerRandom;
-  Crypto->TlsGetKeyMaterial            = TlsGetKeyMaterial;
-  Crypto->TlsGetCaCertificate          = TlsGetCaCertificate;
-  Crypto->TlsGetHostPublicCert         = TlsGetHostPublicCert;
-  Crypto->TlsGetHostPrivateKey         = TlsGetHostPrivateKey;
-  Crypto->TlsGetCertRevocationList     = TlsGetCertRevocationList;
-  Crypto->TlsGetExportKey              = TlsGetExportKey;
-
+  Crypto->TlsInitialize              = TlsInitialize;
+  Crypto->TlsCtxFree                 = TlsCtxFree;
+  Crypto->TlsCtxNew                  = TlsCtxNew;
+  Crypto->TlsFree                    = TlsFree;
+  Crypto->TlsNew                     = TlsNew;
+  Crypto->TlsInHandshake             = TlsInHandshake;
+  Crypto->TlsDoHandshake             = TlsDoHandshake;
+  Crypto->TlsHandleAlert             = TlsHandleAlert;
+  Crypto->TlsCloseNotify             = TlsCloseNotify;
+  Crypto->TlsCtrlTrafficOut          = TlsCtrlTrafficOut;
+  Crypto->TlsCtrlTrafficIn           = TlsCtrlTrafficIn;
+  Crypto->TlsRead                    = TlsRead;
+  Crypto->TlsWrite                   = TlsWrite;
+  Crypto->TlsShutdown                = TlsShutdown;
+  Crypto->TlsSetVersion              = TlsSetVersion;
+  Crypto->TlsSetConnectionEnd        = TlsSetConnectionEnd;
+  Crypto->TlsSetCipherList           = TlsSetCipherList;
+  Crypto->TlsSetCompressionMethod    = TlsSetCompressionMethod;
+  Crypto->TlsSetVerify               = TlsSetVerify;
+  Crypto->TlsSetVerifyHost           = TlsSetVerifyHost;
+  Crypto->TlsSetSessionId            = TlsSetSessionId;
+  Crypto->TlsSetCaCertificate        = TlsSetCaCertificate;
+  Crypto->TlsSetHostPublicCert       = TlsSetHostPublicCert;
+  Crypto->TlsSetHostPrivateKeyEx     = TlsSetHostPrivateKeyEx;
+  Crypto->TlsSetHostPrivateKey       = TlsSetHostPrivateKey;
+  Crypto->TlsSetCertRevocationList   = TlsSetCertRevocationList;
+  Crypto->TlsSetSignatureAlgoList    = TlsSetSignatureAlgoList;
+  Crypto->TlsSetEcCurve              = TlsSetEcCurve;
+  Crypto->TlsGetVersion              = TlsGetVersion;
+  Crypto->TlsGetConnectionEnd        = TlsGetConnectionEnd;
+  Crypto->TlsGetCurrentCipher        = TlsGetCurrentCipher;
+  Crypto->TlsGetCurrentCompressionId = TlsGetCurrentCompressionId;
+  Crypto->TlsGetVerify               = TlsGetVerify;
+  Crypto->TlsGetSessionId            = TlsGetSessionId;
+  Crypto->TlsGetClientRandom         = TlsGetClientRandom;
+  Crypto->TlsGetServerRandom         = TlsGetServerRandom;
+  Crypto->TlsGetKeyMaterial          = TlsGetKeyMaterial;
+  Crypto->TlsGetCaCertificate        = TlsGetCaCertificate;
+  Crypto->TlsGetHostPublicCert       = TlsGetHostPublicCert;
+  Crypto->TlsGetHostPrivateKey       = TlsGetHostPrivateKey;
+  Crypto->TlsGetCertRevocationList   = TlsGetCertRevocationList;
+  Crypto->TlsGetExportKey            = TlsGetExportKey;
 
   return;
 }

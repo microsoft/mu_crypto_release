@@ -15,7 +15,7 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = OpensslLibFull
+  BASE_NAME                      = OpensslLibFullShared
   MODULE_UNI_FILE                = OpensslLibFull.uni
   FILE_GUID                      = AB9E2231-D8FC-433F-9F27-FA293B64FB2C
   MODULE_TYPE                    = BASE
@@ -640,7 +640,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
-  OpensslPkg/OpensslPkg.dec
+  OpensslPkg/OpensslLibPkg.dec
 
 [LibraryClasses]
 

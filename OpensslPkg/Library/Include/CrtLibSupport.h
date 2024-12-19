@@ -2,7 +2,7 @@
 #define __CRT_LIB_SUPPORT_H__
 
 #if defined(SHARED_CRYPTO_ENVIRONMENT)
-#include "SharedCrtLibSupport.h"
+#include <SharedCrtLibSupport.h>
 #else
 #include "BaseCrtLibSupport.h"
 #endif

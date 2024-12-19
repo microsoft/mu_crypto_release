@@ -12,15 +12,15 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #undef _WIN32
 #undef _WIN64
 #include <CrtLibSupport.h>
-#include <Library/SafeIntLib.h>
-#include "Rand/CryptRand.h"
 #include <Protocol/Tls.h>
 #include <IndustryStandard/Tls1.h>
+#include <Library/SafeIntLib.h>
 #include <Library/PcdLib.h>
 #include <openssl/obj_mac.h>
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
+#include "Rand/CryptRand.h"
 
 #pragma message("SharedCryptLib: using Shared/InternalTlsLib.h")
 

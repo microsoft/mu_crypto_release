@@ -32,7 +32,7 @@
   ##  @libraryclass  Provides library functions from the openssl project.
   #
   OpensslLib|Private/Library/OpensslLib.h
-  
+
   ##  @libraryclass  Provides compiler intrinsic functions required to link openssl project.
   #
   InstrinsicLib|Private/Library/IntrinsicLib.h
