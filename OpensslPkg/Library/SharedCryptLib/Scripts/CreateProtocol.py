@@ -27,8 +27,9 @@ def convert_to_underscores(name: str) -> str:
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).upper()
 
 
-def create_divider(indent=" " * 0, divider="=", length=80) -> str:
-    begin = f"{indent}// "
+def create_divider(indent=" " * 0, divider="=", length=80, begin=None) -> str:
+    if begin is None:
+        begin = f"{indent}// "
     if length < len(begin):
         raise ValueError(f"Length must be at least the length of the begin string {len(begin)}")
     return begin + divider * (length - len(begin)) + "\n"
@@ -159,6 +160,16 @@ def get_functions(f: io.TextIOWrapper) -> dict:
         re.DOTALL
     )
 
+    version_pattern = re.compile(
+        r'\@since\s(?P<version>((\d+).(\d+).(\d+)))',
+        re.DOTALL
+    )
+
+    group_pattern = re.compile(
+        r'\@ingroup\s(?P<group_name>(.+))\n',
+        re.DOTALL
+    )
+
     matches = function_pattern.findall(content)
     for match in matches:
         comment = match[0]
@@ -174,6 +185,14 @@ def get_functions(f: io.TextIOWrapper) -> dict:
             #
             raise ValueError(f"Failed to parse function {function_name}")
 
+        version_match = version_pattern.search(comment)
+        if not version_match:
+            raise ValueError(f"Version not found in the comment for function {function_name}")
+
+        group_match = group_pattern.search(comment)
+        if not group_match:
+            raise ValueError(f"Group not found in the comment for function {function_name}")
+
         typedef_name = convert_to_underscores(function_name)
         functions.update({
             function_name: {
@@ -181,7 +200,9 @@ def get_functions(f: io.TextIOWrapper) -> dict:
                 'comment': comment.strip(),
                 'return_type': return_type.strip(),
                 'calling_convention': calling_convention.strip(),
-                'params': params
+                'params': params,
+                'version': version_match['version'],
+                'group': group_match['group_name']
             }
         })
 
@@ -224,7 +245,6 @@ def create_typedefs(functions: dict) -> str:
         typedefs.append(typedef)
     return "".join(typedefs)
 
-
 def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
     """
     Creates the protocol structure.
@@ -237,8 +257,47 @@ def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
         str: A string containing the protocol structure.
     """
 
-    structure = "typedef struct _SHARED_CRYPTO_PROTOCOL\n{\n"
+    version = None
+    group = None
+    previous_group = None
 
+
+    #
+    # reorganize the functions based on group and version
+    # Group functions by version
+    #
+    grouped_functions = OrderedDict()
+    for function in functions:
+        version = functions[function]['version']
+        if version not in grouped_functions:
+            grouped_functions[version] = []
+        grouped_functions[version].append(function)
+
+    sorted_versions = sorted(grouped_functions.keys(), key=lambda v: tuple(map(int, v.split('.'))))
+
+    structure = ""
+    structure += "\n/**\n"
+    structure += f"{indent}@struct _SHARED_CRYPTO_PROTOCOL\n"
+    structure += f"{indent}@brief This structure defines the protocol for shared cryptographic operations.\n\n"
+    structure += f"{indent}The _SHARED_CRYPTO_PROTOCOL structure provides a standardized interface for\n"
+    structure += f"{indent}cryptographic functions, enabling interoperability and consistent usage across\n"
+    structure += f"{indent}different cryptographic implementations.\n\n"
+    structure += f"{indent}Supports functions from versions:\n"
+    for version in sorted_versions:
+        structure += f"{indent} - {version}\n"
+    structure += "\n"
+    structure += f"{indent}@since 1.0.0\n"
+    structure += f"{indent}@ingroup SharedCryptoProtocol\n"
+    structure += "**/\n"
+
+    #
+    # Begin the structure
+    #
+    structure += "typedef struct _SHARED_CRYPTO_PROTOCOL\n{\n"
+
+    #
+    # Add the versioning information to the protocol structure
+    #
     structure += create_divider(indent=indent, divider="-", length=80)
     structure += f"{indent}// Versioning\n"
     structure += f"{indent}// Major.Minor.Revision\n"
@@ -246,25 +305,22 @@ def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
     structure += f"{indent}// Minor - Functions added to the end of this structure\n"
     structure += f"{indent}// Revision - Some non breaking change\n"
     structure += f"{indent}//\n"
-    structure += f"{indent}// The caller should fill in with a function that provides the version of the protocol they are expecting.\n"
-    structure += f"{indent}// When initializing the protocol, the callee filling in the crypto functions will check the version\n"
-    structure += f"{indent}// and attempt to provide the functions that match the version requested.\n"
     structure += create_divider(indent=indent, divider="-", length=80)
-    for function in functions:
-        typedef_name = functions[function]['typedef_name']
 
-        #
-        # Add the function to the protocol structure
-        #
-        structure += f"{indent}SHARED_{typedef_name} {function};\n"
+    for version in sorted_versions:
+        group = None
+        previous_group = None
+        for function in grouped_functions[version]:
+            typedef_name = functions[function]['typedef_name']
+            group = functions[function]["group"]
 
-        #
-        # Add a divider after the GET_VERSION function
-        # This is just to provide a visual break in the protocol structure
-        # TODO make this more generic to the class of functions and not just GET_VERSION
-        #
-        if "GET_VERSION" in typedef_name:
-            structure += create_divider(indent=indent, divider="-", length=80)
+            if previous_group != group:
+                previous_group = group
+                structure += create_divider(divider="-", length=80, begin=f"{indent}/// v{version} {group} ")
+            #
+            # Add the function to the protocol structure
+            #
+            structure += f"{indent}SHARED_{typedef_name} {function};\n"
 
     structure += "} SHARED_CRYPTO_PROTOCOL;\n\n"
 
