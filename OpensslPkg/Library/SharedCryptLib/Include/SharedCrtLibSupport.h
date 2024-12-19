@@ -2,6 +2,7 @@
 #define SHARED_CRT_LIB_H
 
 #include <Uefi.h>
+#include <Library/BaseLib.h>
 
 typedef UINTN size_t;
 

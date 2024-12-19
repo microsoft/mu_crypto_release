@@ -30,13 +30,11 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  OpensslPkg/OpensslPkg.dec
+  OpensslPkg/OpensslLibPkg.dec
 
 [Sources]
   InternalCryptLib.h
   SharedCryptoBin.c
-  SharedCryptoProtocol.h
-  SharedCryptDecl.h
   SharedCryptoCrt.c
   Shared/SharedOpenssl.c
   Shared/SharedOpenssl.h
