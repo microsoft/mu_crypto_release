@@ -11,6 +11,9 @@ from datetime import datetime
 from git import Repo
 import lzma
 
+binary_to_type = {}
+arch_and_type_to_lib = {}
+
 class ReportCrypto(IUefiBuildPlugin):
 
     def do_post_build(self, thebuilder):
@@ -41,18 +44,23 @@ class ReportCrypto(IUefiBuildPlugin):
         # get tool chain
         report.append(f"Tool Chain: {tool_chain}\n")
 
-        # start binaries sizes report
-        report.append("=============================================\n")
-        report.append("<------Crypto binaries sizes report------>\n\n")
+        # get each CryptoBin module type
+        self.get_module_type_for_crypto_bin(thebuilder)
 
+        report.append("=============================================\n")
+        
         # For each architecture built
         for arch in arch_list.split(" "):
             arch_build_path = build_path / arch
             # write flavor and architecture name to report file
             report += ["--------------------------------\n", "ARCH: " + arch + "\n\n"]
+
             # get built binaries
             files = list(arch_build_path.glob("*.efi"))
             files.sort()
+
+            # start binaries sizes report
+            report.append("<------Crypto binaries sizes report------>\n\n")
             for file in files:
                 # get file size in k bytes
                 file_size = file.stat().st_size / 1024
@@ -68,7 +76,17 @@ class ReportCrypto(IUefiBuildPlugin):
                     compressed_data_size = len(compressed_data) / 1024
                     # log to file (assuming file name won't be longer than 30 characters to keep the report clean)
                     report.append(f"{file.name} - " + (30-len(file.name))* " " + f"Uncompressed: {file_size:.2f} KB | LZMA Compressed: {compressed_data_size:.2f} KB\n")
-          
+                                
+            # get linked openssl configuration
+            report.append("\n")   
+            report.append("<------Linked Openssl configuration------>\n\n")
+            for file in files:
+                # get module type for the binary
+                module_type = binary_to_type.get(file.name, "UEFI_APPLICATION") # Default to UEFI_APPLICATION if not found (e.g. test binary)
+                opensslib = self.get_linked_lib(thebuilder, arch, module_type, "OpensslLib")
+                report.append(f"{file.name} - " + (30-len(file.name))* " " + f"OpensslLib: {opensslib}\n")
+            
+
         # start openssl configuration report
         report.append("=============================================\n")
         report.append("<------Openssl configuration report------>\n")
@@ -85,7 +103,7 @@ class ReportCrypto(IUefiBuildPlugin):
             report.extend(openssl_flags)
             
         report.append("=============================================\n")
-        
+       
         # write report to the report file
         report_File.write_text("".join(report))
 
@@ -99,3 +117,54 @@ class ReportCrypto(IUefiBuildPlugin):
                 if "DEFINE OPENSSL_FLAGS" in line:
                     flags.append(line)
         return flags
+    
+    def get_module_type_for_crypto_bin(self, thebuilder):
+        CryptoBinPkg_Driver_path = Path(thebuilder.ws) / "CryptoBinPkg" / "Driver"
+        inf_files = list(CryptoBinPkg_Driver_path.glob("*.inf"))
+        for inf_file in inf_files:
+            base_name = ""
+            module_type = ""
+            with inf_file.open() as f:
+                for line in f:
+                    if "BASE_NAME" in line:
+                        base_name = line.split("=")[1].strip()
+                    if "MODULE_TYPE" in line:
+                        module_type = line.split("=")[1].strip()
+                    if base_name != "" and module_type != "":
+                        binary_to_type[f"{base_name}.efi"] = module_type # start binaries sizes report
+                        break
+
+    def get_linked_lib(self, thebuilder, arch, module_type, lib):
+        cryptoBinPkg_dsc_path = Path(thebuilder.ws) / "CryptoBinPkg" / "CryptoBinPkg.dsc"
+
+        with cryptoBinPkg_dsc_path.open() as f:
+            current_key = None
+            # there are 3 possible lib configuarions for the crypto binaries: "[LibraryClasses] (default)", "LibraryClasses.common.{module_type}" and "[LibraryClasses.arch.module_type] (most specific)"
+            default = ""
+            common_type = ""
+            arch_type = ""
+            for line in f:
+                if "[LibraryClasses]" in line:
+                    current_key = "Default"
+                elif "[LibraryClasses" in line:
+                    current_key = line
+                if f"{lib}|" in line:
+                    specific_lib = line.split("|")[1].strip()
+                    if current_key == "Default":
+                        default = specific_lib            
+                    else:
+                        if f"{arch}.{module_type}" in current_key:
+                            arch_type = specific_lib
+                        elif f"common.{module_type}" in current_key:
+                            common_type = specific_lib
+
+            if arch_type != "":
+                return arch_type
+            elif common_type != "":
+                return common_type
+            else:
+                return default
+
+
+                
+                    
