@@ -1,6 +1,6 @@
 from pathlib import Path
 import argparse
-
+import subprocess
 #
 # Setup and parse arguments.
 #
@@ -32,10 +32,8 @@ target_openssl_conf_report = {}
 size_change_threshold = 10 # in percentage %
 
 def log_warning(msg):
-    print(f"##[warning]{msg}\n")
-
-def log_error(msg):
-    print(f"##[error]{msg}\n")
+    subprocess.call(["echo", f"##vso[task.logissue type=warning;]{msg}"])
+    #print(f"##[warning]{msg}\n")
 
 def log_section(msg):
     print(f"##[section]{msg}\n")
