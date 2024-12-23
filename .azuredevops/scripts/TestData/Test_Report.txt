@@ -1,0 +1,63 @@
+#### RANDOM REPORT - NO REAL DATA! ####
+
+CRYPTO BINARIES REPORT - STANDARD FLAVOR - DEBUG
+
+Build Time: 2024-12-19 14:31:31
+Branch: release/<branch name> | Commit: <hash>
+Tool Chain: VS2022
+=============================================
+--------------------------------
+ARCH: X64
+
+<------Crypto binaries sizes report------>
+
+BaseCryptLibUnitTestApp.efi -    Uncompressed: 873.00 KB | LZMA Compressed: 370.96 KB
+CryptoDxe.efi -                  Uncompressed: 900.50 KB | LZMA Compressed: 375.64 KB
+CryptoPei.efi -                  Uncompressed: 650.00 KB | LZMA Compressed: 300.14 KB
+CryptoRuntimeDxe.efi -           Uncompressed: 792.50 KB | LZMA Compressed: 307.67 KB
+CryptoSmm.efi -                  Uncompressed: 534.00 KB | LZMA Compressed: 201.72 KB
+CryptoStandaloneMm.efi -         Uncompressed: 534.50 KB | LZMA Compressed: 201.75 KB
+
+<------Linked Openssl configuration------>
+
+BaseCryptLibUnitTestApp.efi -    Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+CryptoDxe.efi -                  Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+CryptoPei.efi -                  Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLibAccel.inf
+CryptoRuntimeDxe.efi -           Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLib.inf
+CryptoSmm.efi -                  Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLib.inf
+CryptoStandaloneMm.efi -         Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLib.inf
+--------------------------------
+ARCH: IA32
+
+<------Crypto binaries sizes report------>
+
+CryptoDxe.efi -                  Uncompressed: 700.00 KB | LZMA Compressed: 320.77 KB
+CryptoPei.efi -                  Uncompressed: 500.62 KB | LZMA Compressed: 250.07 KB
+CryptoRuntimeDxe.efi -           Uncompressed: 619.00 KB | LZMA Compressed: 281.23 KB
+CryptoSmm.efi -                  Uncompressed: 415.50 KB | LZMA Compressed: 186.04 KB
+
+<------Linked Openssl configuration------>
+
+CryptoDxe.efi -                  Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+CryptoPei.efi -                  Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLib.inf
+CryptoRuntimeDxe.efi -           Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLib.inf
+CryptoSmm.efi -                  Linked OpensslLib: OpensslPkg/Library/OpensslLib/OpensslLib.inf
+=============================================
+<------Openssl configuration report------>
+--------
+File: OpensslLib.inf
+  DEFINE OPENSSL_FLAGS           = -DL_ENDIAN -DOPENSSL_SMALL_FOOTPRINT -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DOPENSSL_NO_EC -DOPENSSL_NO_ECDH -DOPENSSL_NO_ECDSA -DOPENSSL_NO_TLS1_3 -DOPENSSL_NO_SM2 -DOPENSSL_NO_ASM
+  DEFINE OPENSSL_FLAGS_CONFIG    =
+--------
+File: OpensslLibAccel.inf
+  DEFINE OPENSSL_FLAGS           = -DOPENSSL_SMALL_FOOTPRINT -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DOPENSSL_NO_EC -DOPENSSL_NO_ECDH -DOPENSSL_NO_ECDSA -DOPENSSL_NO_TLS1_3 -DOPENSSL_NO_SM2
+  DEFINE OPENSSL_FLAGS_CONFIG    = -DOPENSSL_CPUID_OBJ -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DAESNI_ASM -DVPAES_ASM -DGHASH_ASM
+--------
+File: OpensslLibFull.inf
+  DEFINE OPENSSL_FLAGS           = -DL_ENDIAN -DOPENSSL_SMALL_FOOTPRINT -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DOPENSSL_NO_ASM
+  DEFINE OPENSSL_FLAGS_CONFIG    = -DSHA1_ASM
+--------
+File: OpensslLibFullAccel.inf
+  DEFINE OPENSSL_FLAGS           = -DL_ENDIAN -DOPENSSL_SMALL_FOOTPRINT -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+  DEFINE OPENSSL_FLAGS_CONFIG    = -DOPENSSL_CPUID_OBJ -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DAESNI_ASM -DVPAES_ASM -DGHASH_ASM
+=============================================
