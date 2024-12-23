@@ -146,6 +146,10 @@ def comapre_linked_openssllib(source_linked_openssllib, target_linked_openssllib
         log_section(f"Comparing linked OpensslLib for Arch: {arch}:")
 
         for binary in source_linked_openssllib[arch]:
+            if binary not in target_linked_openssllib[arch]:
+                # already reported new/missing binaries in the sizes comparison, so no need to report them again here
+                continue
+            
             source_linked_openssllib_for_binary = source_linked_openssllib[arch][binary]
             target_linked_openssllib_for_binary = target_linked_openssllib[arch][binary]
 
@@ -215,7 +219,6 @@ def compare_reports(source_reports, target_reports):
     compare_sizes(source_reports['sizes_per_arch'], target_reports['sizes_per_arch'])
 
     # compare linked openssl lib for binary per architecture
-    # already reported new/missing binaries in the sizes comparison, so no need to report them again here
     comapre_linked_openssllib(source_reports['linked_openssllib_per_arch'], target_reports['linked_openssllib_per_arch'])
 
     # compare openssl configuration flags
