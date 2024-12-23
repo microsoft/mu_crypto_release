@@ -159,6 +159,7 @@ stages:
           BUILDLOG_CryptoBin_*.txt
           SETUPLOG.txt
           UPDATE_LOG.txt
+          Report_STANDARD_DEBUG_VS2022.txt
         targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
         flattenFolders: true
 
@@ -174,7 +175,7 @@ stages:
       displayName: Compare Crypto Report
       inputs:
         scriptSource: filePath
-        scriptPath: .azuredevops/scripts/CompareCryptoReport.py
+        scriptPath: .azuredevops/scripts/CompareCryptoReports.py
         arguments: > # Use this to avoid newline characters in multiline string
           --source Build/CryptoBin_STANDARD/DEBUG_VS2022/Report_STANDARD_DEBUG_VS2022.txt
           --target .azuredevops/scripts/TestData/Test_Report.txt
