@@ -100,7 +100,7 @@ stages:
         scriptSource: filePath
         scriptPath: .azuredevops/scripts/CompareCryptoReports.py
         arguments: > # Use this to avoid newline characters in multiline string
-          --source Build/CryptoBin_STANDARD/DEBUG_VS2022/Report_STANDARD_DEBUG_VS2022.txt
+          --source Build/Report_STANDARD_DEBUG_VS2022.txt
           --target .azuredevops/scripts/TestData/Test_Report.txt
 
     - task: CopyFiles@2
