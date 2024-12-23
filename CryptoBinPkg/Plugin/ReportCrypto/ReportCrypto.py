@@ -74,8 +74,8 @@ class ReportCrypto(IUefiBuildPlugin):
 
                     # Get the number of k bytes of the compressed data
                     compressed_data_size = len(compressed_data) / 1024
-                    # log to file (assuming file name won't be longer than 30 characters to keep the report clean)
-                    report.append(f"{file.name} - " + (30-len(file.name))* " " + f"Uncompressed: {file_size:.2f} KB | LZMA Compressed: {compressed_data_size:.2f} KB\n")
+                    # log to file (assuming file name won't be longer than 40 characters to keep the report clean)
+                    report.append(f"{file.name} - " + (40-len(file.name))* " " + f"Uncompressed: {file_size:.2f} KB | LZMA Compressed: {compressed_data_size:.2f} KB\n")
                                 
             # get linked openssl configuration
             report.append("\n")   
@@ -84,7 +84,7 @@ class ReportCrypto(IUefiBuildPlugin):
                 # get module type for the binary
                 module_type = binary_to_type.get(file.name, "UEFI_APPLICATION") # Default to UEFI_APPLICATION if not found (e.g. test binary)
                 opensslib = self.get_linked_lib(thebuilder, arch, module_type, "OpensslLib")
-                report.append(f"{file.name} - " + (30-len(file.name))* " " + f"OpensslLib: {opensslib}\n")
+                report.append(f"{file.name} - " + (40-len(file.name))* " " + f"OpensslLib: {opensslib}\n")
             
 
         # start openssl configuration report
