@@ -90,6 +90,7 @@ stages:
           -a $(build_archs)
           -t $(build_targets)
           --stop-on-fail
+          --report
           TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
     - task: CopyFiles@2
@@ -167,3 +168,13 @@ stages:
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)/Logs'
         artifactName: $(Build.Flavor)_Logs
+
+    # Compare crypto report
+    - task: PythonScript@0
+      displayName: Compare Crypto Report
+      inputs:
+        scriptSource: filePath
+        scriptPath: .azuredevops/scripts/CompareCryptoReport.py
+        arguments: > # Use this to avoid newline characters in multiline string
+          --source Build/CryptoBin_STANDARD/DEBUG_VS2022/Report_STANDARD_DEBUG_VS2022.txt
+          --target .azuredevops/scripts/TestData/Test_Report.txt
