@@ -35,11 +35,11 @@ class ReportCrypto(IUefiBuildPlugin):
         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S\n')
         report = [title, "Build Time: " + time]
 
-        # get current branch
-        repo = Repo(thebuilder.ws)
-        branch = repo.active_branch
-        commit = repo.active_branch.commit
-        report.append(f"Branch: {branch.name} | Commit: {commit}\n")
+        # # get current branch
+        # repo = Repo(thebuilder.ws)
+        # branch = repo.active_branch
+        # commit = repo.active_branch.commit
+        # report.append(f"Branch: {branch.name} | Commit: {commit}\n")
         
         # get tool chain
         report.append(f"Tool Chain: {tool_chain}\n")

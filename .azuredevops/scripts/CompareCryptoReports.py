@@ -191,14 +191,14 @@ def compare_openssl_flags(source_flags, target_flags):
 def compare_reports(source_reports, target_reports):
     # print and compare basic report information
     print("Source Branch Report Info:\n")
-    print(f"Branch and Commit: {source_reports['info']['branch_commit']}")
+    #print(f"Branch and Commit: {source_reports['info']['branch_commit']}")
     print(f"Flavor: {source_reports['info']['flavor']}\n")
     print(f"Build Target: {source_reports['info']['build_target']}\n")
     print(f"Tool Chain: {source_reports['info']['tool_chain']}\n")
     print(f"Build Time: {source_reports['info']['Build Time']}\n\n")
 
     print("Target Branch Report Info:\n")
-    print(f"Branch and Commit: {target_reports['info']['branch_commit']}")
+    #print(f"Branch and Commit: {target_reports['info']['branch_commit']}")
     print(f"Flavor: {target_reports['info']['flavor']}\n")
     print(f"Build Target: {target_reports['info']['build_target']}\n")
     print(f"Tool Chain: {target_reports['info']['tool_chain']}\n")
