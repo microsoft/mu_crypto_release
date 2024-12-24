@@ -32,8 +32,12 @@
 !include MdePkg/MdeLibs.dsc.inc
 
 [LibraryClasses]
+
+  # BaseLib has a dependency on BaseMemoryLib for CopyMem() and ZeroMem() functions
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
+  #BaseMemoryLib|OpensslPkg/Library/SharedMemoryLib/SharedMemoryLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+  BasePrintLib|MdePkg/Library/BasePrintLib/BasePrintLib.inf
   StackCheckFailureHookLib|MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf # Required for UEFI applications - NULL implementation
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf # Required for UEFI applications - NULL implementation

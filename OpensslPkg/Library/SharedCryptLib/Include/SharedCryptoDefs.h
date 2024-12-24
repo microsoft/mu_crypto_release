@@ -1,5 +1,5 @@
 /**
-  @file SharedCryptDecls.h // TODO change this name
+  @file SharedCryptDefs.h
   @brief This file contains the declarations for the shared crypto protocol.
   @defgroup SharedCrypt Shared Cryptography Protocol
   @brief Provides functions for cryptographic operations.
@@ -12,16 +12,14 @@
 
   @{
 **/
-#ifndef SHARED_CRYPT_DECLS_H_
-#define SHARED_CRYPT_DECLS_H_
+#ifndef SHARED_CRYPT_DEFS_H_
+#define SHARED_CRYPT_DEFS_H_
 
 #include <Uefi.h>
 
-// COPY_REGION_BEGIN [[VERSION]]
 #define VERSION_MAJOR     1ULL
 #define VERSION_MINOR     0ULL
 #define VERSION_REVISION  0ULL
-// COPY_REGION_END [[VERSION]]
 
 #define CRYPTO_NID_NULL  0x0000
 
@@ -104,6 +102,7 @@ typedef enum {
   RsaKeyDq,     ///< q's CRT exponent (== d mod (q - 1))
   RsaKeyQInv    ///< The CRT coefficient (== 1/q mod p)
 } RSA_KEY_TAG;
+
 
 /**
   @defgroup Info Information Functions
@@ -5038,4 +5037,4 @@ TlsGetExportKey (
 
 /** @} */ // end of TLS group
 /** @} */ // end of SharedCrypt group
-#endif // SHARED_CRYPT_DECL_H_
+#endif // SHARED_CRYPT_DEFS_H_
