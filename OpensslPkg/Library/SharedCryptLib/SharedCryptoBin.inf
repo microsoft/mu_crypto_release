@@ -24,6 +24,8 @@
   UefiApplicationEntryPoint
   IntrinsicLib
   BaseLib
+  BasePrintLib
+  BaseMemoryLib
   OpensslLib
   SafeIntLib
 

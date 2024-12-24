@@ -1,6 +1,6 @@
 #include "SharedOpenssl.h"
 #include <SharedCryptoProtocol.h>
-#include <SharedCryptDecl.h>
+#include <SharedCryptoDefs.h>
 #include <CrtLibSupport.h>
 #include <Uefi.h>
 

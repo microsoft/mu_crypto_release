@@ -3,6 +3,8 @@ import argparse
 import re
 import io
 import json
+import os
+import datetime
 
 from collections import OrderedDict
 
@@ -23,25 +25,68 @@ def cli() -> dict:
 
 
 def convert_to_underscores(name: str) -> str:
+    """
+    Converts a camel case string to an uppercase string with underscores.
+
+    This function takes a string in camel case format and converts it to a
+    string where words are separated by underscores and all characters are
+    in uppercase.
+
+    Args:
+        name (str): The camel case string to be converted.
+
+    Returns:
+        str: The converted string in uppercase with underscores.
+    """
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).upper()
 
 
 def create_divider(indent=" " * 0, divider="=", length=80, begin=None) -> str:
+    """
+    Creates a divider string with a specified length, indentation, and divider character.
+
+    Args:
+        indent (str): The string to use for indentation. Default is an empty string.
+        divider (str): The character to use for the divider. Default is '='.
+        length (int): The total length of the divider string. Default is 80.
+        begin (str, optional): The beginning string to prepend to the divider. If None, defaults to the indent followed by "// ".
+
+    Returns:
+        str: The formatted divider string.
+
+    Raises:
+        ValueError: If the specified length is less than the length of the begin string.
+    """
     if begin is None:
         begin = f"{indent}// "
     if length < len(begin):
         raise ValueError(f"Length must be at least the length of the begin string {len(begin)}")
     return begin + divider * (length - len(begin)) + "\n"
 
-def extract_version(version: str):
+
+def extract_version(file: io.TextIOWrapper) -> tuple:
     """
-    #define VERSION_MAJOR     1ULL
-    #define VERSION_MINOR     0ULL
-    #define VERSION_REVISION  0ULL
+    Extracts the version information from a file.
+    The function reads the content of the provided file and searches for version
+    definitions in the format:
+
+    #define VERSION_MAJOR     <major>ULL
+    #define VERSION_MINOR     <minor>ULL
+    #define VERSION_REVISION  <revision>ULL
+    Args:
+        file (io.TextIOWrapper): The file object to read from.
+    Returns:
+        tuple: A tuple containing the major, minor, and revision version numbers as integers.
+    Raises:
+        ValueError: If the version information cannot be parsed from the file.
     """
-    version_pattern = re.compile(r"#define VERSION_MAJOR\s+(\d+ULL)\s+#define VERSION_MINOR\s+(\d+ULL)\s+#define VERSION_REVISION\s+(\d+ULL)")
-    match = version_pattern.match(version)
+
+    file.seek(0)
+    content = file.read()
+    version_pattern = re.compile(
+        r"#define VERSION_MAJOR\s+(\d+ULL)\s+#define VERSION_MINOR\s+(\d+ULL)\s+#define VERSION_REVISION\s+(\d+ULL)")
+    match = version_pattern.search(content)
     if not match:
         raise ValueError("Failed to parse version")
     major = match.group(1)
@@ -54,40 +99,6 @@ def extract_version(version: str):
     revision = int(revision[:-3])
 
     return major, minor, revision
-
-def extract_copy_region(f: io.TextIOWrapper, section: str) -> list:
-    """
-    Extracts region of the file content that start with "// COPY_REGION_BEGIN [[section]]"
-    and end with "// COPY_REGION_END [[section]]".
-
-    Args:
-        file_content (str): The content of the file as a string.
-
-    Returns:
-        list: A list of extracted regions as strings.
-    """
-    start_marker = f"// COPY_REGION_BEGIN [[{section}]]"
-    end_marker = f"// COPY_REGION_END [[{section}]]"
-
-    regions = []
-    start_index = 0
-
-    f.seek(0)
-    content = f.read()
-    start_index = content.find(start_marker)
-    if start_index == -1:
-        raise ValueError(f"Start marker '{start_marker}' not found in the file.")
-    end_index = content.find(end_marker, start_index)
-    if end_index == -1:
-        raise ValueError(f"End marker '{end_marker}' not found in the file.")
-    region_start = start_index + len(start_marker)
-    region_end = end_index
-    regions.append(content[region_start:region_end].strip())
-
-    # combine all regions into one string
-    regions = "".join(regions) + "\n"
-
-    return regions
 
 
 def get_functions(f: io.TextIOWrapper) -> dict:
@@ -156,7 +167,7 @@ def get_functions(f: io.TextIOWrapper) -> dict:
     # Regex to find function declarations
     #
     function_pattern = re.compile(
-        r'(?P<comment>\/\*\*[\s\S]*?\*\/)\n(?P<return_type>[\w\s\*]+)\n(?P<calling_convention>EFIAPI)\s(?P<function_name>\w+)\s*\((?P<params>[\s\S]*?)\);',
+        r'\n(?P<comment>\/\*\*[\s\S]*?\*\/)\n(?P<return_type>[\w\s\*]+)\n(?P<calling_convention>EFIAPI)\s(?P<function_name>\w+)\s*\((?P<params>[\s\S]*?)\);',
         re.DOTALL
     )
 
@@ -167,6 +178,11 @@ def get_functions(f: io.TextIOWrapper) -> dict:
 
     group_pattern = re.compile(
         r'\@ingroup\s(?P<group_name>(.+))\n',
+        re.DOTALL
+    )
+
+    function_name_pattern = re.compile(
+        r'EFIAPI\n(?P<function>\w+)\s\(',
         re.DOTALL
     )
 
@@ -218,11 +234,21 @@ def get_functions(f: io.TextIOWrapper) -> dict:
     # Count the number of "EFIAPI" in the file and compare it to the number of functions found
     # Early warning system to catch any issues with the regex - this may not be the most robust way to do this
     #
-    efiapi_count = content.count("EFIAPI")
-    if efiapi_count != len(functions):
-        raise ValueError(f"EFIAPI count does not match the number of functions found {efiapi_count} != {len(functions)}")
+    matches = function_name_pattern.findall(content)
+    if len(matches) != len(functions):
+        for function in functions:
+            if function not in matches:
+                print(f"Missing!: {function}")
+
+        for match in matches:
+            if match not in functions:
+                print(f"Missing!: {match}")
+
+        raise ValueError(f"EFIAPI count does not match the number of functions found {
+                         len(matches)} != {len(functions)}")
 
     return functions
+
 
 def create_typedefs(functions: dict) -> str:
     """
@@ -245,6 +271,7 @@ def create_typedefs(functions: dict) -> str:
         typedefs.append(typedef)
     return "".join(typedefs)
 
+
 def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
     """
     Creates the protocol structure.
@@ -260,7 +287,6 @@ def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
     version = None
     group = None
     previous_group = None
-
 
     #
     # reorganize the functions based on group and version
@@ -333,28 +359,29 @@ def process_header_file(header_file: str, output_file: str) -> dict:
     """
     with open(header_file, 'r') as file:
 
-        version_region = extract_copy_region(file, section="VERSION")
+        major, minor, revision = extract_version(file)
         functions = get_functions(file)
         typedefs = create_typedefs(functions)
         protocol_structure = create_protocol_structure(functions)
 
+        guard_statement = f"{convert_to_underscores(os.path.basename(output_file).split('.')[0])}_"
+
         with open(output_file, 'w') as f:
             f.write("//")
-            f.write("// This file was generated by CreateProtocol.py\n") # TODO: Add date
-            f.write("#ifndef __PROTOCOL_H__\n")
-            f.write("#define __PROTOCOL_H__\n\n")
-
+            f.write("// This file was generated by CreateProtocol.py\n")
+            f.write("// Timestamp: {:%Y-%b-%d %H:%M:%S}\n".format(datetime.datetime.now()))
+            f.write(f"#ifndef {guard_statement}\n")
+            f.write(f"#define {guard_statement}\n\n")
             f.write("#include <Uefi.h>\n\n")
-            f.write("#include \"SharedCryptDecl.h\" // TODO should this be Protocol or Library?\n\n")
+            f.write("#include <SharedCryptoDefs.h> // TODO should this be Protocol or Library?\n\n")
             f.write(create_divider())
-            major, minor, revision = extract_version(version_region)
             f.write(f"// Protocol version: {major}.{minor}.{revision}\n")
             f.write(create_divider())
-            #f.write(version_region)
-            #f.write(create_divider())
+            # f.write(version_region)
+            # f.write(create_divider())
             f.write("\n")
             # TODO
-            #f.write(rsa_key_tag_region)
+            # f.write(rsa_key_tag_region)
             f.write(create_divider())
             f.write("// Typedef Declarations\n")
             f.write(create_divider())
@@ -365,24 +392,9 @@ def process_header_file(header_file: str, output_file: str) -> dict:
             f.write(create_divider())
             f.write(protocol_structure)
 
-            f.write("#endif // __PROTOCOL_H__\n")
+            f.write(f"#endif // {guard_statement}\n")
 
         print(f"Protocol written to {output_file}")
-
-    #create_c_definitions(functions=functions, output_file="temp.out.c")
-
-def create_c_definitions(functions: dict, output_file="temp.out.c"):
-    with open(output_file, 'w') as file:
-        file.write("VOID\n")
-        file.write("EFIAPI\n")
-        file.write("InitAvailableCrypto (\n")
-        file.write("  SHARED_CRYPTO_PROTOCOL  *Crypto\n")
-        file.write(")\n")
-        file.write("{\n")
-        file.write(f"// total functions: {len(functions)}\n")
-        for function in functions:
-            file.write(f"  Crypto->{function} = {function};\n")
-        file.write("}\n")
 
 
 if __name__ == "__main__":
