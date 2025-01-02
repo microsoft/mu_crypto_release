@@ -3,6 +3,7 @@
 
 #if defined(SHARED_CRYPTO_ENVIRONMENT)
 #include <SharedCrtLibSupport.h>
+#include <SharedBaseDebugLib.h>
 #else
 #include "BaseCrtLibSupport.h"
 #endif

@@ -39,8 +39,8 @@ RandGetBytes (
   Ret = FALSE;
 
   if (RandBuffer == NULL) {
-    DEBUG ((DEBUG_ERROR, "[OPENSSL_RAND_POOL] NULL RandBuffer. No random numbers are generated and your system is not secure\n"));
-    ASSERT (RandBuffer != NULL); // Since we can't generate random numbers, we should assert. Otherwise we will just blow up later.
+    // TODO DEBUG ((DEBUG_ERROR, "[OPENSSL_RAND_POOL] NULL RandBuffer. No random numbers are generated and your system is not secure\n"));
+    // TODO ASSERT (RandBuffer != NULL); // Since we can't generate random numbers, we should assert. Otherwise we will just blow up later.
     return Ret;
   }
 

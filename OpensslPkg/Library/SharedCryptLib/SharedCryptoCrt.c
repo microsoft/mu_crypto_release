@@ -8,7 +8,7 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
-#include <SharedCrtLibSupport.h>
+#include <CrtLibSupport.h>
 
 /**
   Allocates a buffer of a specified size from the pool.
