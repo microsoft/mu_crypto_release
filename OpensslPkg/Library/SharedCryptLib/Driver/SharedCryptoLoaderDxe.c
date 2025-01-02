@@ -14,13 +14,24 @@
 SHARED_DEPENDENCIES  *gDriverDependencies = NULL;
 
 VOID
+EFIAPI
+AssertEfiError (
+    BOOLEAN  Expression
+    )
+{
+    ASSERT_EFI_ERROR (Expression);
+}
+
+VOID
 InstallDriverDependencies (
   EFI_SYSTEM_TABLE  SystemTable
   )
 {
+    ASSERT_EFI_ERROR (gDriverDependencies != NULL);
+
     gDriverDependencies->AllocatePool = AllocatePool;
     gDriverDependencies->FreePool = FreePool;
-    //gDriverDependencies->ASSERT = ASSERT_EFI_ERROR;
+    gDriverDependencies->ASSERT = AssertEfiError;
     gDriverDependencies->DebugPrint = DebugPrint;
     gDriverDependencies->GetTime = gRT->GetTime;
     gDriverDependencies->GetRandomNumber64 = GetRandomNumber64;
