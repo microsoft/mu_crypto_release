@@ -14,8 +14,12 @@ args = parser.parse_args()
 #
 
 # basic report information
-source_report_info = {"flavor": "", "build_target": "", "Build Time": "", "branch_commit": "", "tool_chain": ""}
-target_report_info = {"flavor": "", "build_target": "", "Build Time": "", "branch_commit": "", "tool_chain": ""}
+source_report_info = {"flavor": "", "build_target": "", "Build Time": "", "tool_chain": ""}
+target_report_info = {"flavor": "", "build_target": "", "Build Time": "", "tool_chain": ""}
+
+# submodules information
+source_submodules = {}
+target_submodules = {}
 
 # binaries sizes per architecture
 source_binary_sizes_per_arch = {}
@@ -38,7 +42,8 @@ def log_warning(msg):
 def log_section(msg):
     print(f"##[section]{msg}\n")
 
-def parse_report(report_file, report_info, binary_sizes_per_arch, linked_openssllib_per_arch, openssl_conf_report):
+def parse_report(report_file, report_dict):
+                                           
     with report_file.open() as f:
         lines = f.readlines()
 
@@ -50,24 +55,25 @@ def parse_report(report_file, report_info, binary_sizes_per_arch, linked_openssl
             # get basic report information
             if "FLAVOR" in line:
                 flavor = line.split("-")[1].strip().split()[0]
-                report_info["flavor"] = flavor
+                report_dict["info"]["flavor"] = flavor
                 build_target = line.split("-")[2].strip()
-                report_info["build_target"] = build_target
+                report_dict["info"]["build_target"] = build_target
+
             elif "Build Time" in line:
-                report_info["Build Time"] = line.split(":")[1].strip()
-            elif "Branch" and "Commit" in line:
-                report_info["branch_commit"] = line
+                report_dict["info"]["Build Time"] = line.split(":")[1].strip()
+                
             elif "Tool Chain" in line:
-                report_info["tool_chain"] = line.split(":")[1].strip()
+                report_dict["info"]["tool_chain"] = line.split(":")[1].strip()
 
             elif "ARCH" in line:
                 arch = line.split(":")[1].strip()
-                binary_sizes_per_arch[arch] = {}
-                linked_openssllib_per_arch[arch] = {}
+                report_dict["sizes_per_arch"][arch] = {}
+                report_dict["linked_openssllib_per_arch"][arch] = {}
 
             elif "Crypto binaries sizes report" in line:
                 record_sizes = True
-            elif  "Linked Openssl configuration" in line:
+
+            elif "Linked Openssl configuration" in line:
                 record_sizes = False
                 record_linked_openssllib = True
             
@@ -80,24 +86,34 @@ def parse_report(report_file, report_info, binary_sizes_per_arch, linked_openssl
                     uncompressed_size = sizes.split("|")[0].split(":")[1].strip()
                     compressed_size = sizes.split("|")[1].split(":")[1].strip()
 
-                    binary_sizes_per_arch[arch][binary_name] = {"Uncompressed size": uncompressed_size, "LZMA compressed size": compressed_size}
+                    report_dict["sizes_per_arch"][arch][binary_name] = {"Uncompressed size": uncompressed_size, "LZMA compressed size": compressed_size}
                     
                 # linked openssl lib info
                 if record_linked_openssllib:
                     openssllib = line.split("-")[1].split(":")[1].strip()
-                    linked_openssllib_per_arch[arch][binary_name] = openssllib
+                    report_dict["linked_openssllib_per_arch"][arch][binary_name] = openssllib
 
             elif "File: OpensslLib" in line:
                 current_openssl_lib_file = line.split(":")[1].strip()
-                openssl_conf_report[current_openssl_lib_file] = {"OPENSSL_FLAGS": [], "OPENSSL_FLAGS_CONFIG": []}
+                report_dict["openssl_libs_flags"][current_openssl_lib_file] = {"OPENSSL_FLAGS": [], "OPENSSL_FLAGS_CONFIG": []}
 
             elif "DEFINE OPENSSL_FLAGS" in line:
                 define_openssl_flags = line.split("=")[0].strip().split()[1].strip()
                 flags_list = line.split("=")[1].strip().split()
-                openssl_conf_report[current_openssl_lib_file][define_openssl_flags] = flags_list
+                report_dict["openssl_libs_flags"][current_openssl_lib_file][define_openssl_flags] = flags_list
+
+            # submodules info
+            elif "Name:" in line:
+                current_submodule = line.split(":")[1].strip()
+                report_dict["submodules"][current_submodule] = {"Branch": "", "Commit": ""}
+            elif "Branch:" in line:
+                report_dict["submodules"][current_submodule]["Branch"] = line.split(":")[1].strip()
+            elif "Commit:" in line:
+                report_dict["submodules"][current_submodule]["Commit"] = line.split(":")[1].strip()
 
 def compare_sizes(source_sizes, target_sizes):
-     # compare binaries sizes per architecture
+
+    # compare binaries sizes per architecture
     for arch in source_sizes:
         log_section(f"Comparing binary sizes for Arch {arch}:")
         if arch not in target_sizes:
@@ -140,6 +156,7 @@ def compare_sizes(source_sizes, target_sizes):
                 log_warning(f"A binary has been removed! - {binary} is not found in source report for architecture {arch}") # log warning - Missing Binary!
 
 def comapre_linked_openssllib(source_linked_openssllib, target_linked_openssllib):
+
     for arch in source_linked_openssllib:
         log_section(f"Comparing linked OpensslLib for Arch: {arch}:")
 
@@ -156,6 +173,7 @@ def comapre_linked_openssllib(source_linked_openssllib, target_linked_openssllib
                     f"Linked OpensslLib has been changed for {binary} in architecture {arch}! - New {source_linked_openssllib_for_binary}, Old {target_linked_openssllib_for_binary}")  # log warning - Change in linked OpensslLib*.inf!
 
 def compare_openssl_flags(source_flags, target_flags):
+
     for file in source_flags:
         log_section(f"Comparing OpensslLib configuration flags for file {file}:")
         if file not in target_flags:
@@ -190,17 +208,39 @@ def compare_openssl_flags(source_flags, target_flags):
         if file not in source_flags:
             log_warning(f"An OpensslLib*.inf has been removed! - {file} is not found in source report") # log warning - Missing OpensslLib*.inf file!
 
+def compare_submodules(source_submodules, target_submodules):
+
+    log_section("Comparing submodules")
+    for submodule in source_submodules:
+        if submodule not in target_submodules:
+            log_warning(f"A new submodule has been added! - {submodule} is not found in target report") # log warning - New submodule!
+            continue
+
+        source_branch = source_submodules[submodule]["Branch"]
+        target_branch = target_submodules[submodule]["Branch"]
+        source_commit = source_submodules[submodule]["Commit"]
+        target_commit = target_submodules[submodule]["Commit"]
+
+        if source_branch != target_branch:
+            log_warning(f"Submodule {submodule} has changed branch! - New {source_branch}, Old {target_branch}") # log warning - Change in branch!
+        
+        if source_commit != target_commit:
+            log_warning(f"Submodule {submodule} has changed commit! - New {source_commit}, Old {target_commit}") # log warning - Change in commit!
+    
+    for submodule in target_submodules:
+        if submodule not in source_submodules:
+            log_warning(f"A submodule has been removed! - {submodule} is not found in source report") # log warning - Missing submodule!
+
 def compare_reports(source_reports, target_reports):
+
     # print and compare basic report information
     print("Source Branch Report Info:\n")
-    #print(f"Branch and Commit: {source_reports['info']['branch_commit']}")
     print(f"Flavor: {source_reports['info']['flavor']}\n")
     print(f"Build Target: {source_reports['info']['build_target']}\n")
     print(f"Tool Chain: {source_reports['info']['tool_chain']}\n")
     print(f"Build Time: {source_reports['info']['Build Time']}\n\n")
 
     print("Target Branch Report Info:\n")
-    #print(f"Branch and Commit: {target_reports['info']['branch_commit']}")
     print(f"Flavor: {target_reports['info']['flavor']}\n")
     print(f"Build Target: {target_reports['info']['build_target']}\n")
     print(f"Tool Chain: {target_reports['info']['tool_chain']}\n")
@@ -212,6 +252,8 @@ def compare_reports(source_reports, target_reports):
     if(source_reports['info']['build_target'] != target_reports['info']['build_target']):
         log_warning("Reports are for different build targets!")
     
+    # compare submodules
+    compare_submodules(source_reports['submodules'], target_reports['submodules'])
 
     # compare binary sizes per architecture
     compare_sizes(source_reports['sizes_per_arch'], target_reports['sizes_per_arch'])
@@ -226,20 +268,21 @@ def compare_reports(source_reports, target_reports):
 
 
 if __name__ == '__main__':
+
     source_report_file = Path(args.source)
     target_report_file = Path(args.target)
 
+    # wrap the parsed information in single dict
+    source_reports = {"info": source_report_info, "sizes_per_arch": source_binary_sizes_per_arch, "linked_openssllib_per_arch": source_linked_openssllib_per_arch, "openssl_libs_flags": source_openssl_conf_report, "submodules": source_submodules}
+    target_reports = {"info": target_report_info, "sizes_per_arch": target_binary_sizes_per_arch, "linked_openssllib_per_arch": target_linked_openssllib_per_arch, "openssl_libs_flags": target_openssl_conf_report, "submodules": target_submodules}
+
     # read the source report file
     log_section(f"Parsing source report file: {source_report_file}")
-    parse_report(source_report_file, source_report_info, source_binary_sizes_per_arch, source_linked_openssllib_per_arch, source_openssl_conf_report)
+    parse_report(source_report_file, source_reports)
 
     # read the target report file
     log_section(f"Parsing target report file: {target_report_file}")
-    parse_report(target_report_file, target_report_info, target_binary_sizes_per_arch, target_linked_openssllib_per_arch, target_openssl_conf_report)
-
-    # wrap the parsed information in single dict
-    source_reports = {"info": source_report_info, "sizes_per_arch": source_binary_sizes_per_arch, "linked_openssllib_per_arch": source_linked_openssllib_per_arch, "openssl_libs_flags": source_openssl_conf_report}
-    target_reports = {"info": target_report_info, "sizes_per_arch": target_binary_sizes_per_arch, "linked_openssllib_per_arch": target_linked_openssllib_per_arch, "openssl_libs_flags": target_openssl_conf_report}
+    parse_report(target_report_file, target_reports)
 
     # compare the reports
     log_section("Comparing reports")

@@ -18,8 +18,6 @@ class ReportCrypto(IUefiBuildPlugin):
 
     def do_post_build(self, thebuilder):
         
-        # get branch name
-
         # Path to Build output
         build_path = Path(thebuilder.env.GetValue("BUILD_OUTPUT_BASE"))
         tool_chain = thebuilder.env.GetValue("TOOL_CHAIN_TAG")
@@ -35,12 +33,6 @@ class ReportCrypto(IUefiBuildPlugin):
         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S\n')
         report = [title, "Build Time: " + time]
 
-        # # get current branch
-        # repo = Repo(thebuilder.ws)
-        # branch = repo.active_branch
-        # commit = repo.active_branch.commit
-        # report.append(f"Branch: {branch.name} | Commit: {commit}\n")
-        
         # get tool chain
         report.append(f"Tool Chain: {tool_chain}\n")
 
@@ -48,7 +40,16 @@ class ReportCrypto(IUefiBuildPlugin):
         self.get_module_type_for_crypto_bin(thebuilder)
 
         report.append("=============================================\n")
+        # get submodules information
+        report.append("<------Submodules------>\n")
+        repo = Repo(thebuilder.ws)
+        for sub in repo.submodules:
+            report.append("--------\n")
+            report.append(f"Name: {sub.name}\n")
+            report.append(f"Branch: {sub.branch_name}\n")
+            report.append(f"Commit: {sub.hexsha}\n")
         
+        report.append("=============================================\n")
         # For each architecture built
         for arch in arch_list.split(" "):
             arch_build_path = build_path / arch
@@ -110,6 +111,7 @@ class ReportCrypto(IUefiBuildPlugin):
         return 0
     
     def get_openssl_flags(self, file):
+
         # get openssl library flags
         flags = []
         with file.open() as f:
@@ -119,6 +121,7 @@ class ReportCrypto(IUefiBuildPlugin):
         return flags
     
     def get_module_type_for_crypto_bin(self, thebuilder):
+
         CryptoBinPkg_Driver_path = Path(thebuilder.ws) / "CryptoBinPkg" / "Driver"
         inf_files = list(CryptoBinPkg_Driver_path.glob("*.inf"))
         for inf_file in inf_files:
@@ -135,8 +138,8 @@ class ReportCrypto(IUefiBuildPlugin):
                         break
 
     def get_linked_lib(self, thebuilder, arch, module_type, lib):
-        cryptoBinPkg_dsc_path = Path(thebuilder.ws) / "CryptoBinPkg" / "CryptoBinPkg.dsc"
 
+        cryptoBinPkg_dsc_path = Path(thebuilder.ws) / "CryptoBinPkg" / "CryptoBinPkg.dsc"
         with cryptoBinPkg_dsc_path.open() as f:
             current_key = None
             # there are 3 possible lib configuarions for the crypto binaries: "[LibraryClasses] (default)", "LibraryClasses.common.{module_type}" and "[LibraryClasses.arch.module_type] (most specific)"

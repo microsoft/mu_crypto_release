@@ -3,8 +3,25 @@
 CRYPTO BINARIES REPORT - STANDARD FLAVOR - DEBUG
 
 Build Time: 2024-12-19 14:31:31
-Branch: release/<branch name> | Commit: <hash>
 Tool Chain: VS2022
+=============================================
+<------Submodules------>
+--------
+Name: MU_BASECORE
+Branch: release/202302
+Commit: 51a3e0df37ba26bce7bd89895bb303c256560e00
+--------
+Name: Silicon/Arm/MU_TIANO
+Branch: release/202302
+Commit: 966f16aaba56846b01c3fff348f0d29714422f42
+--------
+Name: OpensslPkg/Library/OpensslLib/openssl
+Branch: master
+Commit: acdbf8e1e4749ad65c51b6a1d0d769ae689404ba
+--------
+Name: Common
+Branch: release/202302
+Commit: 5fb0d0462731513e3a28d5c0be1932a765dfe03d
 =============================================
 --------------------------------
 ARCH: X64
