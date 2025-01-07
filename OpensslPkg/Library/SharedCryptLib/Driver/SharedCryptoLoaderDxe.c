@@ -1,4 +1,4 @@
-//#include "LoaderShim.h"
+#include "SharedLoaderShim.h"
 #include <Library/DebugLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -11,15 +11,29 @@
 
 #define EFI_SECTION_PE32  0x10
 
-SHARED_DEPENDENCIES  *gDriverDependencies = NULL;
+SHARED_DEPENDENCIES  *gSharedDepends = NULL;
+DRIVER_DEPENDENCIES  *gDriverDependencies = NULL;
 
 VOID
 EFIAPI
 AssertEfiError (
-    BOOLEAN  Expression
-    )
+  BOOLEAN  Expression
+  )
 {
-    ASSERT_EFI_ERROR (Expression);
+  ASSERT_EFI_ERROR (Expression);
+}
+
+VOID
+InstallSharedDependencies (
+  EFI_SYSTEM_TABLE  SystemTable
+  )
+{
+  gSharedDepends->AllocatePool      = AllocatePool;
+  gSharedDepends->FreePool          = FreePool;
+  gSharedDepends->ASSERT            = AssertEfiError;
+  gSharedDepends->DebugPrint        = DebugPrint;
+  gSharedDepends->GetTime           = SystemTable.RuntimeServices->GetTime;
+  gSharedDepends->GetRandomNumber64 = GetRandomNumber64;
 }
 
 VOID
@@ -27,15 +41,11 @@ InstallDriverDependencies (
   EFI_SYSTEM_TABLE  SystemTable
   )
 {
-    ASSERT_EFI_ERROR (gDriverDependencies != NULL);
-
-    gDriverDependencies->AllocatePool = AllocatePool;
-    gDriverDependencies->FreePool = FreePool;
-    gDriverDependencies->ASSERT = AssertEfiError;
-    gDriverDependencies->DebugPrint = DebugPrint;
-    gDriverDependencies->GetTime = gRT->GetTime;
-    gDriverDependencies->GetRandomNumber64 = GetRandomNumber64;
-
+  gDriverDependencies->AllocatePages  = SystemTable.BootServices->AllocatePages;
+  gDriverDependencies->FreePages      = SystemTable.BootServices->FreePages;
+  gDriverDependencies->LocateProtocol = SystemTable.BootServices->LocateProtocol;
+  gDriverDependencies->AllocatePool   = SystemTable.BootServices->AllocatePool;
+  gDriverDependencies->FreePool       = SystemTable.BootServices->FreePool;
 }
 
 EFI_STATUS
@@ -45,7 +55,9 @@ DxeEntryPoint (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  EFI_GUID    CommonGuid = { 0x76ABA88D, 0x9D16, 0x49A2, { 0xAA, 0x3A, 0xDB, 0x61, 0x12, 0xFA, 0xC5, 0xCB } };
+  EFI_GUID    CommonGuid = {
+    0x76ABA88D, 0x9D16, 0x49A2, { 0xAA, 0x3A, 0xDB, 0x61, 0x12, 0xFA, 0xC5, 0xCB }
+  };
   EFI_STATUS  Status;
   VOID        *SectionData;
   UINTN       SectionSize;
@@ -57,6 +69,15 @@ DxeEntryPoint (
     }
 
     InstallDriverDependencies (*SystemTable);
+  }
+
+  if (gSharedDepends == NULL) {
+    gSharedDepends = AllocatePool (sizeof (*gSharedDepends));
+    if (gSharedDepends == NULL) {
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    InstallSharedDependencies (*SystemTable);
   }
 
   //
@@ -73,16 +94,15 @@ DxeEntryPoint (
     return Status;
   }
 
-  /*
-  Status = LoaderEntryPoint (SectionData, SectionSize);
+  Status = LoaderEntryPoint (SectionData, SectionSize, gSharedDepends);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to load shared library: %r\n", Status));
     goto Exit;
-  }*/
+  }
 
   Status = EFI_SUCCESS;
 
-//Exit:
+Exit:
 
   if (gDriverDependencies != NULL) {
     FreePool (gDriverDependencies);
