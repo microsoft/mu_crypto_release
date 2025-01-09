@@ -1,0 +1,8 @@
+{
+    "packagePaths": [
+        "MU_BASECORE",
+        "Common\\MU"
+    ],
+    "dscPaths": [],
+    "buildDefines": []
+}
