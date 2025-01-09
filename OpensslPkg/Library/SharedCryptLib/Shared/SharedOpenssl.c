@@ -302,6 +302,8 @@ CryptoInit (
   SHARED_CRYPTO_PROTOCOL  *Crypto
   )
 {
+
+  DEBUG ((DEBUG_ERROR, "---> %a:%d\n", __func__, __LINE__));
   if (Crypto == NULL) {
     DEBUG ((DEBUG_ERROR, "CryptoInit: Crypto is NULL\n"));
     ASSERT (Crypto != NULL);
@@ -315,7 +317,6 @@ CryptoInit (
   UINT32  RequestedMajor;
   UINT16  RequestedMinor;
   UINT16  RequestedRevision;
-
   UNPACK_VERSION (Crypto->GetVersion (), RequestedMajor, RequestedMinor, RequestedRevision);
 
   //
@@ -332,6 +333,7 @@ CryptoInit (
     ASSERT (RequestedMajor == VERSION_MAJOR && RequestedMinor <= VERSION_MINOR);
     return;
   }
+  DEBUG ((DEBUG_ERROR, "Version accepted: (%d.%d.%d)\n", RequestedMajor, RequestedMinor, RequestedRevision));
 
   //
   // TODO Add logic to support backward compatibility with older versions of the protocol.
