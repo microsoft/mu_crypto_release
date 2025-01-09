@@ -22,15 +22,17 @@ COMMON_EXPORT_API
 EFI_STATUS
 EFIAPI
 Constructor (
-  IN VOID   *Depends,
+  IN SHARED_DEPENDENCIES *Depends,
   OUT VOID  *RequestedCrypto
   )
 {
   //
   // Map the provided depencencies to our global instance
   //
-  gSharedDepends = (SHARED_DEPENDENCIES *)Depends;
+  gSharedDepends = Depends;
 
+  // TODO DEBUG_ERROR = DEBUG_INFO?
+  DEBUG((DEBUG_ERROR, "SharedCryptoBin: Constructor entry called\n"));
 
   //
   // Build the Crypto

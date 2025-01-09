@@ -73,7 +73,7 @@ SHARED_DEPENDENCIES  *gSharedDepends;
  */
 
 typedef EFI_STATUS (EFIAPI *CONSTRUCTOR)(
-  IN VOID *Depends,
+  IN SHARED_DEPENDENCIES *Depends,
   OUT VOID *RequestedCrypto
   );
 
