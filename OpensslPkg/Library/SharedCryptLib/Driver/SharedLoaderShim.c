@@ -18,13 +18,13 @@
 
 #define EFI_SECTION_PE32  0x10
 
-
 EFI_STATUS
 EFIAPI
 LoaderEntryPoint (
   IN VOID                 *DllSectionData,
   IN UINTN                DllSectionDataSize,
-  IN SHARED_DEPENDENCIES  *Depends
+  IN SHARED_DEPENDENCIES  *Depends,
+  OUT CONSTRUCTOR constructor
   )
 {
   EFI_STATUS                  Status;
@@ -32,7 +32,7 @@ LoaderEntryPoint (
   INTERNAL_IMAGE_CONTEXT      Image;
   EFI_IMAGE_EXPORT_DIRECTORY  *Exports;
   CONSTRUCTOR                 Constructor;
-  SHARED_CRYPTO_PROTOCOL CryptoProtocol;
+
 
   // First we must walk all the FV's and find the one that contains the shared library
 
@@ -85,9 +85,6 @@ LoaderEntryPoint (
   //
   Image.NumberOfPages = EFI_SIZE_TO_PAGES (Image.Size);
 
-  DEBUG ((DEBUG_INFO, "Image size: %u bytes\n", Image.Size));
-  DEBUG ((DEBUG_INFO, "Number of pages: %u\n", Image.NumberOfPages));
-
   //
   // Allocate Executable memory for the image
   //
@@ -123,8 +120,6 @@ LoaderEntryPoint (
     goto Exit;
   }
 
-  DEBUG ((DEBUG_INFO, "%a:%d\n", __func__, __LINE__));
-
   //
   // Relocate the image in memory
   //
@@ -134,8 +129,6 @@ LoaderEntryPoint (
     goto Exit;
   }
 
-  DEBUG ((DEBUG_INFO, "%a:%d\n", __func__, __LINE__));
-
   //
   // Grab the export directory from the image
   //
@@ -144,8 +137,6 @@ LoaderEntryPoint (
     DEBUG ((DEBUG_ERROR, "Failed to get export directory: %r\n", Status));
     goto Exit;
   }
-
-  DEBUG ((DEBUG_INFO, "%a:%d\n", __func__, __LINE__));
 
   DEBUG_CODE_BEGIN ();
 
@@ -165,15 +156,16 @@ LoaderEntryPoint (
     goto Exit;
   }
 
-  EFI_IMAGE_IMPORT_DESCRIPTOR  *ImageImportDirectory;
+  // NOT USING THE IMPORT TABLE
+  // EFI_IMAGE_IMPORT_DESCRIPTOR  *ImageImportDirectory;
 
-  Status = GetImportDirectoryInPeCoffImage (&Image, &ImageImportDirectory);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to get import directory: %r\n", Status));
-    goto Exit;
-  }
+  // Status = GetImportDirectoryInPeCoffImage (&Image, &ImageImportDirectory);
+  // if (EFI_ERROR (Status)) {
+  //  DEBUG ((DEBUG_ERROR, "Failed to get import directory: %r\n", Status));
+  //  goto Exit;
+  // }
 
-  DUMP_HEX (DEBUG_ERROR, 0, ImageImportDirectory, sizeof (EFI_IMAGE_IMPORT_DESCRIPTOR), "");
+  // DUMP_HEX (DEBUG_ERROR, 0, ImageImportDirectory, sizeof (EFI_IMAGE_IMPORT_DESCRIPTOR), "");
 
   //
   // While we're setting up the Image,
@@ -187,7 +179,6 @@ LoaderEntryPoint (
   // Setup the Library constructor function
   //
   Constructor = (CONSTRUCTOR)((EFI_PHYSICAL_ADDRESS)Image.Context.ImageAddress + RVA);
-
   InvalidateInstructionCacheRange ((VOID *)(UINTN)Image.Context.ImageAddress, (UINTN)Image.Context.ImageSize);
   Status = Constructor (Depends, &CryptoProtocol);
   if (EFI_ERROR (Status)) {

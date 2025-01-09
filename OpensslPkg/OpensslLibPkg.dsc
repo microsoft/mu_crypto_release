@@ -31,6 +31,15 @@
 
 !include MdePkg/MdeLibs.dsc.inc
 
+
+[PcdsPatchableInModule]
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+
+  [PcdsFixedAtBuild]
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80080246
+  #gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x800002CF # use when debugging depex loading issues
+  gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel
+
 [LibraryClasses]
 #
 # BE VERY CAREFUL PUTTING ANYTHING HERE
@@ -45,7 +54,11 @@ BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   UefiLib                 |MdePkg/Library/UefiLib/UefiLib.inf
   PcdLib                  |MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf # Required for UEFI applications - NULL implementation
   DebugPrintErrorLevelLib |MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
-  DebugLib                |MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf
+  AssertLib|AdvLoggerPkg/Library/AssertLib/AssertLib.inf
+  DebugLib                |AdvLoggerPkg/Library/BaseDebugLibAdvancedLogger/BaseDebugLibAdvancedLogger.inf
+  AdvancedLoggerLib       |AdvLoggerPkg/Library/AdvancedLoggerLib/Dxe/AdvancedLoggerLib.inf
+
+  #DebugLib                |MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf
   BaseMemoryLib           |MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
   NULL                    |MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
   MemoryAllocationLib     |MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
