@@ -1,4 +1,3 @@
-#include "SharedLoaderShim.h"
 #include <Library/DebugLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -7,12 +6,28 @@
 #include <Library/DxeServicesLib.h>
 #include <Library/DebugLib.h>
 #include <Library/RngLib.h>
+
 #include <SharedCrtLibSupport.h>
+#include <SharedCryptoProtocol.h>
+#include "SharedLoaderShim.h"
 
 #define EFI_SECTION_PE32  0x10
 
 SHARED_DEPENDENCIES  *gSharedDepends = NULL;
 DRIVER_DEPENDENCIES  *gDriverDependencies = NULL;
+
+//
+// The version we're requesting
+//
+UINT64
+EFIAPI
+GetVersion(
+  VOID
+  )
+{
+  DEBUG((DEBUG_INFO, ""))
+  return PACK_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION);
+}
 
 VOID
 EFIAPI
@@ -34,6 +49,10 @@ InstallSharedDependencies (
   gSharedDepends->DebugPrint        = DebugPrint;
   gSharedDepends->GetTime           = SystemTable.RuntimeServices->GetTime;
   gSharedDepends->GetRandomNumber64 = GetRandomNumber64;
+
+
+  DUMP_HEX(DEBUG_ERROR, 0, gSharedDepends, sizeof(SHARED_DEPENDENCIES), "");
+
 }
 
 VOID
@@ -61,6 +80,10 @@ DxeEntryPoint (
   EFI_STATUS  Status;
   VOID        *SectionData;
   UINTN       SectionSize;
+
+  SHARED_CRYPTO_PROTOCOL CryptoProtocol;
+
+  CryptoProtocol.GetVersion = GetVersion;
 
   if (gDriverDependencies == NULL) {
     gDriverDependencies = AllocatePool (sizeof (*gDriverDependencies));
@@ -91,7 +114,7 @@ DxeEntryPoint (
   Status = GetSectionFromAnyFv (&CommonGuid, EFI_SECTION_PE32, 0, &SectionData, &SectionSize);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to find section with known GUID: %r\n", Status));
-    return Status;
+    return EFI_NOT_READY;
   }
 
   Status = LoaderEntryPoint (SectionData, SectionSize, gSharedDepends);
@@ -106,6 +129,10 @@ Exit:
 
   if (gDriverDependencies != NULL) {
     FreePool (gDriverDependencies);
+  }
+
+  if (gSharedDepends != NULL) {
+    FreePool (gSharedDepends);
   }
 
   if (SectionData != NULL) {
