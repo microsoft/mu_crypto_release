@@ -4794,4 +4794,6 @@ typedef struct _SHARED_CRYPTO_PROTOCOL {
   SHARED_TLS_GET_EXPORT_KEY                     TlsGetExportKey;
 } SHARED_CRYPTO_PROTOCOL;
 
+extern GUID  gSharedCryptoProtocolGuid;
+
 #endif // SHARED_CRYPTO_PROTOCOL_
