@@ -18,21 +18,29 @@
 
 #define EFI_SECTION_PE32  0x10
 
+/**
+ * @brief Entry point for the loader.
+ *
+ * This function serves as the main entry point for the loader module. It is responsible for
+ * initializing the loader, setting up necessary resources, and starting the loading process.
+ *
+ * @param argc The number of command-line arguments.
+ * @param argv An array of command-line arguments.
+ * @return An integer status code indicating the result of the loader initialization and execution.
+ *         Typically, a return value of 0 indicates success, while non-zero values indicate errors.
+ */
 EFI_STATUS
 EFIAPI
 LoaderEntryPoint (
   IN VOID                 *DllSectionData,
   IN UINTN                DllSectionDataSize,
-  IN SHARED_DEPENDENCIES  *Depends,
-  OUT CONSTRUCTOR constructor
+  OUT CONSTRUCTOR         *Constructor
   )
 {
   EFI_STATUS                  Status;
   UINT32                      RVA;
   INTERNAL_IMAGE_CONTEXT      Image;
   EFI_IMAGE_EXPORT_DIRECTORY  *Exports;
-  CONSTRUCTOR                 Constructor;
-
 
   // First we must walk all the FV's and find the one that contains the shared library
 
@@ -156,17 +164,6 @@ LoaderEntryPoint (
     goto Exit;
   }
 
-  // NOT USING THE IMPORT TABLE
-  // EFI_IMAGE_IMPORT_DESCRIPTOR  *ImageImportDirectory;
-
-  // Status = GetImportDirectoryInPeCoffImage (&Image, &ImageImportDirectory);
-  // if (EFI_ERROR (Status)) {
-  //  DEBUG ((DEBUG_ERROR, "Failed to get import directory: %r\n", Status));
-  //  goto Exit;
-  // }
-
-  // DUMP_HEX (DEBUG_ERROR, 0, ImageImportDirectory, sizeof (EFI_IMAGE_IMPORT_DESCRIPTOR), "");
-
   //
   // While we're setting up the Image,
   //
@@ -178,21 +175,23 @@ LoaderEntryPoint (
   //
   // Setup the Library constructor function
   //
-  Constructor = (CONSTRUCTOR)((EFI_PHYSICAL_ADDRESS)Image.Context.ImageAddress + RVA);
   InvalidateInstructionCacheRange ((VOID *)(UINTN)Image.Context.ImageAddress, (UINTN)Image.Context.ImageSize);
-  Status = Constructor (Depends, &CryptoProtocol);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to call LibConstructor: %r\n", Status));
-    goto Exit;
-  }
+  *Constructor = (CONSTRUCTOR)((EFI_PHYSICAL_ADDRESS)Image.Context.ImageAddress + RVA);
 
   Status = EFI_SUCCESS;
 
 Exit:
-  if (Image.Context.ImageAddress != 0) {
+  //
+  // Only Free if the Status was not successful
+  // We need this memory to last long past the execution of the driver
+  // otherwise the protocol would cause the system to break
+  //
+  if (Status != EFI_SUCCESS && Image.Context.ImageAddress != 0) {
     gDriverDependencies->FreePages (Image.PageBase, Image.NumberOfPages);
+    Image.Context.ImageAddress = 0;
   }
 
+  DEBUG ((DEBUG_INFO, "Memory %a cleared\n", (Status != EFI_SUCCESS && Image.Context.ImageAddress != 0) ? "was" : "was not"));
   DEBUG ((DEBUG_INFO, "Exiting with status: %r\n", Status));
 
   return Status;

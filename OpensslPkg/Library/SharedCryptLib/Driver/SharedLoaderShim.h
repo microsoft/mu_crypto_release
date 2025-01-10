@@ -43,9 +43,9 @@ extern DRIVER_DEPENDENCIES  *gDriverDependencies;
 EFI_STATUS
 EFIAPI
 LoaderEntryPoint (
-  IN VOID   *DllSectionData,
-  IN UINTN  DllSectionDataSize,
-  IN SHARED_DEPENDENCIES *Depends
+  IN VOID          *DllSectionData,
+  IN UINTN         DllSectionDataSize,
+  OUT CONSTRUCTOR  *Constructor
   );
 
 #endif // SHAREDLOADER_SHIM_H
