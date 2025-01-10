@@ -22,8 +22,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/err.h>
 #include "Rand/CryptRand.h"
 
-#pragma message("SharedCryptLib: using Shared/InternalTlsLib.h")
-
 typedef struct {
   //
   // Main SSL Connection which is created by a server or a client

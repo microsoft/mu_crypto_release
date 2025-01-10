@@ -33,3 +33,9 @@
   ##  @libraryclass  Provides compiler intrinsic functions required to link openssl project.
   #
   InstrinsicLib|Private/Library/IntrinsicLib.h
+
+
+  [Protocols]
+  ## EDK II Crypto DXE protocol
+  # 2C2275C9-3A7B-426F-BE54-2D22BD9D1092
+  gSharedCryptoProtocolGuid =  { 0x2C2275C9, 0x3A7B, 0x426F, { 0xBE, 0x54, 0x2D, 0x22, 0xBD, 0x9D, 0x10, 0x93 }}

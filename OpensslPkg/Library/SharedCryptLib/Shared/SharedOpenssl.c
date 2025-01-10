@@ -303,7 +303,6 @@ CryptoInit (
   )
 {
 
-  DEBUG ((DEBUG_ERROR, "---> %a:%d\n", __func__, __LINE__));
   if (Crypto == NULL) {
     DEBUG ((DEBUG_ERROR, "CryptoInit: Crypto is NULL\n"));
     ASSERT (Crypto != NULL);
