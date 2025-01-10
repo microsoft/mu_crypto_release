@@ -49,6 +49,7 @@
 [Protocols]
   ## TODO Add protocols here
   gEfiMemoryAttributeProtocolGuid     ## CONSUMES
+  gSharedCryptoProtocolGuid           ## PRODUCES
 
 [Depex]
   TRUE
