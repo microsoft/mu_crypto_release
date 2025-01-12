@@ -90,6 +90,7 @@ stages:
           -a $(build_archs)
           -t $(build_targets)
           --stop-on-fail
+          --report
           TOOL_CHAIN_TAG=${{ parameters.toolchain }}
 
     - task: CopyFiles@2
@@ -158,6 +159,7 @@ stages:
           BUILDLOG_CryptoBin_*.txt
           SETUPLOG.txt
           UPDATE_LOG.txt
+          Report_STANDARD_DEBUG_VS2022.txt
         targetFolder: '$(Build.ArtifactStagingDirectory)/Logs'
         flattenFolders: true
 
