@@ -86,6 +86,20 @@ The steps are:
    in the ``Bundle`` directory
 
 
+Building OpensslPkg
+===================
+
+``OpensslPkg`` is built using normal Stuart build commands. The package, target, and architecture are specified as
+parameters to ``.pytool/CISettings.py``.
+
+Example to build the ``DEBUG`` target for the ``X64`` architecture:
+
+``> stuart_ci_build -c .pytool/CISettings.py -p OpensslPkg -t DEBUG -a X64 TOOL_CHAIN_TAG=VS2022``
+
+Note that the ``OpensslPkg`` build is not required to build the crypto binaries only to build and verify CI checks
+against the code in the package.
+
+
 Releasing a Pipeline Build
 ==========================
 
