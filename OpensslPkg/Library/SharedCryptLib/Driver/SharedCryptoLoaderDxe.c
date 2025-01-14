@@ -25,7 +25,7 @@ SHARED_DEPENDENCIES  *mSharedDepends = NULL;
 //
 // Crypto protocol for the shared library
 //
-SHARED_CRYPTO_PROTOCOL  mSharedCryptoProtocol;
+SHARED_CRYPTO_PROTOCOL mSharedCryptoProtocol;
 
 UINT64
 EFIAPI
