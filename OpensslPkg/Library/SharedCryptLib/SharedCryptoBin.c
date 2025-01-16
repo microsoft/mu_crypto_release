@@ -9,7 +9,7 @@
 #include <Uefi.h>
 #include <Library/UefiApplicationEntryPoint.h>
 #include "Shared/SharedOpenssl.h"
-#include <SharedCrtLibSupport.h>
+#include <Library/SharedCrtLibSupport.h>
 
 // #if defined(_MSC_VER)
 #define COMMON_EXPORT_API  __declspec(dllexport)
@@ -32,6 +32,8 @@ Constructor (
   gSharedDepends = Depends;
 
   // TODO DEBUG_ERROR = DEBUG_INFO?
+  // CRASHPOINT
+  //
   DEBUG((DEBUG_ERROR, "SharedCryptoBin: Constructor entry called\n"));
 
   //

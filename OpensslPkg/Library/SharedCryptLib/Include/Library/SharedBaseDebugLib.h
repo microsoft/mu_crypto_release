@@ -1,7 +1,7 @@
 #ifndef SHARED_DEBUG_LIB
 #define SHARED_DEBUG_LIB
 
-#include <SharedCrtLibSupport.h>
+#include <Library/SharedCrtLibSupport.h>
 
 extern SHARED_DEPENDENCIES *gSharedDepends;
 

@@ -1,6 +1,6 @@
 #include "SharedOpenssl.h"
-#include <SharedCryptoProtocol.h>
-#include <SharedCryptoDefs.h>
+#include <Protocol/SharedCryptoProtocol.h>
+#include <Library/SharedCryptoLibrary.h>
 #include <CrtLibSupport.h>
 #include <Uefi.h>
 
@@ -302,6 +302,10 @@ CryptoInit (
   SHARED_CRYPTO_PROTOCOL  *Crypto
   )
 {
+  SHARED_CRYPTO_PROTOCOL LocalCrypto;
+  UINT32  RequestedMajor;
+  UINT16  RequestedMinor;
+  UINT16  RequestedRevision;
 
   if (Crypto == NULL) {
     DEBUG ((DEBUG_ERROR, "CryptoInit: Crypto is NULL\n"));
@@ -313,9 +317,8 @@ CryptoInit (
   // The Caller should provide a GetVersion function that returns the version that the caller is expecting.
   // and this function should use that to ensure that the crypto functionality is compatible with the caller.
   //
-  UINT32  RequestedMajor;
-  UINT16  RequestedMinor;
-  UINT16  RequestedRevision;
+  // CRASHPOINT
+  //
   UNPACK_VERSION (Crypto->GetVersion (), RequestedMajor, RequestedMinor, RequestedRevision);
 
   //
@@ -339,10 +342,12 @@ CryptoInit (
   // This may require archiving older versions of the protocol and providing the requested version.
   //
 
-  //
-  // Initialize the Crypto functions
-  //
-  InitAvailableCrypto (Crypto);
+  // Initialize the local instance with available crypto functions
+  InitAvailableCrypto(&LocalCrypto);
+
+  // Copy back the initialized local instance to the provided Crypto structure
+  //TODO
+  CopyMem(Crypto, &LocalCrypto, sizeof(SHARED_CRYPTO_PROTOCOL));
 
   return;
 }

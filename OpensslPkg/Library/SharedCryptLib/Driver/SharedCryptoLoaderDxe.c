@@ -7,8 +7,8 @@
 #include <Library/DebugLib.h>
 #include <Library/RngLib.h>
 
-#include <SharedCrtLibSupport.h>
-#include <SharedCryptoProtocol.h>
+#include <Library/SharedCrtLibSupport.h>
+#include <Protocol/SharedCryptoProtocol.h>
 #include "SharedLoaderShim.h"
 
 #define EFI_SECTION_PE32  0x10
