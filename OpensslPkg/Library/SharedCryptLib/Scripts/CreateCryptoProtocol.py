@@ -5,10 +5,61 @@ import io
 import json
 import os
 import datetime
+import logging
 
 from collections import OrderedDict
+from dataclasses import dataclass
 
+logger = logging.getLogger(os.path.basename(__file__))
 DEBUG = False
+
+level = 'INFO'
+if DEBUG:
+    level = 'DEBUG'
+    basic_config_level = logging.DEBUG
+
+try:
+    import coloredlogs
+    # To enable debugging set level to 'DEBUG'
+    coloredlogs.install(level=level, logger=logger, fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+except ImportError:
+    logging.basicConfig(level=basic_config_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+INCLUDE_PATH = os.path.join(SCRIPT_DIR, "../Include")
+LIBRARY_PATH = os.path.join(SCRIPT_DIR, "../Library/Include")
+
+# Paths to the library and include directories
+LIBRARY_INCLUDE_PATH = os.path.join(LIBRARY_PATH, "Include")
+BASE_CRYPTO_PATH = os.path.join(LIBRARY_PATH, "BaseCryptLibOnProtocol")
+
+# Default group for functions that don't have a group specified
+# TODO Ideally this would have a different name like "Shared"
+DEFAULT_GROUP = "BaseCrypt"
+LIBRARY_GROUPS = [
+    "Tls",
+    "Hash",
+]  # Any function that doesn't fit into the groups above will be added to one large group
+
+
+@dataclass
+class FunctionDetails:
+    full_text: str
+    typedef_name: str
+    comment: str
+    return_type: str
+    calling_convention: str
+    params: str
+    version: str
+    group: str
+
+
+@dataclass
+class FunctionInfo:
+    functions: dict
+    typedefs: dict
+    version: tuple
 
 
 def cli() -> dict:
@@ -16,8 +67,14 @@ def cli() -> dict:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("header_file", help="The header file to be transformed")
+
+    parser.add_argument("-p", "--generate-protocol", help="Generate the protocol file",
+                        action="store_true", default=False)
     parser.add_argument(
-        "-o", "--output", help="The output file to write the transformed protocol header file to", default="SharedCryptoProtocol.h")
+        "--output-protocol", help="The output file to write the transformed protocol header file to", default=os.path.join(INCLUDE_PATH, "SharedCryptoProtocol.h"))
+    parser.add_argument("-l", "--generate-library", help="Generate the library file",
+                        action="store_true", default=False)
+
     parser.add_argument("-d", "--debug", help="Enable debug mode", action="store_true", default=False)
 
     args = parser.parse_args()
@@ -101,151 +158,138 @@ def extract_version(file: io.TextIOWrapper) -> tuple:
     return major, minor, revision
 
 
-def get_functions(f: io.TextIOWrapper) -> dict:
+def extract_function_details(file_content):
     """
-    Extracts the functions from the header file.
-
+    Extracts details of functions from the given file content.
+    This function parses the provided file content to identify and extract details of functions,
+    including their comments, return types, calling conventions, parameters, version, and group.
+    It uses regular expressions to match the start and end of function definitions, as well as
+    to extract specific details from the comment blocks.
     Args:
-        f (io.TextIOWrapper): The file object.
-
+        file_content (list of str): The content of the file as a list of strings, where each string
+                                    represents a line in the file.
     Returns:
-        dict: A dictionary of functions where the key is the function name and the value is a dictionary containing the function details.
-
-    Return Value has been the biggest challenge - any change to the regex must be tested against examples like this:
-
-        /**
-        Checks if Big Number is odd.
-
-        @param[in]   Bn     Big number.
-
-        @retval TRUE   Bn is odd (Bn % 2 == 1).
-        @retval FALSE  otherwise.
-        **/
-        BOOLEAN
-        EFIAPI
-        BigNumIsOdd (
-            IN CONST VOID  *Bn
-        );
-
-        /**
-        Copy Big number.
-
-        @param[out]  BnDst     Destination.
-        @param[in]   BnSrc     Source.
-
-        @retval BnDst on success.
-        @retval NULL otherwise.
-        **/
-        VOID *
-        EFIAPI
-        BigNumCopy (
-            OUT VOID       *BnDst,
-            IN CONST VOID  *BnSrc
-        );
-
-        /**
-        Get constant Big number with value of "1".
-        This may be used to save expensive allocations.
-
-        @retval Big Number with value of 1.
-        **/
-        CONST VOID *
-        EFIAPI
-        BigNumValueOne (
-            VOID
-        );
+        OrderedDict: An ordered dictionary where the keys are function names and the values are
+                     instances of FunctionDetails containing the extracted details of each function.
+    Raises:
+        ValueError: If a required component (comment, function name, group, or version) is not found
+                    in the function definition.
     """
-    f.seek(0)
-    content = f.read()
 
-    #
-    # Dictionary to store the functions in the file - keep the order of the functions
-    #
-    functions = OrderedDict()
-
-    #
-    # Regex to find function declarations
-    #
-    function_pattern = re.compile(
-        r'\n(?P<comment>\/\*\*[\s\S]*?\*\/)\n(?P<return_type>[\w\s\*]+)\n(?P<calling_convention>EFIAPI)\s(?P<function_name>\w+)\s*\((?P<params>[\s\S]*?)\);',
+    # Regex patterns to match the start and end of a function
+    # The start pattern is the beginning of a comment block
+    # Example: /**
+    begin_pattern = re.compile(
+        r"\/\*\*",
         re.DOTALL
     )
 
-    version_pattern = re.compile(
-        r'\@since\s(?P<version>((\d+).(\d+).(\d+)))',
+    # The end pattern is the end of a function definition
+    # Example: );
+    end_pattern = re.compile(
+        r".*?\);",
         re.DOTALL
     )
 
+    # The comment pattern is the comment block that contains the function details
+    # Example: /** {comment} **/
+    comment_pattern = re.compile(
+        r"\/\*\*[\s\S]*?\*\/",
+        re.DOTALL
+    )
+
+    # The group pattern is the @ingroup tag that contains the group name
+    # Example: @ingroup GroupName
     group_pattern = re.compile(
-        r'\@ingroup\s(?P<group_name>(.+))\n',
+        r'\@ingroup\s(.+)\n',
         re.DOTALL
     )
 
-    function_name_pattern = re.compile(
-        r'EFIAPI\n(?P<function>\w+)\s\(',
+    # The version pattern is the @since tag that contains the version number
+    # Example: @since 1.0.0
+    version_pattern = re.compile(
+        r'\@since\s((\d+).(\d+).(\d+))',
         re.DOTALL
     )
 
-    matches = function_pattern.findall(content)
-    for match in matches:
-        comment = match[0]
-        return_type = match[1]
-        calling_convention = match[2]
-        function_name = match[3]
-        params = match[4]
+    functions = OrderedDict()
+    in_function = False
+    function_text = []
 
-        # if any of these fail raise an error
-        if not comment or not return_type or not calling_convention or not function_name or not params:
-            #
-            # Early warning system to catch any issues with the regex - this may not be the most robust way to do this
-            #
-            raise ValueError(f"Failed to parse function {function_name}")
+    # Simple state machine for parsing the functions out of the file
+    for lineno, line in enumerate(file_content):
+        if re.search(begin_pattern, line):
+            # if we see a function start, we should reset the in_function flag
+            logger.debug(f"StateMachine: Start @ {lineno}")
+            if in_function:
+                logger.debug(f"StateMachine: Restart @ {lineno}")
 
-        version_match = version_pattern.search(comment)
-        if not version_match:
-            raise ValueError(f"Version not found in the comment for function {function_name}")
+            in_function = True
+            function_text = [line]
+        elif re.search(end_pattern, line) and in_function:
 
-        group_match = group_pattern.search(comment)
-        if not group_match:
-            raise ValueError(f"Group not found in the comment for function {function_name}")
+            logger.debug(f"StateMachine: End @ {lineno}")
+            function_text.append(line)
 
-        typedef_name = convert_to_underscores(function_name)
-        functions.update({
-            function_name: {
-                'typedef_name': typedef_name,
-                'comment': comment.strip(),
-                'return_type': return_type.strip(),
-                'calling_convention': calling_convention.strip(),
-                'params': params,
-                'version': version_match['version'],
-                'group': group_match['group_name']
-            }
-        })
+            parsable_text = ''.join(function_text)
 
-    #
-    # Write the functions to a file for debugging
-    #
-    if DEBUG:
-        with open('functions.json', 'w') as f:
-            print("Writing functions to functions.json")
-            f.write(json.dumps(functions, indent=4))
+            comment_match = re.search(comment_pattern, parsable_text)
+            if not comment_match:
+                logger.warning(f"Comment not found for function. Line Number: {lineno}")
+                raise ValueError(f"Comment not found for function. Line Number: {lineno}")
+            comment = comment_match.group(0)
+            # Remove comment from parsable_text - this will make it easier to
+            # parse the rest of the text
+            parsable_text = re.sub(comment_pattern, '', parsable_text)
 
-    #
-    # Count the number of "EFIAPI" in the file and compare it to the number of functions found
-    # Early warning system to catch any issues with the regex - this may not be the most robust way to do this
-    #
-    matches = function_name_pattern.findall(content)
-    if len(matches) != len(functions):
-        for function in functions:
-            if function not in matches:
-                print(f"Missing!: {function}")
+            function_info = parsable_text.strip().split('\n')
+            return_type = function_info[0]
+            calling_convention = function_info[1]
+            if calling_convention != 'EFIAPI':
+                logger.error(f"Calling convention wasn't EFIAPI! Line Number: {lineno}")
+                raise ValueError(f"Calling convention wasn't EFIAPI! Line Number: {lineno}")
 
-        for match in matches:
-            if match not in functions:
-                print(f"Missing!: {match}")
+            function_name, opening_bracket = function_info[2].split(' ')
+            if opening_bracket != '(':
+                logger.error(f"Function name not found. Line Number: {lineno}")
+                raise ValueError(f"Function name not found. Line Number: {lineno}")
+            # once we find the start of params - this will run until we see );
+            params = function_info[3:-1]
 
-        raise ValueError(f"EFIAPI count does not match the number of functions found {
-                         len(matches)} != {len(functions)}")
+            group_match = re.search(group_pattern, comment)
+            if not group_match:
+                logger.error(f"Group not found for function. {function_name}")
+                raise ValueError(f"Group not found for function. {function_name}")
+            group = group_match.group(1)
+
+            version_match = re.search(version_pattern, comment)
+            if not version_match:
+                logger.error(f"Version not found for function. {function_name}")
+                raise ValueError("Version not found for function.")
+            version = version_match.group(1)
+
+            functions[function_name] = FunctionDetails(
+                full_text=''.join(function_text),
+                typedef_name='',
+                comment=comment,
+                return_type=return_type,
+                calling_convention=calling_convention,
+                params='\n'.join(params),
+                version=version,
+                group=group
+            )
+            in_function = False
+        elif '#define' in line.lower() and in_function:
+            # Defines are not functions and should reset the in_function flag
+
+            logger.debug(f"StateMachine: Reset @ {lineno}")
+
+            in_function = False
+            function_text = []
+        elif in_function:
+            function_text.append(line)
+
+    logger.info(f"Found {len(functions)} unique functions")
 
     return functions
 
@@ -261,13 +305,14 @@ def create_typedefs(functions: dict) -> str:
         str: A string containing the typedefs for the functions
     """
     typedefs = []
+
     for function in functions:
-        comment = functions[function]['comment']
-        typedef_name = functions[function]['typedef_name']
-        return_type = functions[function]['return_type']
-        calling_convention = functions[function]['calling_convention']
-        params = functions[function]['params']
-        typedef = f"{comment}\ntypedef {return_type} ({calling_convention} *SHARED_{typedef_name})({params});\n\n"
+        typedef_name = convert_to_underscores(function)
+        comment = functions[function].comment
+        return_type = functions[function].return_type
+        calling_convention = functions[function].calling_convention
+        params = functions[function].params
+        typedef = f"{comment}\ntypedef {return_type} ({calling_convention} *SHARED_{typedef_name})(\n{params}\n  );\n\n"
         typedefs.append(typedef)
     return "".join(typedefs)
 
@@ -288,13 +333,15 @@ def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
     group = None
     previous_group = None
 
+    logger.info("Generating the protocol structure")
+
     #
     # reorganize the functions based on group and version
     # Group functions by version
     #
     grouped_functions = OrderedDict()
     for function in functions:
-        version = functions[function]['version']
+        version = functions[function].version
         if version not in grouped_functions:
             grouped_functions[version] = []
         grouped_functions[version].append(function)
@@ -337,8 +384,10 @@ def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
         group = None
         previous_group = None
         for function in grouped_functions[version]:
-            typedef_name = functions[function]['typedef_name']
-            group = functions[function]["group"]
+
+            typedef_name = convert_to_underscores(function)
+
+            group = functions[function].group
 
             if previous_group != group:
                 previous_group = group
@@ -353,48 +402,129 @@ def create_protocol_structure(functions: dict, indent=" " * 2) -> str:
     return structure
 
 
+def generate_autogenerated_file_comment() -> str:
+    lines = "// {0}\n".format("-" * 78)
+    lines += f"// AUTOGENERATED BY {os.path.basename(__file__)}\n"
+    lines += "// GENERATED ON: {:%Y-%b-%d %H:%M:%S}\n".format(datetime.datetime.now())
+    lines += "// DO NOT MODIFY\n"
+    lines += "// {0}\n".format("-" * 78)
+    return lines
+
+
+def generate_protocol(file_name: str, function_info: FunctionInfo, output_file: str):
+    """
+    Generates a protocol file based on the provided function information and writes it to the specified output file.
+    Args:
+        file_name (str): The name of the file to include in the protocol file.
+        function_info (FunctionInfo): An object containing information about the functions, typedefs, and version.
+        output_file (str): The path to the output file where the protocol will be written.
+    Returns:
+        None
+    """
+
+    logger.info("Generating the Protocol file")
+
+    # The C structure built from the typedefs
+    protocol_structure = create_protocol_structure(function_info.functions)
+
+    # The C guard statement
+    guard_statement = f"{convert_to_underscores(os.path.basename(output_file).split('.')[0])}_"
+    major, minor, revision = function_info.version
+    typedefs = function_info.typedefs
+
+    with open(output_file, 'w') as f:
+        f.write(generate_autogenerated_file_comment())
+        f.write(f"#ifndef {guard_statement}\n")
+        f.write(f"#define {guard_statement}\n\n")
+        f.write("#include <Uefi.h>\n")
+        f.write(f"#include <{file_name}>\n\n")
+        f.write(create_divider())
+        f.write(f"// Protocol version: {major}.{minor}.{revision}\n")
+        f.write(create_divider())
+        f.write("\n")
+        f.write(create_divider())
+        f.write("// Typedef Declarations\n")
+        f.write(create_divider())
+        f.write(typedefs)
+        f.write(create_divider())
+        f.write("// Protocol\n")
+        f.write(create_divider())
+        f.write(protocol_structure)
+
+        f.write(f"#endif // {guard_statement}\n")
+
+    logger.info(f"Protocol written to {output_file}")
+
+
+def generate_library(file_name: str, function_info: FunctionInfo):
+
+    logger.info("Generating the library headers")
+
+    grouped_functions = {group: [] for group in LIBRARY_GROUPS}
+    grouped_functions[DEFAULT_GROUP] = []
+
+    for function, details in function_info.functions.items():
+        group_found = False
+        for group in LIBRARY_GROUPS:
+            if group.lower() in details.group.lower():
+                grouped_functions[group].append(function)
+                group_found = True
+                break
+        if not group_found:
+            grouped_functions[DEFAULT_GROUP].append(function)
+
+    #
+    # Generate the library files
+    #
+    for group in grouped_functions:
+        basename = f"{group}ApiLib.h"
+
+        if not os.path.exists(LIBRARY_INCLUDE_PATH):
+            os.makedirs(LIBRARY_INCLUDE_PATH)
+
+        library_file = os.path.join(LIBRARY_INCLUDE_PATH, basename)
+
+        guard_statement = f"{convert_to_underscores(os.path.basename(basename).split('.')[0])}_"
+        with open(library_file, 'w') as f:
+            f.write("//")
+            f.write(generate_autogenerated_file_comment())
+            f.write(f"#ifndef {guard_statement}\n")
+            f.write(f"#define {guard_statement}\n\n")
+            f.write("#include <Uefi.h>\n")
+            f.write(create_divider())
+            f.write(f"// Library for {group}\n")
+            f.write(create_divider())
+            f.write("\n")
+
+            for function_name in grouped_functions[group]:
+                function = function_info.functions[function_name]
+                f.write(f"{function.comment}\n")
+                f.write(f"{function.return_type}\n")
+                f.write(f"{function.calling_convention}\n")
+                f.write(f"{function_name} (")
+                f.write(f"{function.params});\n\n")
+
+            f.write(f"#endif // {guard_statement}\n")
+
+        logger.info(f"Library file written to {library_file}")
+
+    #
+    # Generate the BaseCrypt library file
+    #
+
 def process_header_file(header_file: str, output_file: str) -> dict:
     """
     Processes the header file and writes the protocol to the output file.
     """
+
     with open(header_file, 'r') as file:
 
-        major, minor, revision = extract_version(file)
-        functions = get_functions(file)
-        typedefs = create_typedefs(functions)
-        protocol_structure = create_protocol_structure(functions)
+        file_name = os.path.basename(header_file)
 
-        guard_statement = f"{convert_to_underscores(os.path.basename(output_file).split('.')[0])}_"
-
-        with open(output_file, 'w') as f:
-            f.write("//")
-            f.write("// This file was generated by CreateProtocol.py\n")
-            f.write("// Timestamp: {:%Y-%b-%d %H:%M:%S}\n".format(datetime.datetime.now()))
-            f.write(f"#ifndef {guard_statement}\n")
-            f.write(f"#define {guard_statement}\n\n")
-            f.write("#include <Uefi.h>\n\n")
-            f.write("#include <SharedCryptoDefs.h> // TODO should this be Protocol or Library?\n\n")
-            f.write(create_divider())
-            f.write(f"// Protocol version: {major}.{minor}.{revision}\n")
-            f.write(create_divider())
-            # f.write(version_region)
-            # f.write(create_divider())
-            f.write("\n")
-            # TODO
-            # f.write(rsa_key_tag_region)
-            f.write(create_divider())
-            f.write("// Typedef Declarations\n")
-            f.write(create_divider())
-            f.write(typedefs)
-
-            f.write(create_divider())
-            f.write("// Protocol\n")
-            f.write(create_divider())
-            f.write(protocol_structure)
-
-            f.write(f"#endif // {guard_statement}\n")
-
-        print(f"Protocol written to {output_file}")
+        functions = extract_function_details(file)
+        function_info = FunctionInfo(functions, create_typedefs(functions), extract_version(file))
+        generate_protocol(file_name, function_info, output_file)
+        generate_library(file_name, function_info)
 
 
 if __name__ == "__main__":
@@ -402,4 +532,4 @@ if __name__ == "__main__":
 
     if args.debug:
         DEBUG = True
-    process_header_file(args.header_file, args.output)
+    process_header_file(args.header_file, args.output_protocol)
