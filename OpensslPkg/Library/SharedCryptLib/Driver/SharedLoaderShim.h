@@ -2,7 +2,7 @@
 #define SHAREDLOADER_SHIM_H
 
 #include <Uefi.h>
-#include <SharedCrtLibSupport.h>
+#include <Library/SharedCrtLibSupport.h>
 
 //
 // These represent the dependencies that the driver needs to function

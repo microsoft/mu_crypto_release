@@ -3,7 +3,7 @@
 
 #include <Uefi.h>
 #include <CrtLibSupport.h>
-#include <SharedCryptoDefs.h>
+#include <Library/SharedCryptoLibrary.h>
 
 /**
   Check input P7Data is a wrapped ContentInfo structure or not. If not construct

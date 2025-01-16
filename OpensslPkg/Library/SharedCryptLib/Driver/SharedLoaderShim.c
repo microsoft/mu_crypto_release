@@ -14,7 +14,7 @@
 #include "SharedLoaderShim.h"
 #include "MemoryProtections.h"
 
-#include <SharedCryptoProtocol.h>
+#include <Protocol/SharedCryptoProtocol.h>
 
 #define EFI_SECTION_PE32  0x10
 
