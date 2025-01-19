@@ -25,6 +25,25 @@ openssl_lib_path = ""
 offset = 40
 
 class ReportCrypto(IUefiBuildPlugin):
+    """
+    ReportCrypto is a plugin class that generates a report about the crypto binaries built during the build process.
+    The report includes the next information:
+    - Submodules information
+    - Built binaries sizes
+    - Linked OpenSSL library for each binary
+    - OpenSSL library flags
+    Methods:
+    --------
+    do_post_build(thebuilder):
+        Generates a report file in the build directory containing information about the build process, 
+        submodules, built binaries, and linked OpenSSL configuration.
+    get_openssl_flags(file):
+        Extracts OpenSSL library flags from the given .inf file.
+    get_module_type_for_crypto_bin():
+        Retrieves the module type (DXE_DRIVER, PEIM, etc.) for each crypto binary from the .inf files in the CryptoBinPkg Driver path.
+    get_linked_lib(arch, module_type, lib):
+        Determines the linked library configuration for the specified architecture and module type from the CryptoBinPkg.dsc file.
+    """
 
     def do_post_build(self, thebuilder):
         ### Initiazlize variables ###
