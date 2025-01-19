@@ -11,17 +11,31 @@ from datetime import datetime
 from git import Repo
 import lzma
 
+# Dictionaries
 binary_to_type = {}
 arch_and_type_to_lib = {}
+
+CryptoBinPkg_Driver_path = ""
+cryptoBinPkg_dsc_path = ""
+report_File = ""
+openssl_lib_path = ""
 
 class ReportCrypto(IUefiBuildPlugin):
 
     def do_post_build(self, thebuilder):
+        ### Initiazlize variables ###
+
+        # get needed paths
+        openssl_lib_path = Path(thebuilder.edk2path.GetAbsolutePathOnThisSystemFromEdk2RelativePath("OpensslPkg")) / "Library" / "OpensslLib"
+        CryptoBinPkg_Driver_path = Path(thebuilder.ws) / "CryptoBinPkg" / "Driver"
+        cryptoBinPkg_dsc_path = Path(thebuilder.ws) / "CryptoBinPkg" / "CryptoBinPkg.dsc"
+        repo = Repo(thebuilder.ws)
 
         # Path to Build output
         build_path = Path(thebuilder.env.GetValue("BUILD_OUTPUT_BASE"))
         tool_chain = thebuilder.env.GetValue("TOOL_CHAIN_TAG")
         target = thebuilder.env.GetValue("TARGET")
+        # 
         # Create report file in the build directory
         report_file_name = f"Report_{thebuilder.flavor}_{target}_{tool_chain}.txt"
         report_File = Path(thebuilder.ws) / "Build" / report_file_name
@@ -37,12 +51,12 @@ class ReportCrypto(IUefiBuildPlugin):
         report.append(f"Tool Chain: {tool_chain}\n")
 
         # get each CryptoBin module type
-        self.get_module_type_for_crypto_bin(thebuilder)
+        self.get_module_type_for_crypto_bin()
 
         report.append("=============================================\n")
         # get submodules information
         report.append("<------Submodules------>\n")
-        repo = Repo(thebuilder.ws)
+
         for sub in repo.submodules:
             report.append("--------\n")
             report.append(f"Name: {sub.name}\n")
@@ -84,7 +98,7 @@ class ReportCrypto(IUefiBuildPlugin):
             for file in files:
                 # get module type for the binary
                 module_type = binary_to_type.get(file.name, "UEFI_APPLICATION") # Default to UEFI_APPLICATION if not found (e.g. test binary)
-                opensslib = self.get_linked_lib(thebuilder, arch, module_type, "OpensslLib")
+                opensslib = self.get_linked_lib(arch, module_type, "OpensslLib")
                 report.append(f"{file.name} - " + (40-len(file.name))* " " + f"OpensslLib: {opensslib}\n")
 
 
@@ -93,8 +107,7 @@ class ReportCrypto(IUefiBuildPlugin):
         report.append("<------Openssl configuration report------>\n")
 
         # get openssl library files 
-        openssl_lib = Path(thebuilder.edk2path.GetAbsolutePathOnThisSystemFromEdk2RelativePath("OpensslPkg")) / "Library" / "OpensslLib"
-        openssl_inf_files = list(openssl_lib.glob("OpensslLib*.inf"))
+        openssl_inf_files = list(openssl_lib_path.glob("OpensslLib*.inf"))
         openssl_inf_files.sort()
         for file in openssl_inf_files:
             # write openssl library files to report file
@@ -120,9 +133,8 @@ class ReportCrypto(IUefiBuildPlugin):
                     flags.append(line)
         return flags
 
-    def get_module_type_for_crypto_bin(self, thebuilder):
+    def get_module_type_for_crypto_bin(self):
 
-        CryptoBinPkg_Driver_path = Path(thebuilder.ws) / "CryptoBinPkg" / "Driver"
         inf_files = list(CryptoBinPkg_Driver_path.glob("*.inf"))
         for inf_file in inf_files:
             base_name = ""
@@ -137,9 +149,8 @@ class ReportCrypto(IUefiBuildPlugin):
                         binary_to_type[f"{base_name}.efi"] = module_type # start binaries sizes report
                         break
 
-    def get_linked_lib(self, thebuilder, arch, module_type, lib):
+    def get_linked_lib(self, arch, module_type, lib):
 
-        cryptoBinPkg_dsc_path = Path(thebuilder.ws) / "CryptoBinPkg" / "CryptoBinPkg.dsc"
         with cryptoBinPkg_dsc_path.open() as f:
             current_key = None
             # there are 3 possible lib configuarions for the crypto binaries: "[LibraryClasses] (default)", "LibraryClasses.common.{module_type}" and "[LibraryClasses.arch.module_type] (most specific)"
