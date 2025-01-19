@@ -15,12 +15,6 @@ import lzma
 binary_to_type = {}
 arch_and_type_to_lib = {}
 
-# paths
-CryptoBinPkg_Driver_path = ""
-cryptoBinPkg_dsc_path = ""
-report_File = ""
-openssl_lib_path = ""
-
 # defines
 offset = 40
 
@@ -74,7 +68,7 @@ class ReportCrypto(IUefiBuildPlugin):
         report.append(f"Tool Chain: {tool_chain}\n")
 
         # get each CryptoBin module type
-        self.get_module_type_for_crypto_bin()
+        self.get_module_type_for_crypto_bin(CryptoBinPkg_Driver_path)
 
         report.append("=============================================\n")
         # get submodules information
@@ -123,7 +117,7 @@ class ReportCrypto(IUefiBuildPlugin):
             for file in files:
                 # get module type for the binary
                 module_type = binary_to_type.get(file.name, "UEFI_APPLICATION") # Default to UEFI_APPLICATION if not found (e.g. test binary)
-                opensslib = self.get_linked_lib(arch, module_type, "OpensslLib")
+                opensslib = self.get_linked_lib(arch, module_type, "OpensslLib", cryptoBinPkg_dsc_path)
                 # log to file (try to use offset to align the data)
                 if offset < len(file.name):
                     report.append(f"{file.name} - " + f"OpensslLib: {opensslib}\n")
@@ -161,7 +155,7 @@ class ReportCrypto(IUefiBuildPlugin):
                     flags.append(line)
         return flags
 
-    def get_module_type_for_crypto_bin(self):
+    def get_module_type_for_crypto_bin(self, CryptoBinPkg_Driver_path):
 
         inf_files = list(CryptoBinPkg_Driver_path.glob("*.inf"))
         for inf_file in inf_files:
@@ -177,7 +171,7 @@ class ReportCrypto(IUefiBuildPlugin):
                         binary_to_type[f"{base_name}.efi"] = module_type # start binaries sizes report
                         break
 
-    def get_linked_lib(self, arch, module_type, lib):
+    def get_linked_lib(self, arch, module_type, lib, cryptoBinPkg_dsc_path):
 
         with cryptoBinPkg_dsc_path.open() as f:
             current_key = None
