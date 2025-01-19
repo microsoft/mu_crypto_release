@@ -63,7 +63,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
         parserObj.add_argument("-r", "--report", dest="report", action="store_true",
                                 default=False,
-                                help="produces a report regarding the built crpyto binaries.")
+                                help="produces a report regarding the built crypto binaries.")
 
     def RetrieveCommandLineOptions(self, args):
         self.arch = args.arch
