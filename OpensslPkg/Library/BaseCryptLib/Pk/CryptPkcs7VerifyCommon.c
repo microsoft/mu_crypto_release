@@ -529,7 +529,7 @@ Pkcs7GetCertificatesList (
   //
   // Decodes PKCS#7 SignedData
   //
-  Temp = NewP7Data;
+  Temp  = NewP7Data;
   Pkcs7 = d2i_PKCS7 (NULL, (const unsigned char **)&Temp, (int)NewP7Length);
   if ((Pkcs7 == NULL) || (!PKCS7_type_is_signed (Pkcs7))) {
     goto _Error;
