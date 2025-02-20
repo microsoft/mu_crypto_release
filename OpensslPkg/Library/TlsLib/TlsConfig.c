@@ -174,7 +174,7 @@ TlsSetVersion (
     return EFI_INVALID_PARAMETER;
   }
 
-  ProtoVersion = (MajorVer << 8) | MinorVer;
+  ProtoVersion = ((UINT16)MajorVer << 8) | MinorVer;
 
   //
   // Bound TLS method to the particular specified version.
