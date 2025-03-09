@@ -8,6 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from git import Repo
 import lzma
+from edk2toollib.uefi.edk2.parsers.dsc_parser import DscParser
 
 binary_to_type = {}
 arch_and_type_to_lib = {}
@@ -31,7 +32,6 @@ class ReportCrypto(IUefiBuildPlugin):
 
         openssl_lib_path = Path(thebuilder.edk2path.GetAbsolutePathOnThisSystemFromEdk2RelativePath("OpensslPkg", "Library", "OpensslLib"))
         CryptoBinPkg_Driver_path = Path(thebuilder.ws) / "CryptoBinPkg" / "Driver"
-        cryptoBinPkg_dsc_path = Path(thebuilder.ws) / "CryptoBinPkg" / "CryptoBinPkg.dsc"
         repo = Repo(thebuilder.ws)
 
         build_path = Path(thebuilder.env.GetValue("BUILD_OUTPUT_BASE"))
@@ -48,12 +48,9 @@ class ReportCrypto(IUefiBuildPlugin):
         report = [title, "Build Time: " + time]
 
         report.append(f"Tool Chain: {tool_chain}\n")
-
         self.get_module_type_for_crypto_bin(CryptoBinPkg_Driver_path)
-
         report.append("=============================================\n")
 
-        # get submodules information
         report.append("<------Submodules------>\n")
 
         for sub in repo.submodules:
@@ -90,7 +87,7 @@ class ReportCrypto(IUefiBuildPlugin):
             for file in files:
                 # get module type for the binary
                 module_type = binary_to_type.get(file.name, "UEFI_APPLICATION") # Default to UEFI_APPLICATION if not found (e.g. test binary)
-                opensslib = self.get_linked_lib(arch, module_type, "OpensslLib", cryptoBinPkg_dsc_path)
+                opensslib = self.get_linked_lib(arch, module_type, "OpensslLib", thebuilder)
 
                 if offset < len(file.name):
                     report.append(f"{file.name} - " + f"OpensslLib: {opensslib}\n")
@@ -141,34 +138,27 @@ class ReportCrypto(IUefiBuildPlugin):
                         binary_to_type[f"{base_name}.efi"] = module_type # start binaries sizes report
                         break
 
-    def get_linked_lib(self, arch, module_type, lib, cryptoBinPkg_dsc_path):
+    def get_linked_lib(self, arch, module_type, lib, thebuilder):
         """
-        Determines the linked library configuration for the specified architecture and module type from the CryptoBinPkg.dsc file.
+        Determines the linked library configuration for the specified architecture and module type from the active dsc file.
         """
-        with cryptoBinPkg_dsc_path.open() as f:
-            current_key = None
-            # there are 3 possible lib configuarions for the crypto binaries: "[LibraryClasses] (default)", "LibraryClasses.common.{module_type}" and "[LibraryClasses.arch.module_type] (most specific)"
-            default = ""
-            common_type = ""
-            arch_type = ""
-            for line in f:
-                if "[LibraryClasses]" in line:
-                    current_key = "Default"
-                elif "[LibraryClasses" in line:
-                    current_key = line
-                if f"{lib}|" in line:
-                    specific_lib = line.split("|")[1].strip()
-                    if current_key == "Default":
-                        default = specific_lib            
-                    else:
-                        if f"{arch}.{module_type}" in current_key:
-                            arch_type = specific_lib
-                        elif f"common.{module_type}" in current_key:
-                            common_type = specific_lib
+        ActiveDsc = thebuilder.edk2path.GetAbsolutePathOnThisSystemFromEdk2RelativePath(thebuilder.env.GetValue("ACTIVE_PLATFORM"))
+        dsc_parser = DscParser()
+        dsc_parser.SetEdk2Path(thebuilder.edk2path)
+        env_vars = thebuilder.env.GetAllBuildKeyValues()
+        dsc_parser.SetInputVars(env_vars).ParseFile(ActiveDsc)
+        print("ScopedLibraryDict: ", dsc_parser.ScopedLibraryDict)
 
-            if arch_type != "":
-                return arch_type
-            elif common_type != "":
-                return common_type
-            else:
-                return default
+        arch_scoped_config = f"{arch}.{module_type}.{lib}".lower() # most specific
+        moduleType_scoped_config = f"common.{module_type}.{lib}".lower()
+        common_scoped_config = f"common.{lib}".lower() # common for all module types
+
+        if arch_scoped_config in dsc_parser.ScopedLibraryDict:
+            print("here1")
+            return dsc_parser.ScopedLibraryDict[arch_scoped_config][0]
+        elif moduleType_scoped_config in dsc_parser.ScopedLibraryDict:
+            print("here2")
+            return dsc_parser.ScopedLibraryDict[moduleType_scoped_config][0]
+        elif common_scoped_config in dsc_parser.ScopedLibraryDict:
+            print("here3")
+            return dsc_parser.ScopedLibraryDict[common_scoped_config][0]
