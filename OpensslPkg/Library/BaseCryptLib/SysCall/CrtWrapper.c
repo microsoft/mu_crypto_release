@@ -484,7 +484,6 @@ fwrite (
   return 0;
 }
 
-
 #ifdef __GNUC__
 
 typedef
