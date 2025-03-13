@@ -326,20 +326,20 @@ i2d_PKCS7_bio (
   );
 
 int
-i2d_PKCS7_bio_stream (
-  BIO    *out,
-  PKCS7  *p7,
-  BIO    *in,
-  int    flags
-  );
+  i2d_PKCS7_bio_stream (
+                        BIO    *out,
+                        PKCS7  *p7,
+                        BIO    *in,
+                        int    flags
+                        );
 
 int
-PEM_write_bio_PKCS7_stream (
-  BIO    *out,
-  PKCS7  *p7,
-  BIO    *in,
-  int    flags
-  );
+  PEM_write_bio_PKCS7_stream (
+                              BIO    *out,
+                              PKCS7  *p7,
+                              BIO    *in,
+                              int    flags
+                              );
 
 DECLARE_ASN1_FUNCTIONS (PKCS7_SIGNER_INFO)
 DECLARE_ASN1_FUNCTIONS (PKCS7_RECIP_INFO)
@@ -542,9 +542,9 @@ PKCS7_get_octet_string (
   );
 
 ASN1_OCTET_STRING *
-PKCS7_digest_from_attributes (
-  STACK_OF (X509_ATTRIBUTE)  *sk
-  );
+  PKCS7_digest_from_attributes (
+                                STACK_OF (X509_ATTRIBUTE)  *sk
+                                );
 
 int
 PKCS7_add_signed_attribute (
@@ -575,36 +575,36 @@ PKCS7_get_signed_attribute (
   );
 
 int
-PKCS7_set_signed_attributes (
-  PKCS7_SIGNER_INFO          *p7si,
-  STACK_OF (X509_ATTRIBUTE)  *sk
-  );
+  PKCS7_set_signed_attributes (
+                               PKCS7_SIGNER_INFO          *p7si,
+                               STACK_OF (X509_ATTRIBUTE)  *sk
+                               );
 
 int
-PKCS7_set_attributes (
-  PKCS7_SIGNER_INFO          *p7si,
-  STACK_OF (X509_ATTRIBUTE)  *sk
-  );
+  PKCS7_set_attributes (
+                        PKCS7_SIGNER_INFO          *p7si,
+                        STACK_OF (X509_ATTRIBUTE)  *sk
+                        );
 
 PKCS7 *
-PKCS7_sign (
-  X509             *signcert,
-  EVP_PKEY         *pkey,
-  STACK_OF (X509)  *certs,
-  BIO              *data,
-  int              flags
-  );
+  PKCS7_sign (
+              X509             *signcert,
+              EVP_PKEY         *pkey,
+              STACK_OF (X509)  *certs,
+              BIO              *data,
+              int              flags
+              );
 
 PKCS7 *
-PKCS7_sign_ex (
-  X509             *signcert,
-  EVP_PKEY         *pkey,
-  STACK_OF (X509)  *certs,
-  BIO              *data,
-  int              flags,
-  OSSL_LIB_CTX     *libctx,
-  const char       *propq
-  );
+  PKCS7_sign_ex (
+                 X509             *signcert,
+                 EVP_PKEY         *pkey,
+                 STACK_OF (X509)  *certs,
+                 BIO              *data,
+                 int              flags,
+                 OSSL_LIB_CTX     *libctx,
+                 const char       *propq
+                 );
 
 PKCS7_SIGNER_INFO *
 PKCS7_sign_add_signer (
@@ -623,14 +623,14 @@ PKCS7_final (
   );
 
 int
-PKCS7_verify (
-  PKCS7            *p7,
-  STACK_OF (X509)  *certs,
-  X509_STORE       *store,
-  BIO              *indata,
-  BIO              *out,
-  int              flags
-  );
+  PKCS7_verify (
+                PKCS7            *p7,
+                STACK_OF (X509)  *certs,
+                X509_STORE       *store,
+                BIO              *indata,
+                BIO              *out,
+                int              flags
+                );
 
 STACK_OF (X509) *PKCS7_get0_signers (
                    PKCS7 *p7,
@@ -638,22 +638,22 @@ STACK_OF (X509) *PKCS7_get0_signers (
                    int flags
                    );
 PKCS7 *
-PKCS7_encrypt (
-  STACK_OF (X509)   *certs,
-  BIO               *in,
-  const EVP_CIPHER  *cipher,
-  int               flags
-  );
+  PKCS7_encrypt (
+                 STACK_OF (X509)   *certs,
+                 BIO               *in,
+                 const EVP_CIPHER  *cipher,
+                 int               flags
+                 );
 
 PKCS7 *
-PKCS7_encrypt_ex (
-  STACK_OF (X509)   *certs,
-  BIO               *in,
-  const EVP_CIPHER  *cipher,
-  int               flags,
-  OSSL_LIB_CTX      *libctx,
-  const char        *propq
-  );
+  PKCS7_encrypt_ex (
+                    STACK_OF (X509)   *certs,
+                    BIO               *in,
+                    const EVP_CIPHER  *cipher,
+                    int               flags,
+                    OSSL_LIB_CTX      *libctx,
+                    const char        *propq
+                    );
 
 int
 PKCS7_decrypt (
@@ -665,18 +665,18 @@ PKCS7_decrypt (
   );
 
 int
-PKCS7_add_attrib_smimecap (
-  PKCS7_SIGNER_INFO      *si,
-  STACK_OF (X509_ALGOR)  *cap
-  );
+  PKCS7_add_attrib_smimecap (
+                             PKCS7_SIGNER_INFO      *si,
+                             STACK_OF (X509_ALGOR)  *cap
+                             );
 
 STACK_OF (X509_ALGOR) *PKCS7_get_smimecap (PKCS7_SIGNER_INFO *si);
 int
-PKCS7_simple_smimecap (
-  STACK_OF (X509_ALGOR)  *sk,
-  int                    nid,
-  int                    arg
-  );
+  PKCS7_simple_smimecap (
+                         STACK_OF (X509_ALGOR)  *sk,
+                         int                    nid,
+                         int                    arg
+                         );
 
 int
 PKCS7_add_attrib_content_type (

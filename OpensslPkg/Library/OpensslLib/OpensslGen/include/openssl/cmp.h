@@ -391,8 +391,12 @@ OSSL_CMP_ITAV_get0_value (
   const OSSL_CMP_ITAV  *itav
   );
 
-int  OSSL_CMP_ITAV_push0_stack_item (STACK_OF (OSSL_CMP_ITAV) **itav_sk_p,
-                                     OSSL_CMP_ITAV *itav);
+int
+  OSSL_CMP_ITAV_push0_stack_item (
+                                  STACK_OF (OSSL_CMP_ITAV)  **itav_sk_p,
+                                  OSSL_CMP_ITAV             *itav
+                                  );
+
 void
 OSSL_CMP_ITAV_free (
   OSSL_CMP_ITAV  *itav
@@ -563,7 +567,12 @@ OSSL_CMP_CTX_get0_trustedStore (
   const OSSL_CMP_CTX  *ctx
   );
 
-int  OSSL_CMP_CTX_set1_untrusted (OSSL_CMP_CTX *ctx, STACK_OF (X509) *certs);
+int
+  OSSL_CMP_CTX_set1_untrusted (
+                               OSSL_CMP_CTX     *ctx,
+                               STACK_OF (X509)  *certs
+                               );
+
 STACK_OF (X509) *OSSL_CMP_CTX_get0_untrusted (const OSSL_CMP_CTX *ctx);
 /* client authentication: */
 int
@@ -572,8 +581,13 @@ OSSL_CMP_CTX_set1_cert (
   X509          *cert
   );
 
-int  OSSL_CMP_CTX_build_cert_chain (OSSL_CMP_CTX *ctx, X509_STORE *own_trusted,
-                                    STACK_OF (X509) *candidates);
+int
+  OSSL_CMP_CTX_build_cert_chain (
+                                 OSSL_CMP_CTX     *ctx,
+                                 X509_STORE       *own_trusted,
+                                 STACK_OF (X509)  *candidates
+                                 );
+
 int
 OSSL_CMP_CTX_set1_pkey (
   OSSL_CMP_CTX  *ctx,
@@ -612,8 +626,12 @@ OSSL_CMP_CTX_reset_geninfo_ITAVs (
   OSSL_CMP_CTX  *ctx
   );
 
-int  OSSL_CMP_CTX_set1_extraCertsOut (OSSL_CMP_CTX *ctx,
-                                      STACK_OF (X509) *extraCertsOut);
+int
+  OSSL_CMP_CTX_set1_extraCertsOut (
+                                   OSSL_CMP_CTX     *ctx,
+                                   STACK_OF (X509)  *extraCertsOut
+                                   );
+
 /* certificate template: */
 int
 OSSL_CMP_CTX_set0_newPkey (
@@ -903,10 +921,10 @@ typedef OSSL_CMP_PKISI *(*OSSL_CMP_SRV_rr_cb_t)(
   const ASN1_INTEGER  *serial
   );
 typedef int (*OSSL_CMP_SRV_genm_cb_t)(
-  OSSL_CMP_SRV_CTX                *srv_ctx,
-  const OSSL_CMP_MSG              *req,
+  OSSL_CMP_SRV_CTX          *srv_ctx,
+  const OSSL_CMP_MSG        *req,
   const STACK_OF (OSSL_CMP_ITAV)  *in,
-  STACK_OF (OSSL_CMP_ITAV)        **out
+  STACK_OF (OSSL_CMP_ITAV)  **out
   );
 typedef void (*OSSL_CMP_SRV_error_cb_t)(
   OSSL_CMP_SRV_CTX            *srv_ctx,

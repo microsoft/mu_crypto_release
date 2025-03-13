@@ -249,20 +249,20 @@ BIO_new_CMS (
   );
 
 int
-i2d_CMS_bio_stream (
-  BIO              *out,
-  CMS_ContentInfo  *cms,
-  BIO              *in,
-  int              flags
-  );
+  i2d_CMS_bio_stream (
+                      BIO              *out,
+                      CMS_ContentInfo  *cms,
+                      BIO              *in,
+                      int              flags
+                      );
 
 int
-PEM_write_bio_CMS_stream (
-  BIO              *out,
-  CMS_ContentInfo  *cms,
-  BIO              *in,
-  int              flags
-  );
+  PEM_write_bio_CMS_stream (
+                            BIO              *out,
+                            CMS_ContentInfo  *cms,
+                            BIO              *in,
+                            int              flags
+                            );
 
 CMS_ContentInfo *
 SMIME_read_CMS (
@@ -294,17 +294,34 @@ CMS_final (
   unsigned int     flags
   );
 
-CMS_ContentInfo  *CMS_sign (X509 *signcert, EVP_PKEY *pkey,
-                            STACK_OF (X509) *certs, BIO *data,
-                            unsigned int flags);
-CMS_ContentInfo  *CMS_sign_ex (X509 *signcert, EVP_PKEY *pkey,
-                               STACK_OF (X509) *certs, BIO *data,
-                               unsigned int flags, OSSL_LIB_CTX *ctx,
-                               const char *propq);
+CMS_ContentInfo  *
+  CMS_sign (
+            X509             *signcert,
+            EVP_PKEY         *pkey,
+            STACK_OF (X509)  *certs,
+            BIO              *data,
+            unsigned int     flags
+            );
 
-CMS_ContentInfo  *CMS_sign_receipt (CMS_SignerInfo *si,
-                                    X509 *signcert, EVP_PKEY *pkey,
-                                    STACK_OF (X509) *certs, unsigned int flags);
+CMS_ContentInfo  *
+  CMS_sign_ex (
+               X509             *signcert,
+               EVP_PKEY         *pkey,
+               STACK_OF (X509)  *certs,
+               BIO              *data,
+               unsigned int     flags,
+               OSSL_LIB_CTX     *ctx,
+               const char       *propq
+               );
+
+CMS_ContentInfo  *
+  CMS_sign_receipt (
+                    CMS_SignerInfo   *si,
+                    X509             *signcert,
+                    EVP_PKEY         *pkey,
+                    STACK_OF (X509)  *certs,
+                    unsigned int     flags
+                    );
 
 int
 CMS_data (
@@ -314,18 +331,18 @@ CMS_data (
   );
 
 CMS_ContentInfo *
-CMS_data_create (
-  BIO           *in,
-  unsigned int  flags
-  );
+  CMS_data_create (
+                   BIO           *in,
+                   unsigned int  flags
+                   );
 
 CMS_ContentInfo *
-CMS_data_create_ex (
-  BIO           *in,
-  unsigned int  flags,
-  OSSL_LIB_CTX  *ctx,
-  const char    *propq
-  );
+  CMS_data_create_ex (
+                      BIO           *in,
+                      unsigned int  flags,
+                      OSSL_LIB_CTX  *ctx,
+                      const char    *propq
+                      );
 
 int
 CMS_digest_verify (
@@ -336,20 +353,20 @@ CMS_digest_verify (
   );
 
 CMS_ContentInfo *
-CMS_digest_create (
-  BIO           *in,
-  const EVP_MD  *md,
-  unsigned int  flags
-  );
+  CMS_digest_create (
+                     BIO           *in,
+                     const EVP_MD  *md,
+                     unsigned int  flags
+                     );
 
 CMS_ContentInfo *
-CMS_digest_create_ex (
-  BIO           *in,
-  const EVP_MD  *md,
-  unsigned int  flags,
-  OSSL_LIB_CTX  *ctx,
-  const char    *propq
-  );
+  CMS_digest_create_ex (
+                        BIO           *in,
+                        const EVP_MD  *md,
+                        unsigned int  flags,
+                        OSSL_LIB_CTX  *ctx,
+                        const char    *propq
+                        );
 
 int
 CMS_EncryptedData_decrypt (
@@ -362,24 +379,24 @@ CMS_EncryptedData_decrypt (
   );
 
 CMS_ContentInfo *
-CMS_EncryptedData_encrypt (
-  BIO                  *in,
-  const EVP_CIPHER     *cipher,
-  const unsigned char  *key,
-  size_t               keylen,
-  unsigned int         flags
-  );
+  CMS_EncryptedData_encrypt (
+                             BIO                  *in,
+                             const EVP_CIPHER     *cipher,
+                             const unsigned char  *key,
+                             size_t               keylen,
+                             unsigned int         flags
+                             );
 
 CMS_ContentInfo *
-CMS_EncryptedData_encrypt_ex (
-  BIO                  *in,
-  const EVP_CIPHER     *cipher,
-  const unsigned char  *key,
-  size_t               keylen,
-  unsigned int         flags,
-  OSSL_LIB_CTX         *ctx,
-  const char           *propq
-  );
+  CMS_EncryptedData_encrypt_ex (
+                                BIO                  *in,
+                                const EVP_CIPHER     *cipher,
+                                const unsigned char  *key,
+                                size_t               keylen,
+                                unsigned int         flags,
+                                OSSL_LIB_CTX         *ctx,
+                                const char           *propq
+                                );
 
 int
 CMS_EncryptedData_set1_key (
@@ -389,20 +406,44 @@ CMS_EncryptedData_set1_key (
   size_t               keylen
   );
 
-int  CMS_verify (CMS_ContentInfo *cms, STACK_OF (X509) *certs,
-                 X509_STORE *store, BIO *dcont, BIO *out, unsigned int flags);
+int
+  CMS_verify (
+              CMS_ContentInfo  *cms,
+              STACK_OF (X509)  *certs,
+              X509_STORE       *store,
+              BIO              *dcont,
+              BIO              *out,
+              unsigned int     flags
+              );
 
-int  CMS_verify_receipt (CMS_ContentInfo *rcms, CMS_ContentInfo *ocms,
-                         STACK_OF (X509) *certs,
-                         X509_STORE *store, unsigned int flags);
+int
+  CMS_verify_receipt (
+                      CMS_ContentInfo  *rcms,
+                      CMS_ContentInfo  *ocms,
+                      STACK_OF (X509)  *certs,
+                      X509_STORE       *store,
+                      unsigned int     flags
+                      );
 
 STACK_OF (X509) *CMS_get0_signers (CMS_ContentInfo *cms);
 
-CMS_ContentInfo  *CMS_encrypt (STACK_OF (X509) *certs, BIO *in,
-                               const EVP_CIPHER *cipher, unsigned int flags);
-CMS_ContentInfo  *CMS_encrypt_ex (STACK_OF (X509) *certs, BIO *in,
-                                  const EVP_CIPHER *cipher, unsigned int flags,
-                                  OSSL_LIB_CTX *ctx, const char *propq);
+CMS_ContentInfo  *
+  CMS_encrypt (
+               STACK_OF (X509)   *certs,
+               BIO               *in,
+               const EVP_CIPHER  *cipher,
+               unsigned int      flags
+               );
+
+CMS_ContentInfo  *
+  CMS_encrypt_ex (
+                  STACK_OF (X509)   *certs,
+                  BIO               *in,
+                  const EVP_CIPHER  *cipher,
+                  unsigned int      flags,
+                  OSSL_LIB_CTX      *ctx,
+                  const char        *propq
+                  );
 
 int
 CMS_decrypt (
@@ -600,11 +641,11 @@ CMS_uncompress (
   );
 
 CMS_ContentInfo *
-CMS_compress (
-  BIO           *in,
-  int           comp_nid,
-  unsigned int  flags
-  );
+  CMS_compress (
+                BIO           *in,
+                int           comp_nid,
+                unsigned int  flags
+                );
 
 int
 CMS_set1_eContentType (
@@ -701,8 +742,13 @@ CMS_SignerInfo_cert_cmp (
   X509            *cert
   );
 
-int  CMS_set1_signers_certs (CMS_ContentInfo *cms, STACK_OF (X509) *certs,
-                             unsigned int flags);
+int
+  CMS_set1_signers_certs (
+                          CMS_ContentInfo  *cms,
+                          STACK_OF (X509)  *certs,
+                          unsigned int     flags
+                          );
+
 void
 CMS_SignerInfo_get0_algs (
   CMS_SignerInfo  *si,
@@ -733,10 +779,23 @@ CMS_SignerInfo_verify_content (
   BIO             *chain
   );
 
-int  CMS_add_smimecap (CMS_SignerInfo *si, STACK_OF (X509_ALGOR) *algs);
-int  CMS_add_simple_smimecap (STACK_OF (X509_ALGOR) **algs,
-                              int algnid, int keysize);
-int  CMS_add_standard_smimecap (STACK_OF (X509_ALGOR) **smcap);
+int
+  CMS_add_smimecap (
+                    CMS_SignerInfo         *si,
+                    STACK_OF (X509_ALGOR)  *algs
+                    );
+
+int
+  CMS_add_simple_smimecap (
+                           STACK_OF (X509_ALGOR)  **algs,
+                           int                    algnid,
+                           int                    keysize
+                           );
+
+int
+  CMS_add_standard_smimecap (
+                             STACK_OF (X509_ALGOR)  **smcap
+                             );
 
 int
 CMS_signed_get_attr_count (
@@ -888,15 +947,24 @@ CMS_get1_ReceiptRequest (
   CMS_ReceiptRequest  **prr
   );
 
-CMS_ReceiptRequest  *CMS_ReceiptRequest_create0 (
-                                                 unsigned char *id, int idlen, int allorfirst,
-                                                 STACK_OF (GENERAL_NAMES) *receiptList,
-                                                 STACK_OF (GENERAL_NAMES) *receiptsTo);
-CMS_ReceiptRequest  *CMS_ReceiptRequest_create0_ex (
-                                                    unsigned char *id, int idlen, int allorfirst,
-                                                    STACK_OF (GENERAL_NAMES) *receiptList,
-                                                    STACK_OF (GENERAL_NAMES) *receiptsTo,
-                                                    OSSL_LIB_CTX *ctx);
+CMS_ReceiptRequest  *
+  CMS_ReceiptRequest_create0 (
+                              unsigned char             *id,
+                              int                       idlen,
+                              int                       allorfirst,
+                              STACK_OF (GENERAL_NAMES)  *receiptList,
+                              STACK_OF (GENERAL_NAMES)  *receiptsTo
+                              );
+
+CMS_ReceiptRequest  *
+  CMS_ReceiptRequest_create0_ex (
+                                 unsigned char             *id,
+                                 int                       idlen,
+                                 int                       allorfirst,
+                                 STACK_OF (GENERAL_NAMES)  *receiptList,
+                                 STACK_OF (GENERAL_NAMES)  *receiptsTo,
+                                 OSSL_LIB_CTX              *ctx
+                                 );
 
 int
 CMS_add1_ReceiptRequest (
@@ -904,11 +972,15 @@ CMS_add1_ReceiptRequest (
   CMS_ReceiptRequest  *rr
   );
 
-void  CMS_ReceiptRequest_get0_values (CMS_ReceiptRequest *rr,
-                                      ASN1_STRING **pcid,
-                                      int *pallorfirst,
-                                      STACK_OF (GENERAL_NAMES) **plist,
-                                      STACK_OF (GENERAL_NAMES) **prto);
+void
+  CMS_ReceiptRequest_get0_values (
+                                  CMS_ReceiptRequest        *rr,
+                                  ASN1_STRING               **pcid,
+                                  int                       *pallorfirst,
+                                  STACK_OF (GENERAL_NAMES)  **plist,
+                                  STACK_OF (GENERAL_NAMES)  **prto
+                                  );
+
 int
 CMS_RecipientInfo_kari_get0_alg (
   CMS_RecipientInfo  *ri,
