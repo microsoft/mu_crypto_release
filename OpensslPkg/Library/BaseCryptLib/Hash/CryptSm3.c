@@ -55,7 +55,7 @@ Sm3Init (
   //
   // Openssl SM3 Context Initialization
   //
-  ossl_sm3_init  ((SM3_CTX *)Sm3Context);
+  ossl_sm3_init ((SM3_CTX *)Sm3Context);
   return TRUE;
 }
 

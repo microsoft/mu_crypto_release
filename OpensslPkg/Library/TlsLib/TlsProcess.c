@@ -81,7 +81,7 @@ TlsDoHandshake (
   TLS_CONNECTION  *TlsConn;
   UINTN           PendingBufferSize;
   INTN            Ret;
-  
+
   TlsConn           = (TLS_CONNECTION *)Tls;
   PendingBufferSize = 0;
   Ret               = 1;

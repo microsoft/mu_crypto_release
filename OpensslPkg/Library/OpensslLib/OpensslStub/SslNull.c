@@ -82,7 +82,7 @@ SSL_CTX_new (
 
 uint64_t
 SSL_CTX_set_options (
-  SSL_CTX        *ctx,
+  SSL_CTX   *ctx,
   uint64_t  op
   )
 {
