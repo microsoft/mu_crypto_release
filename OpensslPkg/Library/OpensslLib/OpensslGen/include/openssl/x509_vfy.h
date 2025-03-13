@@ -603,24 +603,24 @@ X509_LOOKUP_ctrl_ex((x), X509_L_ADD_STORE, (name), 0, NULL,           \
                                 | X509_V_FLAG_INHIBIT_MAP)
 
 int
-X509_OBJECT_idx_by_subject (
-  STACK_OF (X509_OBJECT)  *h,
-  X509_LOOKUP_TYPE        type,
-  const X509_NAME         *name
-  );
+  X509_OBJECT_idx_by_subject (
+                              STACK_OF (X509_OBJECT)  *h,
+                              X509_LOOKUP_TYPE        type,
+                              const X509_NAME         *name
+                              );
 
 X509_OBJECT *
-X509_OBJECT_retrieve_by_subject (
-  STACK_OF (X509_OBJECT)  *h,
-  X509_LOOKUP_TYPE        type,
-  const X509_NAME         *name
-  );
+  X509_OBJECT_retrieve_by_subject (
+                                   STACK_OF (X509_OBJECT)  *h,
+                                   X509_LOOKUP_TYPE        type,
+                                   const X509_NAME         *name
+                                   );
 
 X509_OBJECT *
-X509_OBJECT_retrieve_match (
-  STACK_OF (X509_OBJECT)  *h,
-  X509_OBJECT             *x
-  );
+  X509_OBJECT_retrieve_match (
+                              STACK_OF (X509_OBJECT)  *h,
+                              X509_OBJECT             *x
+                              );
 
 int
 X509_OBJECT_up_ref_count (
@@ -911,18 +911,18 @@ X509_STORE_CTX_free (
   );
 
 int
-X509_STORE_CTX_init (
-  X509_STORE_CTX   *ctx,
-  X509_STORE       *trust_store,
-  X509             *target,
-  STACK_OF (X509)  *untrusted
-  );
+  X509_STORE_CTX_init (
+                       X509_STORE_CTX   *ctx,
+                       X509_STORE       *trust_store,
+                       X509             *target,
+                       STACK_OF (X509)  *untrusted
+                       );
 
 void
-X509_STORE_CTX_set0_trusted_stack (
-  X509_STORE_CTX   *ctx,
-  STACK_OF (X509)  *sk
-  );
+  X509_STORE_CTX_set0_trusted_stack (
+                                     X509_STORE_CTX   *ctx,
+                                     STACK_OF (X509)  *sk
+                                     );
 
 void
 X509_STORE_CTX_cleanup (
@@ -941,10 +941,10 @@ X509_STORE_CTX_get0_cert (
 
 STACK_OF (X509)* X509_STORE_CTX_get0_untrusted (const X509_STORE_CTX *ctx);
 void
-X509_STORE_CTX_set0_untrusted (
-  X509_STORE_CTX   *ctx,
-  STACK_OF (X509)  *sk
-  );
+  X509_STORE_CTX_set0_untrusted (
+                                 X509_STORE_CTX   *ctx,
+                                 STACK_OF (X509)  *sk
+                                 );
 
 void
 X509_STORE_CTX_set_verify_cb (
@@ -1501,16 +1501,16 @@ X509_STORE_CTX_set_cert (
   );
 
 void
-X509_STORE_CTX_set0_verified_chain (
-  X509_STORE_CTX   *c,
-  STACK_OF (X509)  *sk
-  );
+  X509_STORE_CTX_set0_verified_chain (
+                                      X509_STORE_CTX   *c,
+                                      STACK_OF (X509)  *sk
+                                      );
 
 void
-X509_STORE_CTX_set0_crls (
-  X509_STORE_CTX       *ctx,
-  STACK_OF (X509_CRL)  *sk
-  );
+  X509_STORE_CTX_set0_crls (
+                            X509_STORE_CTX       *ctx,
+                            STACK_OF (X509_CRL)  *sk
+                            );
 
 int
 X509_STORE_CTX_set_purpose (
@@ -1678,10 +1678,10 @@ X509_VERIFY_PARAM_add0_policy (
   );
 
 int
-X509_VERIFY_PARAM_set1_policies (
-  X509_VERIFY_PARAM       *param,
-  STACK_OF (ASN1_OBJECT)  *policies
-  );
+  X509_VERIFY_PARAM_set1_policies (
+                                   X509_VERIFY_PARAM       *param,
+                                   STACK_OF (ASN1_OBJECT)  *policies
+                                   );
 
 int
 X509_VERIFY_PARAM_set_inh_flags (
@@ -1820,13 +1820,13 @@ X509_VERIFY_PARAM_table_cleanup (
 #define X509_PCY_TREE_EXPLICIT  4 /* Explicit policy required */
 
 int
-X509_policy_check (
-  X509_POLICY_TREE        **ptree,
-  int                     *pexplicit_policy,
-  STACK_OF (X509)         *certs,
-  STACK_OF (ASN1_OBJECT)  *policy_oids,
-  unsigned int            flags
-  );
+  X509_policy_check (
+                     X509_POLICY_TREE        **ptree,
+                     int                     *pexplicit_policy,
+                     STACK_OF (X509)         *certs,
+                     STACK_OF (ASN1_OBJECT)  *policy_oids,
+                     unsigned int            flags
+                     );
 
 void
 X509_policy_tree_free (

@@ -328,12 +328,12 @@ typedef void (*custom_ext_free_cb)(
   );
 
 typedef int (*custom_ext_parse_cb)(
-  SSL                  *s,
-  unsigned int         ext_type,
+  SSL           *s,
+  unsigned int  ext_type,
   const unsigned char  *in,
-  size_t               inlen,
-  int                  *al,
-  void                 *parse_arg
+  size_t        inlen,
+  int           *al,
+  void          *parse_arg
   );
 
 typedef int (*SSL_custom_ext_add_cb_ex)(
@@ -357,15 +357,15 @@ typedef void (*SSL_custom_ext_free_cb_ex)(
   );
 
 typedef int (*SSL_custom_ext_parse_cb_ex)(
-  SSL                  *s,
-  unsigned int         ext_type,
-  unsigned int         context,
+  SSL           *s,
+  unsigned int  ext_type,
+  unsigned int  context,
   const unsigned char  *in,
-  size_t               inlen,
-  X509                 *x,
-  size_t               chainidx,
-  int                  *al,
-  void                 *parse_arg
+  size_t        inlen,
+  X509          *x,
+  size_t        chainidx,
+  int           *al,
+  void          *parse_arg
   );
 
 /* Typedef for verification callback */
@@ -864,14 +864,14 @@ int (*SSL_CTX_sess_get_new_cb (SSL_CTX *ctx))(
         SSL_SESSION *sess
         );
 void
-SSL_CTX_sess_set_remove_cb (
-  SSL_CTX  *ctx,
-  void (   *remove_session_cb )(
+  SSL_CTX_sess_set_remove_cb (
+                              SSL_CTX  *ctx,
+                              void (*remove_session_cb)(
         struct ssl_ctx_st
-                     *ctx,
+        *ctx,
         SSL_SESSION  *sess
         )
-  );
+                              );
 
 void (*SSL_CTX_sess_get_remove_cb (SSL_CTX *ctx))(
          struct ssl_ctx_st *ctx,
@@ -897,10 +897,10 @@ SSL_SESSION *(*SSL_CTX_sess_get_get_cb (SSL_CTX *ctx))(
   int *copy
   );
 void
-SSL_CTX_set_info_callback (
-  SSL_CTX *ctx,
-  void ( *cb )(const SSL *ssl, int type, int val)
-  );
+  SSL_CTX_set_info_callback (
+                             SSL_CTX *ctx,
+                             void (*cb)(const SSL *ssl, int type, int val)
+                             );
 
 void (*SSL_CTX_get_info_callback (SSL_CTX *ctx))(
          const SSL *ssl,
@@ -992,12 +992,12 @@ SSL_CTX_set_next_protos_advertised_cb (
 #define SSL_CTX_set_npn_advertised_cb  SSL_CTX_set_next_protos_advertised_cb
 
 typedef int (*SSL_CTX_npn_select_cb_func)(
-  SSL                  *s,
-  unsigned char        **out,
-  unsigned char        *outlen,
+  SSL            *s,
+  unsigned char  **out,
+  unsigned char  *outlen,
   const unsigned char  *in,
-  unsigned int         inlen,
-  void                 *arg
+  unsigned int   inlen,
+  void           *arg
   );
 void
 SSL_CTX_set_next_proto_select_cb (
@@ -2356,13 +2356,13 @@ SSL_use_certificate_ASN1 (
   );
 
 __owur int
-SSL_use_cert_and_key (
-  SSL              *ssl,
-  X509             *x509,
-  EVP_PKEY         *privatekey,
-  STACK_OF (X509)  *chain,
-  int              override
-  );
+  SSL_use_cert_and_key (
+                        SSL              *ssl,
+                        X509             *x509,
+                        EVP_PKEY         *privatekey,
+                        STACK_OF (X509)  *chain,
+                        int              override
+                        );
 
 /* serverinfo file format versions */
 #define SSL_SERVERINFOV1  1
@@ -2453,14 +2453,14 @@ SSL_use_certificate_chain_file (
   );
 
 __owur
-STACK_OF (
-  X509_NAME
-  ) *SSL_load_client_CA_file (const char *file);
+  STACK_OF (
+            X509_NAME
+            ) *SSL_load_client_CA_file (const char *file);
 
 __owur
-STACK_OF (
-  X509_NAME
-  )
+  STACK_OF (
+            X509_NAME
+            )
 *SSL_load_client_CA_file_ex (
    const char *file,
    OSSL_LIB_CTX *libctx,
@@ -2468,22 +2468,22 @@ STACK_OF (
    );
 
 __owur int
-SSL_add_file_cert_subjects_to_stack (
-  STACK_OF (X509_NAME)  *stackCAs,
-  const char            *file
-  );
+  SSL_add_file_cert_subjects_to_stack (
+                                       STACK_OF (X509_NAME)  *stackCAs,
+                                       const char            *file
+                                       );
 
 int
-SSL_add_dir_cert_subjects_to_stack (
-  STACK_OF (X509_NAME)  *stackCAs,
-  const char            *dir
-  );
+  SSL_add_dir_cert_subjects_to_stack (
+                                      STACK_OF (X509_NAME)  *stackCAs,
+                                      const char            *dir
+                                      );
 
 int
-SSL_add_store_cert_subjects_to_stack (
-  STACK_OF (X509_NAME)  *stackCAs,
-  const char            *uri
-  );
+  SSL_add_store_cert_subjects_to_stack (
+                                        STACK_OF (X509_NAME)  *stackCAs,
+                                        const char            *uri
+                                        );
 
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0
 #define SSL_load_error_strings() \
@@ -2698,7 +2698,7 @@ SSL_SESSION_free (
 __owur int
 i2d_SSL_SESSION (
   const SSL_SESSION  *in,
-  unsigned char      **pp
+  unsigned char  **pp
   );
 
 __owur int
@@ -2763,9 +2763,9 @@ SSL_get1_peer_certificate (
 #endif
 
 __owur
-STACK_OF (
-  X509
-  ) *SSL_get_peer_cert_chain (const SSL *s);
+  STACK_OF (
+            X509
+            ) *SSL_get_peer_cert_chain (const SSL *s);
 
 __owur int
 SSL_CTX_get_verify_mode (
@@ -2854,13 +2854,13 @@ SSL_CTX_use_certificate_ASN1 (
   );
 
 __owur int
-SSL_CTX_use_cert_and_key (
-  SSL_CTX          *ctx,
-  X509             *x509,
-  EVP_PKEY         *privatekey,
-  STACK_OF (X509)  *chain,
-  int              override
-  );
+  SSL_CTX_use_cert_and_key (
+                            SSL_CTX          *ctx,
+                            X509             *x509,
+                            EVP_PKEY         *privatekey,
+                            STACK_OF (X509)  *chain,
+                            int              override
+                            );
 
 void
 SSL_CTX_set_default_passwd_cb (
@@ -3634,24 +3634,24 @@ DTLS_get_data_mtu (
   );
 
 __owur
-STACK_OF (
-  SSL_CIPHER
-  ) *SSL_get_ciphers (const SSL *s);
+  STACK_OF (
+            SSL_CIPHER
+            ) *SSL_get_ciphers (const SSL *s);
 
 __owur
-STACK_OF (
-  SSL_CIPHER
-  ) *SSL_CTX_get_ciphers (const SSL_CTX *ctx);
+  STACK_OF (
+            SSL_CIPHER
+            ) *SSL_CTX_get_ciphers (const SSL_CTX *ctx);
 
 __owur
-STACK_OF (
-  SSL_CIPHER
-  ) *SSL_get_client_ciphers (const SSL *s);
+  STACK_OF (
+            SSL_CIPHER
+            ) *SSL_get_client_ciphers (const SSL *s);
 
 __owur
-STACK_OF (
-  SSL_CIPHER
-  ) *SSL_get1_supported_ciphers (SSL *s);
+  STACK_OF (
+            SSL_CIPHER
+            ) *SSL_get1_supported_ciphers (SSL *s);
 
 __owur int
 SSL_do_handshake (
@@ -3748,26 +3748,26 @@ SSL_alert_desc_string (
   );
 
 void
-SSL_set0_CA_list (
-  SSL                   *s,
-  STACK_OF (X509_NAME)  *name_list
-  );
+  SSL_set0_CA_list (
+                    SSL                   *s,
+                    STACK_OF (X509_NAME)  *name_list
+                    );
 
 void
-SSL_CTX_set0_CA_list (
-  SSL_CTX               *ctx,
-  STACK_OF (X509_NAME)  *name_list
-  );
+  SSL_CTX_set0_CA_list (
+                        SSL_CTX               *ctx,
+                        STACK_OF (X509_NAME)  *name_list
+                        );
 
 __owur const
 STACK_OF (
-  X509_NAME
-  ) *SSL_get0_CA_list (const SSL *s);
+          X509_NAME
+          ) *SSL_get0_CA_list (const SSL *s);
 
 __owur const
 STACK_OF (
-  X509_NAME
-  ) *SSL_CTX_get0_CA_list (const SSL_CTX *ctx);
+          X509_NAME
+          ) *SSL_CTX_get0_CA_list (const SSL_CTX *ctx);
 
 __owur int
 SSL_add1_to_CA_list (
@@ -3783,30 +3783,30 @@ SSL_CTX_add1_to_CA_list (
 
 __owur const
 STACK_OF (
-  X509_NAME
-  ) *SSL_get0_peer_CA_list (const SSL *s);
+          X509_NAME
+          ) *SSL_get0_peer_CA_list (const SSL *s);
 
 void
-SSL_set_client_CA_list (
-  SSL                   *s,
-  STACK_OF (X509_NAME)  *name_list
-  );
+  SSL_set_client_CA_list (
+                          SSL                   *s,
+                          STACK_OF (X509_NAME)  *name_list
+                          );
 
 void
-SSL_CTX_set_client_CA_list (
-  SSL_CTX               *ctx,
-  STACK_OF (X509_NAME)  *name_list
-  );
+  SSL_CTX_set_client_CA_list (
+                              SSL_CTX               *ctx,
+                              STACK_OF (X509_NAME)  *name_list
+                              );
 
 __owur
-STACK_OF (
-  X509_NAME
-  ) *SSL_get_client_CA_list (const SSL *s);
+  STACK_OF (
+            X509_NAME
+            ) *SSL_get_client_CA_list (const SSL *s);
 
 __owur
-STACK_OF (
-  X509_NAME
-  ) *SSL_CTX_get_client_CA_list (const SSL_CTX *s);
+  STACK_OF (
+            X509_NAME
+            ) *SSL_CTX_get_client_CA_list (const SSL_CTX *s);
 
 __owur int
 SSL_add_client_CA (
@@ -3847,9 +3847,9 @@ SSL_CIPHER_description (
   );
 
 __owur
-STACK_OF (
-  X509_NAME
-  ) *SSL_dup_CA_list (const STACK_OF (X509_NAME) *sk);
+  STACK_OF (
+            X509_NAME
+            ) *SSL_dup_CA_list (const STACK_OF (X509_NAME) *sk);
 
 __owur SSL *
 SSL_dup (
@@ -4017,9 +4017,9 @@ SSL_get_verify_result (
   );
 
 __owur
-STACK_OF (
-  X509
-  ) *SSL_get0_verified_chain (const SSL *s);
+  STACK_OF (
+            X509
+            ) *SSL_get0_verified_chain (const SSL *s);
 
 __owur size_t
 SSL_get_client_random (
@@ -4044,9 +4044,9 @@ SSL_SESSION_get_master_key (
 
 __owur int
 SSL_SESSION_set1_master_key (
-  SSL_SESSION          *sess,
+  SSL_SESSION  *sess,
   const unsigned char  *in,
-  size_t               len
+  size_t       len
   );
 
 uint8_t
@@ -4210,12 +4210,12 @@ SSL_COMP_get_id (
 
 STACK_OF (SSL_COMP) *SSL_COMP_get_compression_methods (void);
 __owur
-STACK_OF (
-  SSL_COMP
-  ) *SSL_COMP_set0_compression_methods (
-       STACK_OF (SSL_COMP)
-       *meths
-       );
+  STACK_OF (
+            SSL_COMP
+            ) *SSL_COMP_set0_compression_methods (
+                 STACK_OF (SSL_COMP)
+                 *meths
+                 );
 
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0
 #define SSL_COMP_free_compression_methods()  while(0) continue
@@ -4243,14 +4243,14 @@ SSL_CIPHER_get_digest_nid (
   );
 
 int
-SSL_bytes_to_cipher_list (
-  SSL                    *s,
-  const unsigned char    *bytes,
-  size_t                 len,
-  int                    isv2format,
-  STACK_OF (SSL_CIPHER)  **sk,
-  STACK_OF (SSL_CIPHER)  **scsvs
-  );
+  SSL_bytes_to_cipher_list (
+                            SSL                    *s,
+                            const unsigned char    *bytes,
+                            size_t                 len,
+                            int                    isv2format,
+                            STACK_OF (SSL_CIPHER)  **sk,
+                            STACK_OF (SSL_CIPHER)  **scsvs
+                            );
 
 /* TLS extensions functions */
 __owur int
@@ -4279,30 +4279,30 @@ void
 SSL_CTX_set_not_resumable_session_callback (
   SSL_CTX  *ctx,
   int (    *cb )(
-         SSL  *ssl,
-         int
-         is_forward_secure
-         )
+                              SSL  *ssl,
+                              int
+                              is_forward_secure
+                              )
   );
 
 void
 SSL_set_not_resumable_session_callback (
   SSL    *ssl,
   int (  *cb )(
-         SSL  *ssl,
-         int  is_forward_secure
-         )
+                              SSL  *ssl,
+                              int  is_forward_secure
+                              )
   );
 
 void
 SSL_CTX_set_record_padding_callback (
   SSL_CTX   *ctx,
   size_t (  *cb )(
-         SSL     *ssl,
-         int     type,
-         size_t  len,
-         void    *arg
-         )
+                              SSL     *ssl,
+                              int     type,
+                              size_t  len,
+                              void    *arg
+                              )
   );
 
 void
@@ -4326,11 +4326,11 @@ int
 SSL_set_record_padding_callback (
   SSL       *ssl,
   size_t (  *cb )(
-         SSL     *ssl,
-         int     type,
-         size_t  len,
-         void    *arg
-         )
+                              SSL     *ssl,
+                              int     type,
+                              size_t  len,
+                              void    *arg
+                              )
   );
 
 void

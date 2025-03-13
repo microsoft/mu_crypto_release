@@ -256,9 +256,9 @@ SCT_free (
  * Intended to be compatible with X509V3_EXT_FREE.
  */
 void
-SCT_LIST_free (
-  STACK_OF (SCT)  *a
-  );
+  SCT_LIST_free (
+                 STACK_OF (SCT)  *a
+                 );
 
 /*
  * Returns the version of the SCT.
@@ -628,9 +628,9 @@ i2o_SCT (
  */
 SCT *
 o2i_SCT (
-  SCT                  **psct,
+  SCT     **psct,
   const unsigned char  **in,
-  size_t               len
+  size_t  len
   );
 
 /********************

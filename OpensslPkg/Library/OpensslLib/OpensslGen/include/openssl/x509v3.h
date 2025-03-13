@@ -851,11 +851,11 @@ GENERAL_NAME_cmp (
   );
 
 ASN1_BIT_STRING *
-v2i_ASN1_BIT_STRING (
-  X509V3_EXT_METHOD      *method,
-  X509V3_CTX             *ctx,
-  STACK_OF (CONF_VALUE)  *nval
-  );
+  v2i_ASN1_BIT_STRING (
+                       X509V3_EXT_METHOD      *method,
+                       X509V3_CTX             *ctx,
+                       STACK_OF (CONF_VALUE)  *nval
+                       );
 
 STACK_OF (CONF_VALUE) *i2v_ASN1_BIT_STRING (
                          X509V3_EXT_METHOD *method,
@@ -907,11 +907,11 @@ STACK_OF (CONF_VALUE) *i2v_GENERAL_NAMES (
                          STACK_OF (CONF_VALUE) *extlist
                          );
 GENERAL_NAMES *
-v2i_GENERAL_NAMES (
-  const X509V3_EXT_METHOD  *method,
-  X509V3_CTX               *ctx,
-  STACK_OF (CONF_VALUE)    *nval
-  );
+  v2i_GENERAL_NAMES (
+                     const X509V3_EXT_METHOD  *method,
+                     X509V3_CTX               *ctx,
+                     STACK_OF (CONF_VALUE)    *nval
+                     );
 
 DECLARE_ASN1_FUNCTIONS (OTHERNAME)
 DECLARE_ASN1_FUNCTIONS (EDIPARTYNAME)
@@ -1063,12 +1063,12 @@ X509V3_EXT_nconf (
   );
 
 int
-X509V3_EXT_add_nconf_sk (
-  CONF                       *conf,
-  X509V3_CTX                 *ctx,
-  const char                 *section,
-  STACK_OF (X509_EXTENSION)  **sk
-  );
+  X509V3_EXT_add_nconf_sk (
+                           CONF                       *conf,
+                           X509V3_CTX                 *ctx,
+                           const char                 *section,
+                           STACK_OF (X509_EXTENSION)  **sk
+                           );
 
 int
 X509V3_EXT_add_nconf (
@@ -1095,51 +1095,51 @@ X509V3_EXT_CRL_add_nconf (
   );
 
 X509_EXTENSION *
-X509V3_EXT_conf_nid (
-  LHASH_OF (CONF_VALUE)  *conf,
-  X509V3_CTX             *ctx,
-  int                    ext_nid,
-  const char             *value
-  );
+  X509V3_EXT_conf_nid (
+                       LHASH_OF (CONF_VALUE)  *conf,
+                       X509V3_CTX             *ctx,
+                       int                    ext_nid,
+                       const char             *value
+                       );
 
 X509_EXTENSION *
-X509V3_EXT_conf (
-  LHASH_OF (CONF_VALUE)  *conf,
-  X509V3_CTX             *ctx,
-  const char             *name,
-  const char             *value
-  );
+  X509V3_EXT_conf (
+                   LHASH_OF (CONF_VALUE)  *conf,
+                   X509V3_CTX             *ctx,
+                   const char             *name,
+                   const char             *value
+                   );
 
 int
-X509V3_EXT_add_conf (
-  LHASH_OF (CONF_VALUE)  *conf,
-  X509V3_CTX             *ctx,
-  const char             *section,
-  X509                   *cert
-  );
+  X509V3_EXT_add_conf (
+                       LHASH_OF (CONF_VALUE)  *conf,
+                       X509V3_CTX             *ctx,
+                       const char             *section,
+                       X509                   *cert
+                       );
 
 int
-X509V3_EXT_REQ_add_conf (
-  LHASH_OF (CONF_VALUE)  *conf,
-  X509V3_CTX             *ctx,
-  const char             *section,
-  X509_REQ               *req
-  );
+  X509V3_EXT_REQ_add_conf (
+                           LHASH_OF (CONF_VALUE)  *conf,
+                           X509V3_CTX             *ctx,
+                           const char             *section,
+                           X509_REQ               *req
+                           );
 
 int
-X509V3_EXT_CRL_add_conf (
-  LHASH_OF (CONF_VALUE)  *conf,
-  X509V3_CTX             *ctx,
-  const char             *section,
-  X509_CRL               *crl
-  );
+  X509V3_EXT_CRL_add_conf (
+                           LHASH_OF (CONF_VALUE)  *conf,
+                           X509V3_CTX             *ctx,
+                           const char             *section,
+                           X509_CRL               *crl
+                           );
 
 int
-X509V3_add_value_bool_nf (
-  const char             *name,
-  int                    asn1_bool,
-  STACK_OF (CONF_VALUE)  **extlist
-  );
+  X509V3_add_value_bool_nf (
+                            const char             *name,
+                            int                    asn1_bool,
+                            STACK_OF (CONF_VALUE)  **extlist
+                            );
 
 int
 X509V3_get_value_bool (
@@ -1160,10 +1160,10 @@ X509V3_set_nconf (
   );
 
 void
-X509V3_set_conf_lhash (
-  X509V3_CTX             *ctx,
-  LHASH_OF (CONF_VALUE)  *lhash
-  );
+  X509V3_set_conf_lhash (
+                         X509V3_CTX             *ctx,
+                         LHASH_OF (CONF_VALUE)  *lhash
+                         );
 
 #endif
 
@@ -1182,10 +1182,10 @@ X509V3_string_free (
   );
 
 void
-X509V3_section_free (
-  X509V3_CTX             *ctx,
-  STACK_OF (CONF_VALUE)  *section
-  );
+  X509V3_section_free (
+                       X509V3_CTX             *ctx,
+                       STACK_OF (CONF_VALUE)  *section
+                       );
 
 void
 X509V3_set_ctx (
@@ -1205,32 +1205,32 @@ X509V3_set_issuer_pkey (
   );
 
 int
-X509V3_add_value (
-  const char             *name,
-  const char             *value,
-  STACK_OF (CONF_VALUE)  **extlist
-  );
+  X509V3_add_value (
+                    const char             *name,
+                    const char             *value,
+                    STACK_OF (CONF_VALUE)  **extlist
+                    );
 
 int
-X509V3_add_value_uchar (
-  const char             *name,
-  const unsigned char    *value,
-  STACK_OF (CONF_VALUE)  **extlist
-  );
+  X509V3_add_value_uchar (
+                          const char             *name,
+                          const unsigned char    *value,
+                          STACK_OF (CONF_VALUE)  **extlist
+                          );
 
 int
-X509V3_add_value_bool (
-  const char             *name,
-  int                    asn1_bool,
-  STACK_OF (CONF_VALUE)  **extlist
-  );
+  X509V3_add_value_bool (
+                         const char             *name,
+                         int                    asn1_bool,
+                         STACK_OF (CONF_VALUE)  **extlist
+                         );
 
 int
-X509V3_add_value_int (
-  const char             *name,
-  const ASN1_INTEGER     *aint,
-  STACK_OF (CONF_VALUE)  **extlist
-  );
+  X509V3_add_value_int (
+                        const char             *name,
+                        const ASN1_INTEGER     *aint,
+                        STACK_OF (CONF_VALUE)  **extlist
+                        );
 
 char *
 i2s_ASN1_INTEGER (
@@ -1314,13 +1314,13 @@ X509V3_EXT_i2d (
   );
 
 int
-X509V3_add1_i2d (
-  STACK_OF (X509_EXTENSION)  **x,
-  int                        nid,
-  void                       *value,
-  int                        crit,
-  unsigned long              flags
-  );
+  X509V3_add1_i2d (
+                   STACK_OF (X509_EXTENSION)  **x,
+                   int                        nid,
+                   void                       *value,
+                   int                        crit,
+                   unsigned long              flags
+                   );
 
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0
 /* The new declarations are in crypto.h, but the old ones were here. */
@@ -1329,12 +1329,12 @@ X509V3_add1_i2d (
 #endif
 
 void
-X509V3_EXT_val_prn (
-  BIO                    *out,
-  STACK_OF (CONF_VALUE)  *val,
-  int                    indent,
-  int                    ml
-  );
+  X509V3_EXT_val_prn (
+                      BIO                    *out,
+                      STACK_OF (CONF_VALUE)  *val,
+                      int                    indent,
+                      int                    ml
+                      );
 
 int
 X509V3_EXT_print (
@@ -1508,9 +1508,9 @@ X509_PURPOSE_get_id (
 STACK_OF (OPENSSL_STRING) *X509_get1_email (X509 *x);
 STACK_OF (OPENSSL_STRING) *X509_REQ_get1_email (X509_REQ *x);
 void
-X509_email_free (
-  STACK_OF (OPENSSL_STRING)  *sk
-  );
+  X509_email_free (
+                   STACK_OF (OPENSSL_STRING)  *sk
+                   );
 
 STACK_OF (OPENSSL_STRING) *X509_get1_ocsp (X509 *x);
 /* Flags for X509_check_* functions */
@@ -1580,11 +1580,11 @@ a2i_IPADDRESS_NC (
   );
 
 int
-X509V3_NAME_from_section (
-  X509_NAME              *nm,
-  STACK_OF (CONF_VALUE)  *dn_sk,
-  unsigned long          chtype
-  );
+  X509V3_NAME_from_section (
+                            X509_NAME              *nm,
+                            STACK_OF (CONF_VALUE)  *dn_sk,
+                            unsigned long          chtype
+                            );
 
 void
 X509_POLICY_NODE_print (
@@ -1914,18 +1914,18 @@ X509v3_addr_validate_path (
   );
 
 int
-X509v3_asid_validate_resource_set (
-  STACK_OF (X509)  *chain,
-  ASIdentifiers    *ext,
-  int              allow_inheritance
-  );
+  X509v3_asid_validate_resource_set (
+                                     STACK_OF (X509)  *chain,
+                                     ASIdentifiers    *ext,
+                                     int              allow_inheritance
+                                     );
 
 int
-X509v3_addr_validate_resource_set (
-  STACK_OF (X509)  *chain,
-  IPAddrBlocks     *ext,
-  int              allow_inheritance
-  );
+  X509v3_addr_validate_resource_set (
+                                     STACK_OF (X509)  *chain,
+                                     IPAddrBlocks     *ext,
+                                     int              allow_inheritance
+                                     );
 
 #endif /* OPENSSL_NO_RFC3779 */
 
@@ -2070,10 +2070,10 @@ const STACK_OF (ADMISSIONS) *ADMISSION_SYNTAX_get0_contentsOfAdmissions (
                                const ADMISSION_SYNTAX *as
                                );
 void
-ADMISSION_SYNTAX_set0_contentsOfAdmissions (
-  ADMISSION_SYNTAX       *as,
-  STACK_OF (ADMISSIONS)  *a
-  );
+  ADMISSION_SYNTAX_set0_contentsOfAdmissions (
+                                              ADMISSION_SYNTAX       *as,
+                                              STACK_OF (ADMISSIONS)  *a
+                                              );
 
 const GENERAL_NAME *
 ADMISSIONS_get0_admissionAuthority (
@@ -2134,19 +2134,19 @@ const STACK_OF (ASN1_STRING) *PROFESSION_INFO_get0_professionItems (
                                 const PROFESSION_INFO *pi
                                 );
 void
-PROFESSION_INFO_set0_professionItems (
-  PROFESSION_INFO         *pi,
-  STACK_OF (ASN1_STRING)  *as
-  );
+  PROFESSION_INFO_set0_professionItems (
+                                        PROFESSION_INFO         *pi,
+                                        STACK_OF (ASN1_STRING)  *as
+                                        );
 
 const STACK_OF (ASN1_OBJECT) *PROFESSION_INFO_get0_professionOIDs (
                                 const PROFESSION_INFO *pi
                                 );
 void
-PROFESSION_INFO_set0_professionOIDs (
-  PROFESSION_INFO         *pi,
-  STACK_OF (ASN1_OBJECT)  *po
-  );
+  PROFESSION_INFO_set0_professionOIDs (
+                                       PROFESSION_INFO         *pi,
+                                       STACK_OF (ASN1_OBJECT)  *po
+                                       );
 
 const ASN1_PRINTABLESTRING *
 PROFESSION_INFO_get0_registrationNumber (

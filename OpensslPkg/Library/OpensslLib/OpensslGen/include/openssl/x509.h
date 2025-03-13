@@ -1291,10 +1291,10 @@ X509_PUBKEY_get (
   );
 
 int
-X509_get_pubkey_parameters (
-  EVP_PKEY         *pkey,
-  STACK_OF (X509)  *chain
-  );
+  X509_get_pubkey_parameters (
+                              EVP_PKEY         *pkey,
+                              STACK_OF (X509)  *chain
+                              );
 
 long
 X509_get_pathlen (
@@ -2061,12 +2061,12 @@ X509_check_private_key (
   );
 
 int
-X509_chain_check_suiteb (
-  int              *perror_depth,
-  X509             *x,
-  STACK_OF (X509)  *chain,
-  unsigned long    flags
-  );
+  X509_chain_check_suiteb (
+                           int              *perror_depth,
+                           X509             *x,
+                           STACK_OF (X509)  *chain,
+                           unsigned long    flags
+                           );
 
 int
 X509_CRL_check_suiteb (
@@ -2129,18 +2129,18 @@ X509_subject_name_hash_old (
 #define X509_ADD_FLAG_NO_DUP   0x4
 #define X509_ADD_FLAG_NO_SS    0x8
 int
-X509_add_cert (
-  STACK_OF (X509)  *sk,
-  X509             *cert,
-  int              flags
-  );
+  X509_add_cert (
+                 STACK_OF (X509)  *sk,
+                 X509             *cert,
+                 int              flags
+                 );
 
 int
-X509_add_certs (
-  STACK_OF (X509)  *sk,
-  STACK_OF (X509)  *certs,
-  int              flags
-  );
+  X509_add_certs (
+                  STACK_OF (X509)  *sk,
+                  STACK_OF (X509)  *certs,
+                  int              flags
+                  );
 
 int
 X509_cmp (
@@ -2482,10 +2482,10 @@ X509v3_get_ext (
   );
 
 X509_EXTENSION *
-X509v3_delete_ext (
-  STACK_OF (X509_EXTENSION)  *x,
-  int                        loc
-  );
+  X509v3_delete_ext (
+                     STACK_OF (X509_EXTENSION)  *x,
+                     int                        loc
+                     );
 
 STACK_OF (X509_EXTENSION) *X509v3_add_ext (
                              STACK_OF (X509_EXTENSION) **x,
@@ -2754,10 +2754,10 @@ X509at_get_attr (
   );
 
 X509_ATTRIBUTE *
-X509at_delete_attr (
-  STACK_OF (X509_ATTRIBUTE)  *x,
-  int                        loc
-  );
+  X509at_delete_attr (
+                      STACK_OF (X509_ATTRIBUTE)  *x,
+                      int                        loc
+                      );
 
 STACK_OF (X509_ATTRIBUTE) *X509at_add1_attr (
                              STACK_OF (X509_ATTRIBUTE) **x,
@@ -2926,17 +2926,17 @@ EVP_PKEY_add1_attr_by_txt (
 
 /* lookup a cert from a X509 STACK */
 X509 *
-X509_find_by_issuer_and_serial (
-  STACK_OF (X509)     *sk,
-  const X509_NAME     *name,
-  const ASN1_INTEGER  *serial
-  );
+  X509_find_by_issuer_and_serial (
+                                  STACK_OF (X509)     *sk,
+                                  const X509_NAME     *name,
+                                  const ASN1_INTEGER  *serial
+                                  );
 
 X509 *
-X509_find_by_subject (
-  STACK_OF (X509)  *sk,
-  const X509_NAME  *name
-  );
+  X509_find_by_subject (
+                        STACK_OF (X509)  *sk,
+                        const X509_NAME  *name
+                        );
 
 DECLARE_ASN1_FUNCTIONS (PBEPARAM)
 DECLARE_ASN1_FUNCTIONS (PBE2PARAM)

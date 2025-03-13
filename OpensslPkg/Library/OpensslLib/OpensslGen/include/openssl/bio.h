@@ -985,9 +985,9 @@ BIO_set_retry_reason (
   );
 
 BIO *
-BIO_dup_chain (
-  BIO  *in
-  );
+  BIO_dup_chain (
+                 BIO  *in
+                 );
 
 int
 BIO_nread0 (

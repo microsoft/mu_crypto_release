@@ -110,10 +110,10 @@ CONF_set_default_method (
   );
 
 void
-CONF_set_nconf (
-  CONF                   *conf,
-  LHASH_OF (CONF_VALUE)  *hash
-  );
+  CONF_set_nconf (
+                  CONF                   *conf,
+                  LHASH_OF (CONF_VALUE)  *hash
+                  );
 
 LHASH_OF (CONF_VALUE) *CONF_load (
                          LHASH_OF (CONF_VALUE) *conf,
@@ -137,37 +137,37 @@ STACK_OF (CONF_VALUE) *CONF_get_section (
                          const char *section
                          );
 char *
-CONF_get_string (
-  LHASH_OF (CONF_VALUE)  *conf,
-  const char             *group,
-  const char             *name
-  );
+  CONF_get_string (
+                   LHASH_OF (CONF_VALUE)  *conf,
+                   const char             *group,
+                   const char             *name
+                   );
 
 long
-CONF_get_number (
-  LHASH_OF (CONF_VALUE)  *conf,
-  const char             *group,
-  const char             *name
-  );
+  CONF_get_number (
+                   LHASH_OF (CONF_VALUE)  *conf,
+                   const char             *group,
+                   const char             *name
+                   );
 
 void
-CONF_free (
-  LHASH_OF (CONF_VALUE)  *conf
-  );
+  CONF_free (
+             LHASH_OF (CONF_VALUE)  *conf
+             );
 
 #ifndef OPENSSL_NO_STDIO
 int
-CONF_dump_fp (
-  LHASH_OF (CONF_VALUE)  *conf,
-  FILE                   *out
-  );
+  CONF_dump_fp (
+                LHASH_OF (CONF_VALUE)  *conf,
+                FILE                   *out
+                );
 
 #endif
 int
-CONF_dump_bio (
-  LHASH_OF (CONF_VALUE)  *conf,
-  BIO                    *out
-  );
+  CONF_dump_bio (
+                 LHASH_OF (CONF_VALUE)  *conf,
+                 BIO                    *out
+                 );
 
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0
 OSSL_DEPRECATEDIN_1_1_0 void

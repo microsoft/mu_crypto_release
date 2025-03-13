@@ -325,34 +325,34 @@ PKCS8_set0_pbe_ex (
   );
 
 PKCS7 *
-PKCS12_pack_p7data (
-  STACK_OF (PKCS12_SAFEBAG)  *sk
-  );
+  PKCS12_pack_p7data (
+                      STACK_OF (PKCS12_SAFEBAG)  *sk
+                      );
 
 STACK_OF (PKCS12_SAFEBAG) *PKCS12_unpack_p7data (PKCS7 *p7);
 PKCS7 *
-PKCS12_pack_p7encdata (
-  int                        pbe_nid,
-  const char                 *pass,
-  int                        passlen,
-  unsigned char              *salt,
-  int                        saltlen,
-  int                        iter,
-  STACK_OF (PKCS12_SAFEBAG)  *bags
-  );
+  PKCS12_pack_p7encdata (
+                         int                        pbe_nid,
+                         const char                 *pass,
+                         int                        passlen,
+                         unsigned char              *salt,
+                         int                        saltlen,
+                         int                        iter,
+                         STACK_OF (PKCS12_SAFEBAG)  *bags
+                         );
 
 PKCS7 *
-PKCS12_pack_p7encdata_ex (
-  int                        pbe_nid,
-  const char                 *pass,
-  int                        passlen,
-  unsigned char              *salt,
-  int                        saltlen,
-  int                        iter,
-  STACK_OF (PKCS12_SAFEBAG)  *bags,
-  OSSL_LIB_CTX               *ctx,
-  const char                 *propq
-  );
+  PKCS12_pack_p7encdata_ex (
+                            int                        pbe_nid,
+                            const char                 *pass,
+                            int                        passlen,
+                            unsigned char              *salt,
+                            int                        saltlen,
+                            int                        iter,
+                            STACK_OF (PKCS12_SAFEBAG)  *bags,
+                            OSSL_LIB_CTX               *ctx,
+                            const char                 *propq
+                            );
 
 STACK_OF (PKCS12_SAFEBAG) *PKCS12_unpack_p7encdata (
                              PKCS7 *p7,
@@ -361,10 +361,10 @@ STACK_OF (PKCS12_SAFEBAG) *PKCS12_unpack_p7encdata (
                              );
 
 int
-PKCS12_pack_authsafes (
-  PKCS12            *p12,
-  STACK_OF (PKCS7)  *safes
-  );
+  PKCS12_pack_authsafes (
+                         PKCS12            *p12,
+                         STACK_OF (PKCS7)  *safes
+                         );
 
 STACK_OF (PKCS7) *PKCS12_unpack_authsafes (const PKCS12 *p12);
 
@@ -442,28 +442,28 @@ const STACK_OF (X509_ATTRIBUTE) *
 PKCS12_SAFEBAG_get0_attrs (const PKCS12_SAFEBAG *bag);
 unsigned char *
 PKCS12_pbe_crypt (
-  const X509_ALGOR     *algor,
-  const char           *pass,
-  int                  passlen,
+  const X509_ALGOR  *algor,
+  const char        *pass,
+  int               passlen,
   const unsigned char  *in,
-  int                  inlen,
-  unsigned char        **data,
-  int                  *datalen,
-  int                  en_de
+  int               inlen,
+  unsigned char     **data,
+  int               *datalen,
+  int               en_de
   );
 
 unsigned char *
 PKCS12_pbe_crypt_ex (
-  const X509_ALGOR     *algor,
-  const char           *pass,
-  int                  passlen,
+  const X509_ALGOR  *algor,
+  const char        *pass,
+  int               passlen,
   const unsigned char  *in,
-  int                  inlen,
-  unsigned char        **data,
-  int                  *datalen,
-  int                  en_de,
-  OSSL_LIB_CTX         *libctx,
-  const char           *propq
+  int               inlen,
+  unsigned char     **data,
+  int               *datalen,
+  int               en_de,
+  OSSL_LIB_CTX      *libctx,
+  const char        *propq
   );
 
 void *
@@ -708,113 +708,113 @@ PKCS12_PBE_add (
   );
 
 int
-PKCS12_parse (
-  PKCS12           *p12,
-  const char       *pass,
-  EVP_PKEY         **pkey,
-  X509             **cert,
-  STACK_OF (X509)  **ca
-  );
+  PKCS12_parse (
+                PKCS12           *p12,
+                const char       *pass,
+                EVP_PKEY         **pkey,
+                X509             **cert,
+                STACK_OF (X509)  **ca
+                );
 
 PKCS12 *
-PKCS12_create (
-  const char       *pass,
-  const char       *name,
-  EVP_PKEY         *pkey,
-  X509             *cert,
-  STACK_OF (X509)  *ca,
-  int              nid_key,
-  int              nid_cert,
-  int              iter,
-  int              mac_iter,
-  int              keytype
-  );
+  PKCS12_create (
+                 const char       *pass,
+                 const char       *name,
+                 EVP_PKEY         *pkey,
+                 X509             *cert,
+                 STACK_OF (X509)  *ca,
+                 int              nid_key,
+                 int              nid_cert,
+                 int              iter,
+                 int              mac_iter,
+                 int              keytype
+                 );
 
 PKCS12 *
-PKCS12_create_ex (
-  const char       *pass,
-  const char       *name,
-  EVP_PKEY         *pkey,
-  X509             *cert,
-  STACK_OF (X509)  *ca,
-  int              nid_key,
-  int              nid_cert,
-  int              iter,
-  int              mac_iter,
-  int              keytype,
-  OSSL_LIB_CTX     *ctx,
-  const char       *propq
-  );
+  PKCS12_create_ex (
+                    const char       *pass,
+                    const char       *name,
+                    EVP_PKEY         *pkey,
+                    X509             *cert,
+                    STACK_OF (X509)  *ca,
+                    int              nid_key,
+                    int              nid_cert,
+                    int              iter,
+                    int              mac_iter,
+                    int              keytype,
+                    OSSL_LIB_CTX     *ctx,
+                    const char       *propq
+                    );
 
 PKCS12_SAFEBAG *
-PKCS12_add_cert (
-  STACK_OF (PKCS12_SAFEBAG)  **pbags,
-  X509                       *cert
-  );
+  PKCS12_add_cert (
+                   STACK_OF (PKCS12_SAFEBAG)  **pbags,
+                   X509                       *cert
+                   );
 
 PKCS12_SAFEBAG *
-PKCS12_add_key (
-  STACK_OF (PKCS12_SAFEBAG)  **pbags,
-  EVP_PKEY                   *key,
-  int                        key_usage,
-  int                        iter,
-  int                        key_nid,
-  const char                 *pass
-  );
+  PKCS12_add_key (
+                  STACK_OF (PKCS12_SAFEBAG)  **pbags,
+                  EVP_PKEY                   *key,
+                  int                        key_usage,
+                  int                        iter,
+                  int                        key_nid,
+                  const char                 *pass
+                  );
 
 PKCS12_SAFEBAG *
-PKCS12_add_key_ex (
-  STACK_OF (PKCS12_SAFEBAG)  **pbags,
-  EVP_PKEY                   *key,
-  int                        key_usage,
-  int                        iter,
-  int                        key_nid,
-  const char                 *pass,
-  OSSL_LIB_CTX               *ctx,
-  const char                 *propq
-  );
+  PKCS12_add_key_ex (
+                     STACK_OF (PKCS12_SAFEBAG)  **pbags,
+                     EVP_PKEY                   *key,
+                     int                        key_usage,
+                     int                        iter,
+                     int                        key_nid,
+                     const char                 *pass,
+                     OSSL_LIB_CTX               *ctx,
+                     const char                 *propq
+                     );
 
 PKCS12_SAFEBAG *
-PKCS12_add_secret (
-  STACK_OF (PKCS12_SAFEBAG)  **pbags,
-  int                        nid_type,
-  const unsigned char        *value,
-  int                        len
-  );
+  PKCS12_add_secret (
+                     STACK_OF (PKCS12_SAFEBAG)  **pbags,
+                     int                        nid_type,
+                     const unsigned char        *value,
+                     int                        len
+                     );
 
 int
-PKCS12_add_safe (
-  STACK_OF (PKCS7)           **psafes,
-  STACK_OF (PKCS12_SAFEBAG)  *bags,
-  int                        safe_nid,
-  int                        iter,
-  const char                 *pass
-  );
+  PKCS12_add_safe (
+                   STACK_OF (PKCS7)           **psafes,
+                   STACK_OF (PKCS12_SAFEBAG)  *bags,
+                   int                        safe_nid,
+                   int                        iter,
+                   const char                 *pass
+                   );
 
 int
-PKCS12_add_safe_ex (
-  STACK_OF (PKCS7)           **psafes,
-  STACK_OF (PKCS12_SAFEBAG)  *bags,
-  int                        safe_nid,
-  int                        iter,
-  const char                 *pass,
-  OSSL_LIB_CTX               *ctx,
-  const char                 *propq
-  );
+  PKCS12_add_safe_ex (
+                      STACK_OF (PKCS7)           **psafes,
+                      STACK_OF (PKCS12_SAFEBAG)  *bags,
+                      int                        safe_nid,
+                      int                        iter,
+                      const char                 *pass,
+                      OSSL_LIB_CTX               *ctx,
+                      const char                 *propq
+                      );
 
 PKCS12 *
-PKCS12_add_safes (
-  STACK_OF (PKCS7)  *safes,
-  int               p7_nid
-  );
+  PKCS12_add_safes (
+                    STACK_OF (PKCS7)  *safes,
+                    int               p7_nid
+                    );
 
 PKCS12 *
-PKCS12_add_safes_ex (
-  STACK_OF (PKCS7)  *safes,
-  int               p7_nid,
-  OSSL_LIB_CTX      *ctx,
-  const char        *propq
-  );
+  PKCS12_add_safes_ex (
+                       STACK_OF (PKCS7)  *safes,
+                       int               p7_nid,
+                       OSSL_LIB_CTX      *ctx,
+                       const char        *propq
+                       );
 
 int
 i2d_PKCS12_bio (

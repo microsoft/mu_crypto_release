@@ -937,14 +937,14 @@ ASN1_item_ex_free (
 
 int
 ASN1_item_ex_d2i (
-  ASN1_VALUE           **pval,
+  ASN1_VALUE       **pval,
   const unsigned char  **in,
-  long                 len,
-  const ASN1_ITEM      *it,
-  int                  tag,
-  int                  aclass,
-  char                 opt,
-  ASN1_TLC             *ctx
+  long             len,
+  const ASN1_ITEM  *it,
+  int              tag,
+  int              aclass,
+  char             opt,
+  ASN1_TLC         *ctx
   );
 
 int
