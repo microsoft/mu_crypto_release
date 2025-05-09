@@ -517,11 +517,6 @@ const EDKII_CRYPTO_PROTOCOL  mEdkiiCrypto = {
  #else
   NULL,
  #endif
- #if _PCD_VALUE_PcdCryptoServiceX509CompareDateTime
-  X509CompareDateTime,
- #else
-  NULL,
- #endif
  #if _PCD_VALUE_PcdCryptoServiceX509GetKeyUsage
   X509GetKeyUsage,
  #else
@@ -1090,6 +1085,11 @@ const EDKII_CRYPTO_PROTOCOL  mEdkiiCrypto = {
  #endif
  #if _PCD_VALUE_PcdCryptoServiceEcDsaVerify
   EcDsaVerify,
+ #else
+  NULL,
+ #endif
+ #if _PCD_VALUE_PcdCryptoServiceX509CompareDateTime
+  X509CompareDateTime,
  #else
   NULL,
  #endif
