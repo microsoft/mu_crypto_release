@@ -1386,6 +1386,7 @@ X509GetExtensionData (
     *ExtensionDataSize = OctLength;
   } else {
     *ExtensionDataSize = 0;
+    Status = TRUE;
   }
 
 Cleanup:

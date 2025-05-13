@@ -156,8 +156,8 @@ def get_flavors():
             "guid": "d9a75606-caba-4aa0-80a6-591852335400"
         },
         "STANDARD": {
-            "families": ["HMACSHA256", "PKCS", "SHA1", "SHA256", "SHA384", "SHA512", "RANDOM", "TLS", "TLSGET", "TLSSET"],
-            "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "RsaOaepEncrypt", "RsaOaepDecrypt", "RsaGetPublicKeyFromX509", "X509GetSubjectName", "X509GetCommonName", "X509GetOrganizationName", "X509GetTBSCert", "RsaPssSign", "RsaPssVerify"],
+            "families": ["HMACSHA256", "PKCS", "SHA1", "SHA256", "SHA384", "SHA512", "RANDOM", "TLS", "TLSGET", "TLSSET", "X509", "ASN1"],
+            "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "RsaOaepEncrypt", "RsaOaepDecrypt", "RsaGetPublicKeyFromX509", "X509GetSubjectName", "X509GetCommonName", "X509CompareDateTime", "X509GetOrganizationName", "X509GetTBSCert", "RsaPssSign", "RsaPssVerify"],
             "exclude": ["Sha1HashAll", "Pkcs7Sign", "Pkcs7GetCertificatesList", "ImageTimestampVerify"],
             "guid": "bdee011f-87f2-4a7f-bc5e-44b6b61fef00"
         }
@@ -210,7 +210,7 @@ def read_header_file(options, path):
         def set_return_type_if_valid(self, line: str):
             ''' Sets the return type to what is passed in, if it's a valid return type '''
             line = line.upper()
-            if line not in ["VOID *", "VOID*", "BOOLEAN", "UINTN", "VOID", "RETURN_STATUS", "UINT8", "UINT16", "UINT32", "INTN", "EFI_STATUS"]:
+            if line not in ["VOID *", "VOID*", "BOOLEAN", "UINTN", "VOID", "RETURN_STATUS", "UINT8", "UINT16", "UINT32", "INT32", "INTN", "EFI_STATUS"]:
                 return False
             self.return_type = line
             return True
@@ -362,6 +362,7 @@ def read_basecryptlib_and_tlslib(options):
     all_functions = []
     all_functions.extend(read_header_file(options, crypt_h_path))
     all_functions.extend(read_header_file(options, tls_h_path))
+    print(all_functions)
 
     return all_functions
 
