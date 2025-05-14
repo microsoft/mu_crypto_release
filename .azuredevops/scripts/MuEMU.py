@@ -11,6 +11,7 @@ import certifi
 from typing import List
 
 from pathlib import Path 
+import time
 import xml.etree.ElementTree
 
 #
@@ -121,7 +122,6 @@ def main():
         nsh_path = VIRTUAL_DRIVE_PATH / "startup.nsh"
         create_startup_script(STARTUP_SCRIPT, nsh_path)
 
-
         # Build the platform specific arguments.
         qemu_args = []
     
@@ -135,6 +135,11 @@ def main():
 
         # Add virtual drive with crypto test
         qemu_args += ["-drive", f"file=fat:rw:{VIRTUAL_DRIVE_PATH},format=raw,media=disk"]
+
+        # Add sleep to allow the drive to be unmounted before QEMU starts
+        # This is a workaround for a QEMU bug where the drive is not unmounted
+        # properly and QEMU fails to mount the VHD
+        time.sleep(2)
 
         # Launch QEMU
         run_qemu(qemu_args)
