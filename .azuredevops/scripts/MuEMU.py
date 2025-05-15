@@ -51,7 +51,7 @@ reset -s
 
 DEFAULT_VERSION = "0.1.0"
 
-VIRTUAL_DRIVE_PATH = Path("Build/Test/VirtualDrive.vhd")
+SHARED_FOLDER_PATH = Path("Build/Test/SharedFolder")
 
 #
 # Setup and parse arguments.
@@ -117,9 +117,9 @@ def main():
 
     if args.command == "run":
     
-        os.makedirs(VIRTUAL_DRIVE_PATH, exist_ok=True)
-        shutil.copy("Build/CryptoBin_STANDARD/DEBUG_VS2022/X64/BaseCryptLibUnitTestApp.efi", VIRTUAL_DRIVE_PATH)
-        nsh_path = VIRTUAL_DRIVE_PATH / "startup.nsh"
+        os.makedirs(SHARED_FOLDER_PATH, exist_ok=True)
+        shutil.copy("Build/CryptoBin_STANDARD/DEBUG_VS2022/X64/BaseCryptLibUnitTestApp.efi", SHARED_FOLDER_PATH)
+        nsh_path = SHARED_FOLDER_PATH / "startup.nsh"
         create_startup_script(STARTUP_SCRIPT, nsh_path)
 
         # Build the platform specific arguments.
@@ -134,12 +134,7 @@ def main():
         qemu_args += ["-smp", f"{args.cores}"]
 
         # Add virtual drive with crypto test
-        qemu_args += ["-drive", f"file=fat:rw:{VIRTUAL_DRIVE_PATH},format=raw,media=disk"]
-
-        # Add sleep to allow the drive to be unmounted before QEMU starts
-        # This is a workaround for a QEMU bug where the drive is not unmounted
-        # properly and QEMU fails to mount the VHD
-        time.sleep(2)
+        qemu_args += ["-drive", f"file=fat:rw:{SHARED_FOLDER_PATH},format=raw,media=disk"]
 
         # Launch QEMU
         run_qemu(qemu_args)
@@ -289,13 +284,16 @@ def create_startup_script(lines: list[str], file_path):
 
 def report_results(result_output_dir: Path) -> list[(str, str)]:
     """Prints test results to the terminal and returns the number of failed tests."""
-    os.makedirs(result_output_dir, exist_ok=True)
+
+    if not os.path.exists(result_output_dir):
+        raise RuntimeError("No results directory found.")
+
     test = "BaseCryptLibUnitTestApp"
 
     passed = True
     result_file = "BaseCryptLibUnitTestApp_JUNIT_RESULT.XML"
     #local_file_path = result_output_dir / result_file
-    result_path = VIRTUAL_DRIVE_PATH / result_file
+    result_path = SHARED_FOLDER_PATH / result_file
     shutil.copy(result_path, result_output_dir)
     if os.path.isfile(result_path):
                 print('\n' + os.path.basename(test))
