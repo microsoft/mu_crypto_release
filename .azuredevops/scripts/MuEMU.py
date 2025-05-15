@@ -51,8 +51,10 @@ reset -s
 
 DEFAULT_VERSION = "0.1.0"
 
-SHARED_FOLDER_PATH = Path("Build/Test/SharedFolder")
-
+BUILD_PATH = Path("Build")
+TEST_PATH = BUILD_PATH / "Test"
+RESULTS_PATH = TEST_PATH / "Results"
+SHARED_FOLDER_PATH = TEST_PATH / "SharedFolder"
 #
 # Setup and parse arguments.
 #
@@ -140,7 +142,7 @@ def main():
         run_qemu(qemu_args)
 
         # Get test results
-        result = report_results("Build/Test/Results")
+        result = report_results(RESULTS_PATH)
         print("Crypto results: " + str(result))
         if not result:
             raise RuntimeError("Crypto Tests Failed!")
@@ -285,15 +287,22 @@ def create_startup_script(lines: list[str], file_path):
 def report_results(result_output_dir: Path) -> list[(str, str)]:
     """Prints test results to the terminal and returns the number of failed tests."""
 
-    if not os.path.exists(result_output_dir):
-        raise RuntimeError("No results directory found.")
-
+    os.makedirs(result_output_dir, exist_ok=True)
     test = "BaseCryptLibUnitTestApp"
 
     passed = True
     result_file = "BaseCryptLibUnitTestApp_JUNIT_RESULT.XML"
     #local_file_path = result_output_dir / result_file
     result_path = SHARED_FOLDER_PATH / result_file
+
+    print(f"Contents of {SHARED_FOLDER_PATH}:")
+    for root, dirs, files in os.walk(SHARED_FOLDER_PATH):
+        print(f"Directory: {root}")
+        for dir_name in dirs:
+            print(f"  Subdirectory: {dir_name}")
+        for file_name in files:
+            print(f"  File: {file_name}")
+
     shutil.copy(result_path, result_output_dir)
     if os.path.isfile(result_path):
                 print('\n' + os.path.basename(test))
