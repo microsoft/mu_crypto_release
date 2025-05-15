@@ -71,27 +71,21 @@
   UnitTestLib|UnitTestFrameworkPkg/Library/UnitTestLib/UnitTestLib.inf
   UnitTestPersistenceLib|UnitTestFrameworkPkg/Library/UnitTestPersistenceLibNull/UnitTestPersistenceLibNull.inf
   UnitTestResultReportLib|UnitTestFrameworkPkg/Library/UnitTestResultReportLib/UnitTestResultReportLibDebugLib.inf
+  StackCheckLib|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+  # FltUsedLib is to satisfy the linker's need for a floating point global variable
   NULL|MdePkg/Library/FltUsedLib/FltUsedLib.inf
-
 
 #
 # For stack protection
 #
 [LibraryClasses.common.PEI_CORE]
-  NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
-
-[LibraryClasses.common.PEIM, LibraryClasses.common.MM_CORE_STANDALONE, LibraryClasses.common.MM_STANDALONE]
-  NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
-
-[LibraryClasses.common.DXE_CORE, LibraryClasses.common.SMM_CORE, LibraryClasses.common.DXE_SMM_DRIVER, LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.DXE_SAL_DRIVER, LibraryClasses.common.UEFI_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
-  NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLib.inf
 
 [LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
   RngLib|MdePkg/Library/DxeRngLib/DxeRngLib.inf
 
 !if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
 [LibraryClasses.IA32]
-  NULL|MdePkg/Library/VsIntrinsicLib/VsIntrinsicLib.inf
   ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
 [LibraryClasses.X64.DXE_CORE, LibraryClasses.X64.UEFI_DRIVER, LibraryClasses.X64.DXE_DRIVER, LibraryClasses.X64.UEFI_APPLICATION]
   # this is currently X64 only because MSVC doesn't support BaseMemoryLibOptDxe for AARCH64
