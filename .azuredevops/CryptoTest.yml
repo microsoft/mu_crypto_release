@@ -110,7 +110,7 @@ stages:
           update
           --firmwaredir ${{ variables.fw_dir }}
           --qemudir Build/Test/Qemu
-          --version latest
+          --version 8.0.0
           --debugfw
     #- powershell: |
     #    py muemu.py --update --firmwaredir ${{ variables.fw_dir }} --qemudir Build/Test/Qemu --version latest --debugfw
