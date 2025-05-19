@@ -5,6 +5,9 @@
 #include <CrtLibSupport.h>
 #include <Library/SharedCryptoLibrary.h>
 
+// TODO: remove in near future to stop using deprecated OpenSSL APIs
+#define OPENSSL_NO_DEPRECATED  0
+
 /**
   Check input P7Data is a wrapped ContentInfo structure or not. If not construct
   a new structure to wrap P7Data.

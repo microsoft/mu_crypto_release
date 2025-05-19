@@ -61,7 +61,6 @@ FreePool (
   gSharedDepends->FreePool (Buffer);
 }
 
-
 /**
   Retrieves the current time and date information, and the time-keeping capabilities of the hardware platform.
 

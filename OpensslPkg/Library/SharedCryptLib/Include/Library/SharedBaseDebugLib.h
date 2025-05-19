@@ -45,4 +45,42 @@ extern SHARED_DEPENDENCIES *gSharedDepends;
     }                                                                 \
   } while (0)
 
+/**
+  Returns TRUE if DEBUG_CODE() macros are enabled.
+
+  This function returns TRUE if the DEBUG_PROPERTY_DEBUG_CODE_ENABLED bit of
+  PcdDebugProperyMask is set.  Otherwise FALSE is returned.
+
+  @retval  TRUE    The DEBUG_PROPERTY_DEBUG_CODE_ENABLED bit of PcdDebugProperyMask is set.
+  @retval  FALSE   The DEBUG_PROPERTY_DEBUG_CODE_ENABLED bit of PcdDebugProperyMask is clear.
+
+**/
+BOOLEAN
+EFIAPI
+DebugCodeEnabled (
+  VOID
+  );
+
+/**
+  Macro that marks the beginning of debug source code.
+
+  If the DEBUG_PROPERTY_DEBUG_CODE_ENABLED bit of PcdDebugProperyMask is set,
+  then this macro marks the beginning of source code that is included in a module.
+  Otherwise, the source lines between DEBUG_CODE_BEGIN() and DEBUG_CODE_END()
+  are not included in a module.
+
+**/
+#define DEBUG_CODE_BEGIN()  do { if (DebugCodeEnabled ()) { UINT8  __DebugCodeLocal
+
+/**
+  The macro that marks the end of debug source code.
+
+  If the DEBUG_PROPERTY_DEBUG_CODE_ENABLED bit of PcdDebugProperyMask is set,
+  then this macro marks the end of source code that is included in a module.
+  Otherwise, the source lines between DEBUG_CODE_BEGIN() and DEBUG_CODE_END()
+  are not included in a module.
+
+**/
+#define DEBUG_CODE_END()  __DebugCodeLocal = 0; __DebugCodeLocal++; } } while (FALSE)
+  
 #endif // SHARED_DEBUG_LIB

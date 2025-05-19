@@ -7,8 +7,7 @@
 **/
 
 #include <Base.h>
-#include <Library/DebugLib.h>
-
+//#include <Library/DebugLib.h> // TODO
 #undef EDK2_OPENSSL_NOEC
 
 #include <openssl/types.h>
@@ -22,7 +21,7 @@ EC_GROUP_free (
   EC_GROUP  *group
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 int
@@ -32,7 +31,7 @@ EC_GROUP_get_order (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -41,7 +40,7 @@ EC_GROUP_get_curve_name (
   const EC_GROUP  *group
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -54,7 +53,7 @@ EC_GROUP_get_curve (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -63,7 +62,7 @@ EC_GROUP_get_degree (
   const EC_GROUP  *group
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -72,7 +71,7 @@ EC_GROUP_new_by_curve_name (
   int  nid
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -81,7 +80,7 @@ EC_POINT_new (
   const EC_GROUP  *group
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -90,7 +89,7 @@ EC_POINT_free (
   EC_POINT  *point
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 void
@@ -98,7 +97,7 @@ EC_POINT_clear_free (
   EC_POINT  *point
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 int
@@ -110,7 +109,7 @@ EC_POINT_set_affine_coordinates (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -123,7 +122,7 @@ EC_POINT_get_affine_coordinates (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -136,7 +135,7 @@ EC_POINT_set_compressed_coordinates (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -149,7 +148,7 @@ EC_POINT_add (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -160,7 +159,7 @@ EC_POINT_invert (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -170,7 +169,7 @@ EC_POINT_is_at_infinity (
   const EC_POINT  *p
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -181,7 +180,7 @@ EC_POINT_is_on_curve (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return -1;
 }
 
@@ -193,7 +192,7 @@ EC_POINT_cmp (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return -1;
 }
 
@@ -207,7 +206,7 @@ EC_POINT_mul (
   BN_CTX          *ctx
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return -0;
 }
 
@@ -216,7 +215,7 @@ EC_KEY_new_by_curve_name (
   int  nid
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -225,7 +224,7 @@ EC_KEY_free (
   EC_KEY  *key
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 EC_KEY *
@@ -233,7 +232,7 @@ EC_KEY_dup (
   const EC_KEY  *src
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -242,7 +241,7 @@ EC_KEY_get0_group (
   const EC_KEY  *key
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -251,7 +250,7 @@ EC_KEY_get0_public_key (
   const EC_KEY  *key
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -261,7 +260,7 @@ EC_KEY_set_public_key (
   const EC_POINT  *pub
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -270,7 +269,7 @@ EC_KEY_generate_key (
   EC_KEY  *key
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -279,7 +278,7 @@ EC_KEY_check_key (
   const EC_KEY  *key
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -297,7 +296,7 @@ ECDH_compute_key (
   )
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return 0;
 }
 
@@ -306,7 +305,7 @@ EVP_PKEY_get0_EC_KEY (
   const EVP_PKEY  *pkey
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -318,7 +317,7 @@ PEM_read_bio_ECPrivateKey (
   void             *u
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -327,7 +326,7 @@ ECDSA_SIG_new (
   void
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -336,7 +335,7 @@ ECDSA_SIG_free (
   ECDSA_SIG  *sig
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 void
@@ -346,7 +345,7 @@ ECDSA_SIG_get0 (
   const BIGNUM     **ps
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 int
@@ -357,7 +356,7 @@ ECDSA_SIG_set0 (
   )
 {
   return 0;
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
 }
 
 ECDSA_SIG *
@@ -367,7 +366,7 @@ ECDSA_do_sign (
   EC_KEY               *eckey
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return NULL;
 }
 
@@ -379,6 +378,6 @@ ECDSA_do_verify (
   EC_KEY               *eckey
   )
 {
-  ASSERT (FALSE);
+  // ASSERT (FALSE);
   return -1;
 }

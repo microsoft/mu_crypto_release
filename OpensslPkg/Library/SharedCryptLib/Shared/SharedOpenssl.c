@@ -133,13 +133,16 @@ InitAvailableCrypto (
   Crypto->Sha512Final          = Sha512Final;
   Crypto->Sha512Duplicate      = Sha512Duplicate;
   Crypto->Sha512HashAll        = Sha512HashAll;
+  
+  /*DISABLED*/
+  /*
   Crypto->Sm3GetContextSize    = Sm3GetContextSize;
   Crypto->Sm3Init              = Sm3Init;
   Crypto->Sm3Update            = Sm3Update;
   Crypto->Sm3Final             = Sm3Final;
   Crypto->Sm3Duplicate         = Sm3Duplicate;
   Crypto->Sm3HashAll           = Sm3HashAll;
-
+  */
   // ========================================================================================================
   // HMAC based Key Derivation Functions
   // ========================================================================================================

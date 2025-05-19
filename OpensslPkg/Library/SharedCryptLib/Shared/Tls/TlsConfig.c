@@ -9,7 +9,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "InternalTlsLib.h"
 
-
 typedef struct {
   //
   // IANA/IETF defined Cipher Suite ID
@@ -175,7 +174,7 @@ TlsSetVersion (
     return EFI_INVALID_PARAMETER;
   }
 
-  ProtoVersion = (MajorVer << 8) | MinorVer;
+  ProtoVersion = ((UINT16)MajorVer << 8) | MinorVer;
 
   //
   // Bound TLS method to the particular specified version.
@@ -433,7 +432,6 @@ TlsSetCipherList (
   // 79 non-newline characters. (MAX_DEBUG_MESSAGE_LENGTH is usually 0x100 in
   // DebugLib instances.)
   //
-  /*
   DEBUG_CODE_BEGIN ();
   UINTN  FullLength;
   UINTN  SegmentLength;
@@ -465,7 +463,6 @@ TlsSetCipherList (
   CipherStringPosition++;
   ASSERT (CipherStringPosition == CipherString + CipherStringSize);
   DEBUG_CODE_END ();
-  */
 
   //
   // Sets the ciphers for use by the Tls object.
@@ -704,7 +701,6 @@ TlsSetCaCertificate (
   TLS_CONNECTION  *TlsConn;
   SSL_CTX         *SslCtx;
   INTN            Ret;
-  UINTN           ErrorCode;
 
   BioCert   = NULL;
   Cert      = NULL;
@@ -756,11 +752,13 @@ TlsSetCaCertificate (
   //
   Ret = X509_STORE_add_cert (X509Store, Cert);
   if (Ret != 1) {
+    unsigned long  ErrorCode;
+
     ErrorCode = ERR_peek_last_error ();
     //
     // Ignore "already in table" errors
     //
-    if (!((ERR_GET_FUNC (ErrorCode) == X509_F_X509_STORE_ADD_CERT) &&
+    if (!((ERR_GET_LIB (ErrorCode) == ERR_LIB_X509) &&
           (ERR_GET_REASON (ErrorCode) == X509_R_CERT_ALREADY_IN_HASH_TABLE)))
     {
       Status = EFI_ABORTED;

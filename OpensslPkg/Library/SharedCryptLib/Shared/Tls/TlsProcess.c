@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include <InternalTlsLib.h>
+#include "InternalTlsLib.h"
 
 #define MAX_BUFFER_SIZE  32768
 
@@ -81,7 +81,6 @@ TlsDoHandshake (
   TLS_CONNECTION  *TlsConn;
   UINTN           PendingBufferSize;
   INTN            Ret;
-  // UINTN           ErrorCode; TODO: Remove this line
 
   TlsConn           = (TLS_CONNECTION *)Tls;
   PendingBufferSize = 0;
@@ -131,10 +130,10 @@ TlsDoHandshake (
         SSL_get_state (TlsConn->Ssl),
         Ret == SSL_ERROR_SSL ? "SSL" : Ret == SSL_ERROR_SYSCALL ? "SYSCALL" : "ZERO_RETURN"
         ));
-
-      /*
       DEBUG_CODE_BEGIN ();
       while (TRUE) {
+        unsigned long  ErrorCode;
+
         ErrorCode = ERR_get_error ();
         if (ErrorCode == 0) {
           break;
@@ -142,17 +141,15 @@ TlsDoHandshake (
 
         DEBUG ((
           DEBUG_ERROR,
-          "%a ERROR 0x%x=L%x:F%x:R%x\n",
+          "%a ERROR 0x%x=L%x:R%x\n",
           __FUNCTION__,
           ErrorCode,
           ERR_GET_LIB (ErrorCode),
-          ERR_GET_FUNC (ErrorCode),
           ERR_GET_REASON (ErrorCode)
           ));
       }
 
       DEBUG_CODE_END ();
-      */
       return EFI_ABORTED;
     }
   }

@@ -108,7 +108,7 @@ BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
 ###################################################################################################
 [Components]
   OpensslPkg/Library/SharedCryptLib/SharedCryptoBin.inf
-  OpensslPkg/Library/SharedCryptLib/Driver/SharedCryptoLoaderDxe.inf
+  #OpensslPkg/Library/SharedCryptLib/Driver/SharedCryptoLoaderDxe.inf
 
 [BuildOptions]
   *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES
