@@ -45,6 +45,7 @@
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
   DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
   FltUsedLib|MdePkg/Library/FltUsedLib/FltUsedLib.inf
+  NULL|MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
   HashApiLib|CryptoPkg/Library/BaseHashApiLib/BaseHashApiLib.inf
   HmacSha1Lib|OpensslPkg/Library/HmacSha1Lib/HmacSha1Lib.inf
   IntrinsicLib|OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
@@ -73,7 +74,10 @@
   UnitTestResultReportLib|UnitTestFrameworkPkg/Library/UnitTestResultReportLib/UnitTestResultReportLibDebugLib.inf
   StackCheckLib|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
   # FltUsedLib is to satisfy the linker's need for a floating point global variable
-  NULL|MdePkg/Library/FltUsedLib/FltUsedLib.inf
+  FltUsedLib|MdePkg/Library/FltUsedLib/FltUsedLib.inf
+
+[LibraryClasses.AARCH64]
+  NULL|MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
 #
 # For stack protection
