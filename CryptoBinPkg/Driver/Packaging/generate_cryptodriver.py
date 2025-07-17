@@ -210,7 +210,7 @@ def read_header_file(options, path):
         def set_return_type_if_valid(self, line: str):
             ''' Sets the return type to what is passed in, if it's a valid return type '''
             line = line.upper()
-            if line not in ["VOID *", "VOID*", "BOOLEAN", "UINTN", "VOID", "RETURN_STATUS", "UINT8", "UINT16", "UINT32", "INT32", "INTN", "EFI_STATUS"]:
+            if line not in ["VOID *", "VOID*", "BOOLEAN", "UINTN", "VOID", "RETURN_STATUS", "UINT8", "UINT16", "UINT32", "INTN", "EFI_STATUS"]:
                 return False
             self.return_type = line
             return True
