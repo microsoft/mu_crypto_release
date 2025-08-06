@@ -132,6 +132,7 @@
   gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServicePkcs7GetCertificatesList # CONSUMES
   gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServicePkcs7Sign # CONSUMES
   gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServicePkcs7Verify # CONSUMES
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServicePkcs7Encrypt # CONSUMES
   gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceVerifyEKUsInPkcs7Signature # CONSUMES
   gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServicePkcs7GetAttachedContent # CONSUMES
   gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceAuthenticodeVerify # CONSUMES
