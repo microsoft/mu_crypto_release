@@ -735,6 +735,11 @@ def get_crypto_c(options, functions):
     lines = []
 
     # Use strict ordering for struct generation to ensure exact positioning
+    # Use strict ordering for struct generation to ensure exact positioning.
+    # The order of function pointers in the protocol struct must exactly match the order
+    # defined in the interface specification. This is critical because the protocol's ABI
+    # requires that each function pointer appears in the correct position; any deviation
+    # can lead to incorrect behavior or runtime errors.
     strictly_ordered_functions = get_strictly_ordered_functions(functions, options.order_file)
     
     # For function body generation, we still want grouping by type for readability
