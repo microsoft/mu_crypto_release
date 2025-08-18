@@ -85,6 +85,7 @@ jobs:
           inputs:
             scriptSource: 'filePath'
             scriptPath: CryptoBinPkg/Driver/Packaging/generate_cryptodriver.py
+            arguments: --order-file CryptoBinPkg/Driver/Packaging/crypto.order.json -v    
 
         - task: PythonScript@0
           displayName: 'Build Crypto Drivers'
