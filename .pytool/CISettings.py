@@ -5,6 +5,7 @@
 # Copyright (c) 2020 - 2021, ARM Limited. All rights reserved.<BR>
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
+import git
 import os
 import logging
 import sys
@@ -163,41 +164,28 @@ class Settings(CiSetupSettingsManager, CiBuildSettingsManager, UpdateSettingsMan
         If no RequiredSubmodules return an empty iterable
         '''
         rs = []
-        rs.append(RequiredSubmodule(
-            "OpensslPkg/Library/OpensslLib/openssl", False))
+
+        # To avoid maintenance of this file for every new submodule
+        # lets just parse the .gitmodules and add each if not already in list.
+        # The GetRequiredSubmodules is designed to allow a build to optimize
+        # the desired submodules but it isn't necessary for this repository.
+
+        gitrepo = git.Repo(self.GetWorkspaceRoot())
+        for submodule in gitrepo.submodules:
+            if "mu_" in submodule.url.lower():
+                rs.append(RequiredSubmodule(submodule.path, False, ".pytool/CISettings.py"))
+            else:
+                rs.append(RequiredSubmodule(submodule.path, True))
         return rs
 
     def GetName(self):
         return "Crypto_Release"
 
     def GetDependencies(self):
-        return [
-            {
-                "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Branch": "release/202405"
-            },
-            {
-                "Path": "Silicon/Arm/MU_TIANO",
-                "Url": "https://github.com/Microsoft/mu_silicon_arm_tiano.git",
-                "Branch": "release/202405"
-            },
-            {
-                "Path": "Features/MM_SUPV",
-                "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
-                "Branch": "main"
-            },
-            {
-                "Path": "Common/MU",
-                "Url": "https://github.com/microsoft/mu_plus.git",
-                "Branch": "release/202405"
-            }
-        ]
+        return []
+
     def GetPackagesPath(self):
-        result = []
-        for a in self.GetDependencies():
-            result.append(a["Path"])
-        return result
+        return [submodule.path for submodule in self.GetRequiredSubmodules()]
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
