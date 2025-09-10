@@ -162,37 +162,20 @@ class Settings(CiSetupSettingsManager, CiBuildSettingsManager, UpdateSettingsMan
         ''' return iterable containing RequiredSubmodule objects.
         If no RequiredSubmodules return an empty iterable
         '''
-        rs = []
-        rs.append(RequiredSubmodule(
-            "OpensslPkg/Library/OpensslLib/openssl", False))
+        rs = [
+            RequiredSubmodule("MU_BASECORE", False, ".pytool/CISettings.py"),
+            RequiredSubmodule("Common/MU", False, ".pytool/CISettings.py"),
+            RequiredSubmodule("Silicon/Arm/MU_TIANO", False, ".pytool/CISettings.py"),
+            RequiredSubmodule("Features/MM_SUPV", False, ".pytool/CISettings.py"),
+            RequiredSubmodule("OpensslPkg/Library/OpensslLib/openssl", False),
+        ]
         return rs
 
     def GetName(self):
         return "Crypto_Release"
 
     def GetDependencies(self):
-        return [
-            {
-                "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Branch": "release/202405"
-            },
-            {
-                "Path": "Silicon/Arm/MU_TIANO",
-                "Url": "https://github.com/Microsoft/mu_silicon_arm_tiano.git",
-                "Branch": "release/202405"
-            },
-            {
-                "Path": "Features/MM_SUPV",
-                "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
-                "Branch": "main"
-            },
-            {
-                "Path": "Common/MU",
-                "Url": "https://github.com/microsoft/mu_plus.git",
-                "Branch": "release/202405"
-            }
-        ]
+        return []
     def GetPackagesPath(self):
         result = []
         for a in self.GetDependencies():
