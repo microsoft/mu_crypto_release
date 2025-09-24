@@ -1,0 +1,52 @@
+## @file
+#  Simple Shared Library Reference Module.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SharedCryptoDxeLoader
+  FILE_GUID                      = 4F25834D-11D0-4A8F-9860-72B303B9F242
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DxeEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+
+[Sources]
+  SharedCryptoLoaderDxe.c
+  SharedLoaderShim.h
+  PeCoffLib.h
+  PeCoffLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  CryptoPkg/SharedCryptoPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  DebugLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DxeServicesLib
+  PeCoffGetEntryPointLib
+  PeCoffLib
+  CacheMaintenanceLib
+  DxeServicesTableLib
+  UefiBootServicesTableLib
+  RngLib
+
+[Protocols]
+  ## TODO Add protocols here
+  gEfiMemoryAttributeProtocolGuid     ## CONSUMES
+  gSharedCryptoDxeProtocolGuid        ## PRODUCES
+
+[Depex]
+  TRUE
