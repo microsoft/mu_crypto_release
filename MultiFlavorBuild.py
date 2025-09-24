@@ -1,5 +1,5 @@
 # @file SingleFlavorBuild.py
-# Script to Build a Single Flavor and Target of CryptoBin
+# Script to Build a Single Flavor and Target of SharedCrypto
 #
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -13,7 +13,7 @@ from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 from edk2toollib.utility_functions import RunPythonScript
 
-from CommonBuildSettings import CommonPlatform, CommonSettingsManager
+from CommonBuildSettings import CommonPlatform, CommonSettingsManager, crypto_platforms, validate_platform_option
 
 
 # ####################################################################################### #
@@ -50,24 +50,26 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         def validate_targets(target_arg: str):
             return validate_list(target_arg, CommonPlatform.TargetsSupported)
 
-        def validate_flavors(flavor_arg: str):
-            return validate_list(flavor_arg, CommonPlatform.AvailableFlavors)
         parserObj.add_argument("-t", "--target", dest="target", type=validate_targets,
                                default=CommonPlatform.TargetsSupported,
                                help="build target(s) for the build {%s}" % ",".join(CommonPlatform.TargetsSupported))
-        parserObj.add_argument("-f", "--flavor", dest="flavor", type=validate_flavors,
-                               default=CommonPlatform.AvailableFlavors,
-                               help="flavor(s) for the build {%s}" % ",".join(CommonPlatform.AvailableFlavors))
+        
         parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
                                default=False,
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
+        parserObj.add_argument("--active-platform",
+                               dest="active_platform",
+                               choices=crypto_platforms.keys(),
+                               default="CryptoPkg",
+                               type=validate_platform_option,
+                               help="the active platform to build for the Crypto binary distribution")
 
     def RetrieveCommandLineOptions(self, args):
         self.arch = args.arch
         self.target = args.target
-        self.flavor = args.flavor
         self.stop = args.stop
         self.bundle = args.bundle
+        self.active_platform = args.active_platform
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -84,7 +86,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
     def GetName(self):
         ''' Get the name of the repo, platform, or product being built '''
         ''' Used for naming the log file, among others '''
-        return "MultiCryptoBin"
+        return "MultiSharedCrypto"
 
     def GetLoggingLevel(self, loggerType):
         ''' Get the logging level for a given type
@@ -100,58 +102,54 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         if toolchain is None:
             toolchain = "VS2022"
         overall_success = True
-        for flavor in self.flavor:
-            for target in self.target:
-                arches = []
-                use_gcc = False
-                for arch in self.arch:
-                    if arch != "AARCH64":
-                        arches.append(arch)
-                    else:
-                        use_gcc = True
-                if len(arches) > 0:
-                    params = [flavor]
-                    params += [f"TOOL_CHAIN_TAG={toolchain}"]
-                    params += ["-t", target]
-                    params += ["-a", ",".join(arches)]
-                    if self.bundle:
-                        params += ["-b"]
+        for target in self.target:
+            arches = []
+            use_gcc = False
+            for arch in self.arch:
+                if arch != "AARCH64":
+                    arches.append(arch)
+                else:
+                    use_gcc = True
+            if len(arches) > 0:
+                params = [self.active_platform]
+                params += [f"TOOL_CHAIN_TAG={toolchain}"]
+                params += ["-t", target]
+                params += ["-a", ",".join(arches)]
+                if self.bundle:
+                    params += ["-b"]
 
-                    current_build = f"{flavor} {target}"
-                    logging.log(edk2_logging.SECTION, f"Building {current_build}")
+                current_build = f"SHARED {target}"
+                logging.log(edk2_logging.SECTION, f"Building {current_build}")
 
-                    ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
+                ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
 
-                    if ret == 0:
-                        logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
-                    else:
-                        logging.error(f"{current_build} FAILED")
-                        overall_success = False
-                        if self.stop:
-                            break
-                if use_gcc:
-                    params = [flavor]
-                    params += [f"TOOL_CHAIN_TAG=GCC5"]
-                    params += ["-t", target]
-                    params += ["-a", "AARCH64"]
-                    if self.bundle:
-                        params += ["-b"]
+                if ret == 0:
+                    logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
+                else:
+                    logging.error(f"{current_build} FAILED")
+                    overall_success = False
+                    if self.stop:
+                        break
+            if use_gcc:
+                params = [self.active_platform]
+                params += ["TOOL_CHAIN_TAG=GCC5"]
+                params += ["-t", target]
+                params += ["-a", "AARCH64"]
+                if self.bundle:
+                    params += ["-b"]
 
-                    current_build = f"{flavor} {target}"
-                    logging.log(edk2_logging.SECTION, f"Building {current_build}")
+                current_build = f"SHARED {target}"
+                logging.log(edk2_logging.SECTION, f"Building {current_build}")
 
-                    ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
+                ret = RunPythonScript("SingleFlavorBuild.py", " ".join(params), workingdir=self.GetWorkspaceRoot())
 
-                    if ret == 0:
-                        logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
-                    else:
-                        logging.error(f"{current_build} FAILED")
-                        overall_success = False
-                        if self.stop:
-                            break
-            else:
-                continue    # Allow the break to exit both loops.
-            break           # Allow the break to exit both loops.
+                if ret == 0:
+                    logging.log(edk2_logging.PROGRESS, f"{current_build} Success")
+                else:
+                    logging.error(f"{current_build} FAILED")
+                    overall_success = False
+                    if self.stop:
+                        break
 
         return 0 if overall_success else -1
 

@@ -10,7 +10,7 @@ import logging
 from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 
-from CommonBuildSettings import CommonPlatform, CommonSettingsManager
+from CommonBuildSettings import CommonPlatform, CommonSettingsManager, crypto_platforms, validate_platform_option
 
 
 # ####################################################################################### #
@@ -36,19 +36,26 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                                default=CommonPlatform.TargetsSupported[0],
                                choices=CommonPlatform.TargetsSupported,
                                help="the target to build for the Crypto binary distribution")
-        parserObj.add_argument(dest="flavor", type=str,
-                               choices=CommonPlatform.AvailableFlavors,
-                               help="the flavor to build for the Crypto binary distribution")
+
         parserObj.add_argument("-b", "--bundle", dest="bundle", action="store_true",
                                default=False,
                                help="Bundles the build output into the directory structure for the Crypto binary distribution.")
 
+        subparsers = parserObj.add_subparsers(dest="active_platform", help="Sub-commands for active platform", required=True)
+
+        # Add a subparser for each active platform
+        for platform_name, platform_info in crypto_platforms.items():
+            subparsers.add_parser(platform_name, help=f"Options for {platform_name}")
+
+        # TODO for some reason the subparsers are not being added to the help output
+
 
     def RetrieveCommandLineOptions(self, args):
-        self.flavor = args.flavor
         self.target = args.target
         self.arch = args.arch
         self.bundle = args.bundle
+        self.active_platform = crypto_platforms[args.active_platform]["ACTIVE_PLATFORM"]
+        self.product_name = crypto_platforms[args.active_platform]["PRODUCT_NAME"]
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -65,7 +72,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         return CommonPlatform.Scopes
 
     def GetBaseName(self):
-        return "CryptoBin_%s" % self.flavor
+        return "OpensslPkg"
 
     def GetName(self):
         ''' Get the name of the repo, platform, or product being built '''
@@ -83,13 +90,13 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def SetPlatformEnv(self):
         logging.debug("PlatformBuilder SetPlatformEnv")
-        self.env.SetValue("PRODUCT_NAME", "CryptoBin", "Platform Hardcoded")
-        self.env.SetValue("ACTIVE_PLATFORM", "CryptoBinPkg/CryptoBinPkg.dsc", "Platform Hardcoded")
+        self.env.SetValue("PRODUCT_NAME", self.product_name, "Platform Hardcoded")
+        self.env.SetValue("ACTIVE_PLATFORM", self.active_platform, "Platform Hardcoded")
         self.env.SetValue("BLD_%s_OUTPUT_SUB_DIRECTORY" % self.target, self.GetBaseName(), "Platform Hardcoded")
         self.env.SetValue("OUTPUT_DIRECTORY", "Build/%s" % self.GetBaseName(), "Platform Hardcoded")
         self.env.SetValue("TARGET_ARCH", " ".join(self.arch), "CLI args")
         self.env.SetValue("TARGET", self.target, "CLI args")
-        self.env.SetValue("BLD_*_CRYPTO_SERVICES", self.flavor, "CLI args")
+        self.env.SetValue("BLD_*_CRYPTO_SERVICES", "SHARED", "Platform Hardcoded")
         self.env.SetValue("BLD_*_SHARED_CRYPTO_PATH", "CryptoBinPkg", "Platform Hardcoded")
 
         # Default turn on build reporting.
@@ -114,11 +121,11 @@ if __name__ == "__main__":
     from edk2toolext.invocables.edk2_setup import Edk2PlatformSetup
     from edk2toolext.invocables.edk2_platform_build import Edk2PlatformBuild
     print("Invoking Stuart")
-    print("     ) _     _")
-    print("    ( (^)-~-(^)")
-    print("__,-.\_( 0 0 )__,-.___")         # noqa
-    print("  'W'   \   /   'W'")            # noqa
-    print("         >o<")
+    print(r"     ) _     _")
+    print(r"    ( (^)-~-(^)")
+    print(r"__,-.\_( 0 0 )__,-.___")         # noqa
+    print(r"  'W'   \   /   'W'")            # noqa
+    print(r"         >o<")
     SCRIPT_PATH = os.path.relpath(__file__)
     parser = argparse.ArgumentParser(add_help=False)
     parse_group = parser.add_mutually_exclusive_group()

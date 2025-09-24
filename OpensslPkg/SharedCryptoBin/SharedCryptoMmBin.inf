@@ -1,0 +1,108 @@
+## @file
+#  This module provides OpenSSL Binary implementation.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SharedCryptoMmBin
+  FILE_GUID                      = 76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC #TODO UPDATE
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MmEntry
+  PI_SPECIFICATION_VERSION       = 0x00010032
+
+  DEFINE OPENSSL_PATH            = openssl
+  DEFINE OPENSSL_FLAGS           = -DL_ENDIAN -DOPENSSL_SMALL_FOOTPRINT -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DOPENSSL_NO_ASM
+  DEFINE OPENSSL_FLAGS_CONFIG    =
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+#
+
+[LibraryClasses]
+  StandaloneMmDriverEntryPoint
+  MmServicesTableLib
+  IntrinsicLib
+  BaseLib
+  BasePrintLib
+  BaseMemoryLib
+  OpensslLib
+  SafeIntLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  OpensslPkg/OpensslPkg.dec
+  StandaloneMmPkg/StandaloneMmPkg.dec
+
+[Sources]
+  InternalCryptLib.h
+  SharedCryptoBin.c
+  SharedCryptoCrt.c
+  Shared/SharedOpenssl.c
+  Shared/SharedOpenssl.h
+  Shared/Syscall/CrtWrapper.c
+  Shared/Syscall/BaseMemAllocation.c
+  Shared/Syscall/TimerWrapper.c
+  Shared/Math/DivS64x64Remainder.c
+
+  # Big Number Crypto API
+  Shared/BN/CryptBn.c
+
+  # Cipher Crypto API
+  Shared/Cipher/CryptAeadAesGcm.c
+  Shared/Cipher/CryptAes.c
+
+  # Hash Crypto API
+  Shared/Hash/CryptMd5.c
+  Shared/Hash/CryptSha1.c
+  Shared/Hash/CryptSha256.c
+  Shared/Hash/CryptSha512.c
+  # Shared/Hash/CryptSm3.c # Disabled
+
+  # HMAC API
+  Shared/Hmac/CryptHmac.c
+
+  # KDF API
+  Shared/Kdf/CryptHkdf.c
+
+  # PEM API
+  Shared/Pem/CryptPem.c
+
+  # PK API
+  Shared/Pk/CryptAuthenticode.c
+  Shared/Pk/CryptDh.c
+  Shared/Pk/CryptEc.c
+  Shared/Pk/CryptPkcs1Oaep.c
+  Shared/Pk/CryptPkcs5Pbkdf2.c
+  Shared/Pk/CryptPkcs7Sign.c
+  Shared/Pk/CryptPkcs7Encrypt.c
+  Shared/Pk/CryptPkcs7VerifyBase.c
+  Shared/Pk/CryptPkcs7VerifyCommon.c
+  Shared/Pk/CryptPkcs7VerifyEku.c
+  Shared/Pk/CryptRsaBasic.c
+  Shared/Pk/CryptRsaExt.c
+  Shared/Pk/CryptRsaPss.c
+  Shared/Pk/CryptRsaPssSign.c
+  Shared/Pk/CryptX509.c
+  Shared/Pk/CryptTs.c
+
+  # Random Crypto API
+  Shared/Rand/CryptRand.h
+  Shared/Rand/CryptRand.c
+
+  # TLS API
+  InternalTlsLib.h
+  Shared/Tls/TlsConfig.c
+  Shared/Tls/TlsInit.c
+  Shared/Tls/TlsProcess.c
+  Shared/Syscall/inet_pton.c
+
+[BuildOptions]
+  MSFT:*_*_*_DLINK_FLAGS  = /DLL /SUBSYSTEM:CONSOLE /VERSION:1.0
+  MSFT:*_*_*_GENFW_FLAGS = --keepoptionalheader
+
+  [Protocols]
+    gSharedCryptoPrivateProtocolGuid

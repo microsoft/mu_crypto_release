@@ -16,7 +16,7 @@
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
   PACKAGE_NAME                   = OpensslPkg
-  PACKAGE_GUID                   = 8823c3fc-32ca-4275-990a-8485f87e3c8c
+  PACKAGE_GUID                   = 9f8c7e4a-3b2d-4a1e-9d6f-2b3e4c5d6a7b
   PACKAGE_VERSION                = 1.0
 
 [Includes.common.Private]
@@ -27,12 +27,34 @@
   Library/OpensslLib/openssl/providers/implementations/include
   Library/OpensslLib/OpensslGen/include
   Library/OpensslLib/OpensslGen/providers/common/include
+  Library/OpensslLib
+  Include
 
 [LibraryClasses.common.Private]
   ##  @libraryclass  Provides library functions from the openssl project.
   #
   OpensslLib|Private/Library/OpensslLib.h
-  
+
   ##  @libraryclass  Provides compiler intrinsic functions required to link openssl project.
   #
   InstrinsicLib|Private/Library/IntrinsicLib.h
+
+
+  [Protocols]
+  ## Public Shared Crypto Protocol
+  ## This protocol provides a comprehensive cryptographic API for UEFI applications and drivers.
+  ## It exposes OpenSSL-based cryptographic functions including HMAC, hashing, encryption,
+  ## digital signatures, and other cryptographic operations in a standardized UEFI protocol interface.
+  ## Applications and drivers can locate and use this protocol to perform cryptographic operations
+  ## without needing to link directly against cryptographic libraries.
+  #
+  gSharedCryptoProtocolGuid =  { 0x2C2275C9, 0x3A7B, 0x426F, { 0xBE, 0x54, 0x2D, 0x22, 0xBD, 0x9D, 0x10, 0x93 }}
+
+  ## Private Shared Crypto Constructor Protocol
+  ## This is an internal protocol used by the shared crypto binary architecture for dynamic loading.
+  ## It provides a constructor interface that allows the crypto implementation to be initialized
+  ## and configured at runtime. This protocol is used internally by the crypto loader drivers
+  ## (DXE/SMM/MM) to set up the shared crypto binary and is not intended for direct use by 
+  ## applications or other drivers.
+  #
+  gSharedCryptoPrivateProtocolGuid = { 0x854bce61, 0x8d35, 0x4ff5, { 0x9d, 0xb7, 0x30, 0x3a, 0xfb, 0x79, 0x80, 0xe2 }}
