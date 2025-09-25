@@ -234,6 +234,12 @@ def get_flavors():
             "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "RsaOaepEncrypt", "RsaOaepDecrypt", "RsaGetPublicKeyFromX509", "RsaPssSign", "RsaPssVerify", "EcGetPublicKeyFromX509", "EcFree", "EcDsaVerify", "Asn1GetTag"],
             "exclude": ["Sha1HashAll", "Pkcs7Sign", "Pkcs7GetCertificatesList", "ImageTimestampVerify"],
             "guid": "bdee011f-87f2-4a7f-bc5e-44b6b61fef00"
+        },
+        "ALL": {
+            "families": ["HMACSHA256", "PKCS", "SHA1", "SHA256", "SHA384", "SHA512", "RANDOM", "TLS", "TLSGET", "TLSSET", "X509", "AES"],
+            "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "RsaOaepEncrypt", "RsaOaepDecrypt", "RsaGetPublicKeyFromX509", "RsaPssSign", "RsaPssVerify", "EcGetPublicKeyFromX509", "EcFree", "EcDsaVerify", "Asn1GetTag"],
+            "exclude": [],
+            "guid": "bdee011f-87f2-4a7f-bc5e-3C9772B2C4F9"
         }
     }
 
