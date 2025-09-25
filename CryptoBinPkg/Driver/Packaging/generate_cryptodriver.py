@@ -160,8 +160,9 @@ def ParseCommandLineOptions():
                            help="Enable Compile Time check for generated library files")
     ParserObj.add_argument("--disable-null-only", dest="eno", default=True, action='store_false',
                            help="Disable config to use Nulls for protocol instead of unsupported function")
-    ParserObj.add_argument("--order-file", dest="order_file", default=None,
-                           help="JSON file specifying the order of function types and individual functions")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    ParserObj.add_argument("--order-file", dest="order_file", default=os.path.join(script_dir, 'crypto.order.json'))
+
     # parse the args
     options = ParserObj.parse_args()
 
