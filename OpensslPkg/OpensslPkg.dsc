@@ -19,7 +19,7 @@
   PLATFORM_VERSION               = 0.98
   DSC_SPECIFICATION              = 0x00010005
   OUTPUT_DIRECTORY               = Build/OpensslPkg
-  SUPPORTED_ARCHITECTURES        = IA32|X64|ARM|AARCH64
+  SUPPORTED_ARCHITECTURES        = X64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
 
@@ -35,7 +35,7 @@
 [PcdsPatchableInModule]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
 
-  [PcdsFixedAtBuild]
+[PcdsFixedAtBuild]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80080246
   #gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x800002CF # use when debugging depex loading issues
   gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel
@@ -46,7 +46,6 @@
   # We need to be very specific with our dependencies
   #
 
-
 [LibraryClasses.common.MM_STANDALONE]
   UefiBootServicesTableLib    |MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
   StackCheckFailureHookLib    |MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
@@ -55,13 +54,15 @@
   BasePrintLib                |MdePkg/Library/BasePrintLib/BasePrintLib.inf
   SafeIntLib                  |MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   MmServicesTableLib          |MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
-  StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf # Required for MM_SUPV based MM_STANDALONE Drivers
+  StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf #TODO Support AARCH64
   PcdLib                      |MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf # Required for UEFI applications - NULL implementation
   DebugLib                    |MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf # Required for UEFI applications - NULL implementation
   NULL                        |MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
   IntrinsicLib                |OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
   FltUsedLib                  |MdePkg/Library/FltUsedLib/FltUsedLib.inf
   OpensslLib                  |OpensslPkg/Library/OpensslLib/OpenssLibShared.inf
+
+
 
 
 ###################################################################################################
