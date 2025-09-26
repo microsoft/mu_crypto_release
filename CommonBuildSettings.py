@@ -13,6 +13,23 @@ from edk2toolext.invocables.edk2_setup import SetupSettingsManager, RequiredSubm
 from edk2toolext.invocables.edk2_update import UpdateSettingsManager
 from edk2toollib.utility_functions import RunCmd
 
+crypto_platforms = {
+    "CryptoBinPkg": {
+        "PRODUCT_NAME": "CryptoBin",
+        "ACTIVE_PLATFORM": "CryptoBinPkg/CryptoBinPkg.dsc",
+    },
+    "OpensslPkg": {
+        "PRODUCT_NAME": "SharedCrypto",
+        "ACTIVE_PLATFORM": "OpensslPkg/OpensslPkg.dsc",
+    }
+}
+
+def validate_platform_option(active_platform):
+    if active_platform not in crypto_platforms:
+        logging.error(f"Invalid platform option: {active_platform}. Must be one of {list(crypto_platforms.keys())}")
+        raise ValueError(f"Invalid platform option: {active_platform}. Must be one of {list(crypto_platforms.keys())}")
+
+    return active_platform
 
 # ####################################################################################### #
 #                                Common Configuration                                     #
@@ -21,13 +38,11 @@ class CommonPlatform():
     ''' Common settings for this platform.  Define static data here and use
         for the different parts of stuart
     '''
-    BaseName = "CryptoBin"
-    PackagesSupported = ("CryptoBinPkg",)
+    BaseName = "SharedCrypto"
+    PackagesSupported = ("CryptoBinPkg", "OpensslPkg", "CryptoPkg")
     ArchSupported = ("IA32", "X64", "AARCH64")
     TargetsSupported = ("DEBUG", "RELEASE")
-    Scopes = ('cryptobin', 'edk2-build')
-    # TODO: Maybe load this from the supported flavors in MU_BASECORE\CryptoPkg\Driver\Packaging modules?
-    AvailableFlavors = ('ALL', 'TINY_SHA', 'MINIMAL_SHA_SM3', 'SMALL_SHA_RSA', 'STANDARD')
+    Scopes = ('sharedcrypto', 'edk2-build')
     WorkspaceRoot = os.path.dirname(os.path.abspath(__file__))
 
     def GetAllSubmodules():
@@ -41,7 +56,7 @@ class CommonPlatform():
         ret = RunCmd("git", "config --file .gitmodules --get-regexp path",
                      workingdir=CommonPlatform.WorkspaceRoot, outstream=result)
         # Cmd output is expected to look like:
-        # submodule.CryptoPkg/Library/OpensslLib/openssl.path CryptoPkg/Library/OpensslLib/openssl
+        # submodule.OpensslPkg/Library/OpensslLib/openssl.path OpensslPkg/Library/OpensslLib/openssl
         # submodule.SoftFloat.path ArmPkg/Library/ArmSoftFloatLib/berkeley-softfloat-3
         if ret == 0:
             for line in result.getvalue().splitlines():

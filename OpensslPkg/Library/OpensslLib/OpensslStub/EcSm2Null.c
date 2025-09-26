@@ -7,8 +7,7 @@
 **/
 
 #include <Base.h>
-#include <Library/DebugLib.h>
-
+#include "CrtLibSupport.h"
 #undef EDK2_OPENSSL_NOEC
 
 #include <openssl/types.h>
