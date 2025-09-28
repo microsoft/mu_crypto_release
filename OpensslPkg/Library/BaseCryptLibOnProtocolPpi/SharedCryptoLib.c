@@ -30,6 +30,7 @@
   do {                                                                 \
     SHARED_CRYPTO_PROTOCOL  *CryptoServices;                            \
                                                                        \
+    DEBUG ((DEBUG_INFO, "[%a] Calling crypto service: %a\n", gEfiCallerBaseName, #Function));    \
     CryptoServices = (SHARED_CRYPTO_PROTOCOL *)GetCryptoServices ();    \
     if (CryptoServices != NULL && CryptoServices->Function != NULL) {  \
       return (CryptoServices->Function) Args;                          \
@@ -51,6 +52,7 @@
   do {                                                                 \
     SHARED_CRYPTO_PROTOCOL  *CryptoServices;                            \
                                                                        \
+    DEBUG ((DEBUG_INFO, "[%a] Calling crypto service: %a\n", gEfiCallerBaseName, #Function));    \
     CryptoServices = (SHARED_CRYPTO_PROTOCOL *)GetCryptoServices ();    \
     if (CryptoServices != NULL && CryptoServices->Function != NULL) {  \
       (CryptoServices->Function) Args;                                 \

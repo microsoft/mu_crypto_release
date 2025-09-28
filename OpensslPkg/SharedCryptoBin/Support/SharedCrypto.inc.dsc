@@ -15,11 +15,6 @@
   $(SHARED_SHARED_CRYPTO_PATH)/bin/shared/SharedCryptoMmBin.inf
 
   # Drivers that will be built from source to provide platform services
-  $(SHARED_SHARED_CRYPTO_PATH)/src/driver/SharedCryptoLoaderDxe.inf
+  $(SHARED_SHARED_CRYPTO_PATH)/bin/shared/SharedCryptoDxeLoader.inf
 
-  $(SHARED_SHARED_CRYPTO_PATH)/src/driver/SharedCryptoLoaderMm.inf {
-    <LibraryClasses>
-      #PrePiLib|EmbeddedPkg/Library/PrePiLib/PrePiLib.inf
-      FvLib|StandaloneMmPkg/Library/FvLib/FvLib.inf
-      ExtractGuidedSectionLib|MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
-  }
+  $(SHARED_SHARED_CRYPTO_PATH)/bin/shared/SharedCryptoLoaderMm.inf

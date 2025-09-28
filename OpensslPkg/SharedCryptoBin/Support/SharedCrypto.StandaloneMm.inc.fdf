@@ -14,4 +14,4 @@
 # environment. It provides cryptographic services to other components in the
 # firmware.
 #
-INF $(SHARED_SHARED_CRYPTO_PATH)/src/driver/SharedCryptoLoaderMm.inf
+INF $(SHARED_SHARED_CRYPTO_PATH)/bin/shared/SharedCryptoLoaderMm.inf
