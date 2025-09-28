@@ -26,7 +26,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  CryptoPkg/SharedCryptoPkg.dec
+  OpensslPkg/OpensslPkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec
 
 [LibraryClasses]
