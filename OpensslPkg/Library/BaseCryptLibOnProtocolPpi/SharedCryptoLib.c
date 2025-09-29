@@ -32,8 +32,25 @@
                                                                        \
     DEBUG ((DEBUG_INFO, "[%a] Calling crypto service: %a\n", gEfiCallerBaseName, #Function));    \
     CryptoServices = (SHARED_CRYPTO_PROTOCOL *)GetCryptoServices ();    \
-    if (CryptoServices != NULL && CryptoServices->Function != NULL) {  \
-      return (CryptoServices->Function) Args;                          \
+    if (CryptoServices != NULL) {                                      \
+  /* Validate protocol version compatibility */                    \
+      if (CryptoServices->Major != VERSION_MAJOR) { \
+        DEBUG ((DEBUG_ERROR, "[%a] Crypto Protocol major version mismatch: expected %d.%d.%d, got %d.%d.%d.\n", \
+                gEfiCallerBaseName, VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, \
+                CryptoServices->Major, CryptoServices->Minor, CryptoServices->Revision)); \
+        ASSERT (FALSE);                                                \
+        return ErrorReturnValue;                                       \
+      }                                                                \
+      if (CryptoServices->Minor < VERSION_MINOR) { \
+        DEBUG ((DEBUG_ERROR, "[%a] Crypto Protocol minor version mismatch: expected %d.%d.%d, got %d.%d.%d.\n", \
+                gEfiCallerBaseName, VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, \
+                CryptoServices->Major, CryptoServices->Minor, CryptoServices->Revision)); \
+        ASSERT (FALSE);                                                \
+        return ErrorReturnValue;                                       \
+      }                                                                \
+      if (CryptoServices->Function != NULL) {                          \
+        return (CryptoServices->Function) Args;                        \
+      }                                                                \
     }                                                                  \
     CryptoServiceNotAvailable (#Function);                             \
     return ErrorReturnValue;                                           \
@@ -54,13 +71,31 @@
                                                                        \
     DEBUG ((DEBUG_INFO, "[%a] Calling crypto service: %a\n", gEfiCallerBaseName, #Function));    \
     CryptoServices = (SHARED_CRYPTO_PROTOCOL *)GetCryptoServices ();    \
-    if (CryptoServices != NULL && CryptoServices->Function != NULL) {  \
-      (CryptoServices->Function) Args;                                 \
-      return;                                                          \
+    if (CryptoServices != NULL) {                                      \
+  /* Validate protocol version compatibility */                    \
+      if (CryptoServices->Major != VERSION_MAJOR) { \
+        DEBUG ((DEBUG_ERROR, "[%a] Crypto Protocol major version mismatch: expected %d.%d.%d, got %d.%d.%d.\n", \
+                gEfiCallerBaseName, VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, \
+                CryptoServices->Major, CryptoServices->Minor, CryptoServices->Revision)); \
+        ASSERT (FALSE);                                                \
+        return;                                       \
+      }                                                                \
+      if (CryptoServices->Minor < VERSION_MINOR) { \
+        DEBUG ((DEBUG_ERROR, "[%a] Crypto Protocol minor version mismatch: expected %d.%d.%d, got %d.%d.%d.\n", \
+                gEfiCallerBaseName, VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, \
+                CryptoServices->Major, CryptoServices->Minor, CryptoServices->Revision)); \
+        ASSERT (FALSE);                                                \
+        return;                                                        \
+      }                                                                \
+      if (CryptoServices->Function != NULL) {                          \
+        (CryptoServices->Function) Args;                               \
+        return;                                                        \
+      }                                                                \
     }                                                                  \
     CryptoServiceNotAvailable (#Function);                             \
     return;                                                            \
   } while (FALSE);
+
 
 /**
   Internal worker function that returns the pointer to an EDK II Crypto
