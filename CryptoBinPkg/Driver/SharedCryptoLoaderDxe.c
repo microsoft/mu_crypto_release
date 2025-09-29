@@ -22,7 +22,6 @@
 #include <Protocol/Rng.h>
 
 #include <Library/SharedCryptoDependencySupport.h>
-#include <Protocol/SharedCryptoProtocol.h>
 #include "SharedLoaderShim.h"
 #include "PeCoffLib.h"
 
@@ -39,8 +38,9 @@ DRIVER_DEPENDENCIES  *gDriverDependencies = NULL;
 SHARED_DEPENDENCIES  *mSharedDepends = NULL;
 //
 // Crypto protocol for the shared library
+// Using VOID* to be agnostic about protocol structure size/layout
 //
-SHARED_CRYPTO_PROTOCOL  mSharedCryptoProtocol;
+VOID  *mSharedCryptoProtocol = NULL;
 
 //
 // Lazy RNG state tracking
@@ -268,9 +268,9 @@ GetConstructorFromLoadedImage (
   //
   // Find the constructor function
   //
-  Status = FindExportedFunction (&Image, Exports, CONSTRUCTOR_NAME, &RVA);
+  Status = FindExportedFunction (&Image, Exports, EXPORTED_CONSTRUCTOR_NAME, &RVA);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to find exported function '%a': %r\n", CONSTRUCTOR_NAME, Status));
+    DEBUG ((DEBUG_ERROR, "Failed to find exported function '%a': %r\n", EXPORTED_CONSTRUCTOR_NAME, Status));
     return Status;
   }
 
@@ -422,18 +422,12 @@ DxeEntryPoint (
     goto Exit;
   }
 
-  //
-  // Provide the requested version to the constructor
-  //
-  mSharedCryptoProtocol.Major    = VERSION_MAJOR;
-  mSharedCryptoProtocol.Minor    = VERSION_MINOR;
-  mSharedCryptoProtocol.Revision = VERSION_REVISION;
-
   DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: About to call library constructor at %p\n", Constructor));
-  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: Constructor args - mSharedDepends=%p, protocol=%p\n", mSharedDepends, &mSharedCryptoProtocol));
 
   //
   // Call library constructor to generate the protocol
+  // Constructor will allocate memory and assign it to mSharedCryptoProtocol
+  // Using VOID** to be agnostic about the actual protocol structure
   //
   Status = Constructor (mSharedDepends, &mSharedCryptoProtocol);
   if (EFI_ERROR (Status)) {
@@ -446,7 +440,7 @@ DxeEntryPoint (
   Status = SystemTable->BootServices->InstallMultipleProtocolInterfaces (
                                         &ImageHandle,
                                         &gSharedCryptoDxeProtocolGuid,
-                                        (SHARED_CRYPTO_PROTOCOL *)&mSharedCryptoProtocol,
+                                        mSharedCryptoProtocol,
                                         NULL
                                         );
   if (EFI_ERROR (Status)) {
@@ -475,11 +469,12 @@ Exit:
   }
 
   //
-  // The dependendencies that the shared library needs may not be freed unless
+  // The dependencies that the shared library needs may not be freed unless
   // there was an error. If there is no Error then the memory must live long past this driver.
+  // The protocol memory is managed by the shared library.
   //
-  if ((Status != EFI_SUCCESS) && (gSharedDepends != NULL)) {
-    FreePool (gSharedDepends);
+  if ((Status != EFI_SUCCESS) && (mSharedDepends != NULL)) {
+    FreePool (mSharedDepends);
   }
 
   return Status;

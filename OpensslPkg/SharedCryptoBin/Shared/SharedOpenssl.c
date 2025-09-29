@@ -36,13 +36,21 @@ GetOpenSslVersionNumber (
 }
 
 /**
-  Initializes the shared crypto protocol for version 1.0.
+  Initializes the shared cryptography subsystem.
 
-  @param[out]  Crypto  Pointer to the shared crypto protocol.
+  This function initializes the cryptographic services based on the requested
+  protocol configuration. It sets up the necessary OpenSSL components and
+  prepares the shared cryptography environment for subsequent operations.
+
+  @param[in] RequestedCrypto  Pointer to the shared crypto protocol interface
+                              containing configuration and function pointers
+                              to be initialized.
+
+  @return None
 **/
 VOID
 EFIAPI
-InitAvailableCrypto_v1_0 (
+CryptoInit (
   SHARED_CRYPTO_PROTOCOL  *Crypto
   )
 {
@@ -338,88 +346,6 @@ InitAvailableCrypto_v1_0 (
   // ========================================================================================================
 
   Crypto->ImageTimestampVerify = ImageTimestampVerify;
-
-  return;
-}
-
-/**
-  Initializes the cryptographic library by setting up function tables for various cryptographic operations.
- *
- * @param[in] Crypto  Pointer to the SHARED_CRYPTO_LIB structure that will be initialized.
- *
- * This function initializes the following cryptographic function tables:
- * - BigNumFunctionsTable: Functions for big number operations.
- * - AeadAesGcmFunctionsTable: Functions for AEAD AES-GCM operations.
- * - AesFunctionsTable: Functions for AES operations.
- * - HashFunctionsTable: Functions for hash operations.
- * - HmacFunctionsTable: Functions for HMAC operations.
- */
-VOID
-EFIAPI
-CryptoInit (
-  SHARED_CRYPTO_PROTOCOL  *Crypto
-  )
-{
-  UINT32                  RequestedMajor;
-  UINT32                  RequestedMinor;
-  UINT32                  RequestedRevision;
-
-  if (Crypto == NULL) {
-    DEBUG ((DEBUG_ERROR, "CryptoInit: Crypto is NULL\n"));
-    ASSERT (Crypto != NULL);
-    return;
-  }
-
-  //
-  // The Caller should provide a GetVersion function that returns the version that the caller is expecting.
-  // and this function should use that to ensure that the crypto functionality is compatible with the caller.
-  //
-  RequestedMajor    = Crypto->Major;
-  RequestedMinor    = Crypto->Minor;
-  RequestedRevision = Crypto->Revision;
-
-  //
-  // If the Major version is different, then the caller is expecting a different version of the protocol.
-  // If this does not match, then this request is not compatible with the provided crypto functions.
-  //
-  // If the Minor version is greater than the current version, then the caller is expecting a newer version of the protocol.
-  // If this does not match, then this request is not compatible with the provided crypto functions.
-  //
-  // Revision is ignored for compatibility checks. Since the revision only refers to bug fixes and not API changes.
-  //
-  if ((RequestedMajor != VERSION_MAJOR) && (RequestedMinor > VERSION_MINOR)) {
-    DEBUG ((DEBUG_ERROR, "Incompatible version requested: (%d.%d.%d) - Actual (%d.%d.%d)\n", RequestedMajor, RequestedMinor, RequestedRevision, VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION));
-    ASSERT (RequestedMajor == VERSION_MAJOR && RequestedMinor <= VERSION_MINOR);
-    return;
-  }
-
-  DEBUG ((DEBUG_ERROR, "Version accepted: (%d.%d.%d)\n", RequestedMajor, RequestedMinor, RequestedRevision));
-  DEBUG ((DEBUG_ERROR, "OpenSSL Version: %a (0x%lx)\n", GetOpenSslVersionText(), (UINT64)GetOpenSslVersionNumber()));
-
-  //
-  // For minor version compatibility: If caller requests a higher minor version
-  // (e.g., v1.1) but we only support v1.0, we initialize the v1.0 fields and
-  // leave the newer fields alone (caller should have zero-initialized them).
-  //
-  if (RequestedMajor == 1) {
-    // We support all v1.x by initializing v1.0 fields
-    // Caller is responsible for zero-initializing any v1.1+ fields they expect
-    InitAvailableCrypto_v1_0 (Crypto);
-    
-    // Optional: Explicitly NULL any v1.1+ fields we know about but don't support
-    // This would require knowledge of what fields were added in later versions
-    if (RequestedMinor > 0) {
-      DEBUG ((DEBUG_INFO, "Caller requested v%d.%d, but we only support v%d.%d. "
-             "v1.0 fields initialized, v1.1+ fields left untouched.\n",
-             RequestedMajor, RequestedMinor, VERSION_MAJOR, VERSION_MINOR));
-    }
-  } else {
-    // Major version mismatch - not compatible
-    DEBUG ((DEBUG_ERROR, "Unsupported major version: (%d.%d.%d)\n", 
-           RequestedMajor, RequestedMinor, RequestedRevision));
-    ASSERT (FALSE);
-    return;
-  }
 
   return;
 }

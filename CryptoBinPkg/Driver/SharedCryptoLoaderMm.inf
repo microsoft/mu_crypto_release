@@ -44,10 +44,9 @@
   FvLib
 
 [Protocols]
-  ## TODO Add protocols here
-  # gEfiMemoryAttributeProtocolGuid     ## CONSUMES
   gSharedCryptoMmProtocolGuid         ## PRODUCES
   gSharedCryptoPrivateProtocolGuid    ## CONSUMES
+  gEfiRngProtocolGuid                 ## CONSUMES
 
 [Depex]
   gSharedCryptoPrivateProtocolGuid 

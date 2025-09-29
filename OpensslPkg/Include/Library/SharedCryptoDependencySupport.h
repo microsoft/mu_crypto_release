@@ -29,9 +29,11 @@
 #define SHARED_DEPENDENCIES_VERSION_REVISION  0
 
 //
-// The name of the exported function
+// The names of the exproted functions.
 //
-#define CONSTRUCTOR_NAME  "Constructor"
+#define EXPORTED_CONSTRUCTOR_NAME               "Constructor"
+
+
 
 /**
   Function pointer type for memory allocation.
@@ -128,75 +130,65 @@ BOOLEAN
   OUT UINT64  *Rand
   );
 
+
 /**
   Structure to hold function pointers for shared crypto dependencies.
 
   This structure contains all the function pointers that the shared crypto
   implementation needs from the host environment. The versioning fields allow
   for compatibility checking and future evolution of this interface.
-
-  @field Major                 Major version - Breaking change to this structure
-  @field Minor                 Minor version - Functions added to the end of this structure
-  @field Revision              Revision - Some non breaking change
-  @field Reserved              Reserved field for future use, must be zero
-  @field AllocatePool          Memory allocation function.
-  @field FreePool              Memory deallocation function.
-  @field ASSERT                Assertion checking function.
-  @field GetTime               System time retrieval function.
-  @field DebugPrint            Debug message output function.
-  @field GetRandomNumber64     64-bit random number generation function.
 **/
 typedef struct  _SHARED_DEPENDENCIES {
-  // ---------------------------------------------------------------------------
+  //
   // Versioning
   // Major.Minor.Revision
   // Major - Breaking change to this structure
   // Minor - Functions added to the end of this structure
   // Revision - Some non breaking change
   //
-  // ---------------------------------------------------------------------------
-  UINT16                  Major;
-  UINT16                  Minor;
-  UINT16                  Revision;
-  UINT16                  Reserved;
-  ALLOCATE_POOL           AllocatePool;
-  FREE_POOL               FreePool;
-  ASSERT_T                ASSERT;
-  GET_TIME                GetTime;
-  DEBUG_PRINT             DebugPrint;
-  GET_RANDOM_NUMBER_64    GetRandomNumber64;
+  UINT16                  Major;                ///< Version Major
+  UINT16                  Minor;                ///< Version Minor
+  UINT16                  Revision;             ///< Version Revision
+  UINT16                  Reserved;             ///< Reserved for future use
+  ALLOCATE_POOL           AllocatePool;         ///< Memory allocation function
+  FREE_POOL               FreePool;             ///< Memory deallocation function
+  ASSERT_T                ASSERT;               ///< Assertion checking function
+  GET_TIME                GetTime;              ///< System time retrieval function
+  DEBUG_PRINT             DebugPrint;           ///< Debug message output function
+  GET_RANDOM_NUMBER_64    GetRandomNumber64;    ///< 64-bit random number generation function
 } SHARED_DEPENDENCIES;
 
 SHARED_DEPENDENCIES  *gSharedDepends;
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Exported Constructor
+/// Exported Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL_SIGNATURE  SIGNATURE_32('S', 'C', 'M', 'C')
 
 /**
- * @typedef CONSTRUCTOR
- * @brief Defines a function pointer type for a constructor function.
- *
- * @param Depends A pointer to a SHARED_DEPENDENCIES structure containing function pointers for crypto dependencies.
- * @param RequestedCrypto Output pointer to the constructed crypto protocol interface.
- *
- * @return EFI_STATUS The status of the constructor function.
- */
+  Defines a function pointer type for a constructor function.
 
+  @param[in]  Depends          Pointer to a SHARED_DEPENDENCIES structure containing
+                               function pointers for crypto dependencies.
+  @param[out] Crypto           Output pointer to the constructed crypto protocol
+                               interface.
+
+  @retval EFI_SUCCESS  The constructor function completed successfully.
+  @retval Others       Constructor function failed.
+**/
 typedef EFI_STATUS (EFIAPI *CONSTRUCTOR)(
   IN SHARED_DEPENDENCIES *Depends,
-  OUT VOID *RequestedCrypto
+  OUT VOID **Crypto
   );
 
 //
 // Protocol Definition
 //
 typedef struct _SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL {
-  UINT32         Signature;
-  UINT32         Version;
-  CONSTRUCTOR    Constructor;
+  UINT32                      Signature;
+  UINT32                      Version;
+  CONSTRUCTOR                 Constructor;
 } SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL;
 
 #endif // SHARED_DEPENDENCY_SUPPORT_H

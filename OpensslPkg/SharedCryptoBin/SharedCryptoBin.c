@@ -16,16 +16,14 @@
 // #if defined(_MSC_VER)
 #define COMMON_EXPORT_API  __declspec(dllexport)
 
-
-SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL *ProtocolInstance = NULL;
-
+SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL  *ProtocolInstance = NULL;
 
 COMMON_EXPORT_API
 EFI_STATUS
 EFIAPI
 Constructor (
-  IN SHARED_DEPENDENCIES *Depends,
-  OUT VOID  *RequestedCrypto
+  IN SHARED_DEPENDENCIES  *Depends,
+  OUT VOID                **Crypto
   )
 {
   //
@@ -33,15 +31,26 @@ Constructor (
   //
   gSharedDepends = Depends;
 
-  // TODO DEBUG_ERROR = DEBUG_INFO?
-  // CRASHPOINT
-  //
-  DEBUG((DEBUG_ERROR, "SharedCryptoBin: Constructor entry called\n"));
+  DEBUG ((DEBUG_ERROR, "SharedCryptoBin: Constructor entry called\n"));
 
   //
-  // Build the Crypto
+  // Allocate the required space for our SHARED_CRYPTO_PROTOCOL
+  // We do not care that we might be publishing more functions than available via the library instance
+  // the library should be responsible for ensuing that the crypto functionality is acceptable before
+  // attempting to use it.
+  // 
+  *Crypto = AllocateZeroPool (sizeof (SHARED_CRYPTO_PROTOCOL));
+  if (*Crypto == NULL) {
+    DEBUG ((DEBUG_ERROR, "SharedCryptoBin: Failed to allocate memory for Crypto protocol\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  DEBUG ((DEBUG_ERROR, "OpenSSL Version: %a (0x%lx)\n", GetOpenSslVersionText(), (UINT64)GetOpenSslVersionNumber()));
+
   //
-  CryptoInit (RequestedCrypto);
+  // Initialize the Crypto Protocol
+  //
+  CryptoInit (*Crypto);
 
   return EFI_SUCCESS;
 }
@@ -63,44 +72,44 @@ MmEntry (
   IN EFI_MM_SYSTEM_TABLE  *MmSystemTable
   )
 {
-  EFI_STATUS Status;
-  EFI_HANDLE Handle = NULL;
+  EFI_STATUS  Status;
+  EFI_HANDLE  Handle = NULL;
 
   if (MmSystemTable == NULL) {
-    DEBUG((DEBUG_ERROR, "SharedCryptoBin: MmSystemTable is NULL\n"));
+    DEBUG ((DEBUG_ERROR, "SharedCryptoBin: MmSystemTable is NULL\n"));
     return EFI_INVALID_PARAMETER;
   }
 
   Status = MmSystemTable->MmAllocatePool (
-                    EfiRuntimeServicesData,
-                    sizeof (SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL),
-                    (VOID **)&ProtocolInstance
-                    );
+                            EfiRuntimeServicesData,
+                            sizeof (SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL),
+                            (VOID **)&ProtocolInstance
+                            );
 
-  if (EFI_ERROR(Status) || ProtocolInstance == NULL) {
-    DEBUG((DEBUG_ERROR, "SharedCryptoBin: Failed to allocate memory for constructor protocol: %r\n", Status));
+  if (EFI_ERROR (Status) || (ProtocolInstance == NULL)) {
+    DEBUG ((DEBUG_ERROR, "SharedCryptoBin: Failed to allocate memory for constructor protocol: %r\n", Status));
     return EFI_OUT_OF_RESOURCES;
   }
 
-  ProtocolInstance->Signature = SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL_SIGNATURE;
-  ProtocolInstance->Version = 1;
+  ProtocolInstance->Signature   = SHARED_CRYPTO_MM_CONSTRUCTOR_PROTOCOL_SIGNATURE;
+  ProtocolInstance->Version     = 1;
   ProtocolInstance->Constructor = Constructor;
 
   Status = MmSystemTable->MmInstallProtocolInterface (
-                    &Handle,
-                    &gSharedCryptoPrivateProtocolGuid,
-                    EFI_NATIVE_INTERFACE,
-                    ProtocolInstance
-                    );
+                            &Handle,
+                            &gSharedCryptoPrivateProtocolGuid,
+                            EFI_NATIVE_INTERFACE,
+                            ProtocolInstance
+                            );
 
-  if (EFI_ERROR(Status)) {
-    DEBUG((DEBUG_ERROR, "SharedCryptoBin: Failed to install protocol: %r\n", Status));
-    MmSystemTable->MmFreePool(ProtocolInstance);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "SharedCryptoBin: Failed to install protocol: %r\n", Status));
+    MmSystemTable->MmFreePool (ProtocolInstance);
     ProtocolInstance = NULL;
     return Status;
   }
 
-  DEBUG((DEBUG_INFO, "SharedCryptoBin: Protocol installed successfully\n"));
+  DEBUG ((DEBUG_INFO, "SharedCryptoBin: Protocol installed successfully\n"));
 
   return EFI_SUCCESS;
 }

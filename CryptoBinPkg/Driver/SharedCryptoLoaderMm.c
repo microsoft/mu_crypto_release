@@ -8,36 +8,34 @@
   which is responsible for loading and initializing the shared cryptographic
   library and its dependencies.
 
-  IMPORTANT SECURITY CONSIDERATIONS:
+  MM ENVIRONMENT RNG STRATEGY:
   
-  This MM (Management Mode) loader operates in a restricted environment where:
+  This MM (Management Mode) loader uses a lazy RNG approach similar to DXE
+  but with stricter requirements:
   
-  1. RNG LIMITATIONS:
-     - No EFI_RNG_PROTOCOL is available in MM phase
-     - Uses BaseRngLibNull by default (always returns FALSE)
-     - Cryptographic operations requiring entropy will fail
-     - This is intentional for security - MM phase should not perform
-       operations requiring random numbers without explicit platform provision
+  1. RNG PROTOCOL EXPECTATION:
+     - Attempts to locate EFI_RNG_PROTOCOL on first use
+     - ASSERTS if protocol is not available (unlike DXE which fails gracefully)
+     - MM environment should have controlled access to RNG protocols
   
-  2. RECOMMENDED USAGE:
-     - Use MM crypto only for deterministic operations (hashing, signature verification)
-     - Avoid random number generation, key generation, or operations requiring entropy
-     - For entropy-dependent operations, perform them in DXE phase before MM
+  2. SECURITY RATIONALE:
+     - MM phase should not perform operations requiring randomness without proper platform provision
+     - Assertion forces platform developers to consider RNG requirements for MM phase
+     - No silent fallback to weak entropy sources
   
-  3. PLATFORM CUSTOMIZATION:
-     - Platforms requiring MM phase entropy must override RngLib in their DSC:
+  3. EXPECTED BEHAVIOR:
+     - If EFI_RNG_PROTOCOL available: Full crypto functionality with hardware entropy
+     - If EFI_RNG_PROTOCOL unavailable: Assertion failure to alert developers
+     - BaseRngLibNull used as fallback library (prevents boot hangs)
+  
+  4. PLATFORM REQUIREMENTS:
+     - For full crypto functionality, provide EFI_RNG_PROTOCOL in MM environment
+     - Or override RngLib with platform-specific MM RNG implementation:
        [Components.X64.MM_STANDALONE]
          CryptoBinPkg/Driver/SharedCryptoLoaderMm.inf {
            <LibraryClasses>
              RngLib|YourPlatformPkg/Library/MmRngLib/MmRngLib.inf
          }
-
-  Copyright (c) Microsoft Corporation.
-  SPDX-License-Identifier: BSD-2-Clause-Patent
-
-  This file contains the implementation of the SharedCryptoLoader StandaloneMM driver,
-  which is responsible for loading and initializing the shared cryptographic
-  library and its dependencies.
 
 **/
 
@@ -49,6 +47,7 @@
 #include <Library/HobLib.h>
 #include <Guid/FirmwareFileSystem2.h>
 #include <Protocol/FirmwareVolume2.h>
+#include <Protocol/Rng.h>
 #include <Ppi/FirmwareVolumeInfo.h>
 #include <Library/FvLib.h>
 
@@ -69,8 +68,91 @@ DRIVER_DEPENDENCIES  *gDriverDependencies = NULL;
 SHARED_DEPENDENCIES  *mSharedDepends = NULL;
 //
 // Crypto protocol for the shared library
+// Using VOID* to be agnostic about protocol structure size/layout
 //
-SHARED_CRYPTO_PROTOCOL  *SharedCryptoProtocol = NULL;
+VOID  *SharedCryptoProtocol = NULL;
+
+//
+// Lazy RNG state tracking for MM environment
+//
+STATIC BOOLEAN mMmRngInitAttempted = FALSE;
+STATIC EFI_RNG_PROTOCOL *mMmCachedRngProtocol = NULL;
+
+/**
+ * @brief Lazy RNG implementation for MM environment with assertion on failure
+ *
+ * This function implements lazy initialization of the RNG protocol in MM environment.
+ * Unlike the DXE version, this asserts if no RNG protocol is available since
+ * MM environment should have controlled protocol access.
+ *
+ * @param[out] Rand Pointer to buffer to receive the 64-bit random number
+ * @return TRUE if random number generated successfully, FALSE with assertion if protocol unavailable
+ */
+BOOLEAN
+EFIAPI
+LazyMmGetRandomNumber64 (
+  OUT UINT64  *Rand
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       *RandBytes;
+
+  if (Rand == NULL) {
+    DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: Null Rand pointer\n"));
+    ASSERT (FALSE);
+    return FALSE;
+  }
+
+  //
+  // Only attempt to locate the RNG protocol once
+  //
+  if (!mMmRngInitAttempted) {
+    DEBUG ((DEBUG_INFO, "LazyMmGetRandomNumber64: First call, locating EFI_RNG_PROTOCOL in MM\n"));
+    
+    Status = gMmst->MmLocateProtocol (
+                      &gEfiRngProtocolGuid,
+                      NULL,
+                      (VOID **)&mMmCachedRngProtocol
+                      );
+    
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: EFI_RNG_PROTOCOL not available in MM environment, Status=%r\n", Status));
+      DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: MM environment should provide RNG protocol for secure crypto operations\n"));
+      mMmCachedRngProtocol = NULL;
+      //
+      // Assert because MM should have controlled access to RNG
+      //
+      ASSERT_EFI_ERROR (Status);
+    } else {
+      DEBUG ((DEBUG_INFO, "LazyMmGetRandomNumber64: EFI_RNG_PROTOCOL located at %p\n", mMmCachedRngProtocol));
+    }
+    
+    mMmRngInitAttempted = TRUE;
+  }
+
+  //
+  // If we don't have RNG protocol after attempting to locate it, assert
+  //
+  if (mMmCachedRngProtocol == NULL) {
+    DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: No RNG protocol available in MM environment\n"));
+    ASSERT (mMmCachedRngProtocol != NULL);
+    return FALSE;
+  }
+
+  //
+  // Use the cached RNG protocol
+  //
+  RandBytes = (UINT8 *)Rand;
+  Status = mMmCachedRngProtocol->GetRNG (mMmCachedRngProtocol, NULL, sizeof (UINT64), RandBytes);
+  
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: GetRNG failed in MM environment, Status=%r\n", Status));
+    return FALSE;
+  }
+
+  DEBUG ((DEBUG_VERBOSE, "LazyMmGetRandomNumber64: Successfully generated random number in MM\n"));
+  return TRUE;
+}
 
 /**
  * @brief Asserts that the given EFI_STATUS is not an error.
@@ -109,7 +191,11 @@ InstallSharedDependencies (
   SharedDepends->ASSERT            = AssertEfiError;
   SharedDepends->DebugPrint        = DebugPrint;
   SharedDepends->GetTime           = NULL;
-  SharedDepends->GetRandomNumber64 = GetRandomNumber64;
+  //
+  // Use lazy RNG initialization for MM environment - will assert if protocol unavailable
+  //
+  SharedDepends->GetRandomNumber64 = LazyMmGetRandomNumber64;
+  DEBUG ((DEBUG_INFO, "InstallSharedDependencies: Using lazy MM RNG initialization with assertion\n"));
 }
 
 /**
@@ -211,47 +297,18 @@ MmEntry (
     InstallSharedDependencies (mSharedDepends);
   }
 
-  Status = MmSystemTable->MmAllocatePool (
-                            EfiRuntimeServicesData,
-                            sizeof (SHARED_CRYPTO_PROTOCOL),
-                            (VOID **)&SharedCryptoProtocol
-                            );
-
-  if (EFI_ERROR (Status) || (SharedCryptoProtocol == NULL)) {
-    DEBUG ((DEBUG_ERROR, "SharedCryptoBin: Failed to allocate memory for shared crypto protocol: %r\n", Status));
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  //
-  // Provide the requested version to the constructor
-  //
-  SharedCryptoProtocol->Major    = VERSION_MAJOR;
-  SharedCryptoProtocol->Minor    = VERSION_MINOR;
-  SharedCryptoProtocol->Revision = VERSION_REVISION;
-
-
   //
   // Call library constructor to generate the protocol
+  // Constructor will allocate memory and assign it to SharedCryptoProtocol
+  // Using VOID** to be agnostic about the actual protocol structure
   //
-  Status = ConstructorProtocol->Constructor (mSharedDepends, SharedCryptoProtocol);
+  Status = ConstructorProtocol->Constructor (mSharedDepends, &SharedCryptoProtocol);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to call LibConstructor: %r\n", Status));
     goto Exit;
   }
 
   DEBUG ((DEBUG_INFO, "SharedCrypto Protocol Constructor called successfully.\n"));
-  DEBUG ((DEBUG_INFO, "SharedCrypto Protocol Version: %d.%d.%d\n", SharedCryptoProtocol->Major, SharedCryptoProtocol->Minor, SharedCryptoProtocol->Revision));
-
-  //
-  // Validate the protocol structure before installing it
-  //
-  /*
-  Status = ValidateSharedCryptoProtocol (SharedCryptoProtocol);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "SharedCrypto Protocol validation failed: %r\n", Status));
-    DUMP_HEX (DEBUG_ERROR, 0, SharedCryptoProtocol, sizeof (SHARED_CRYPTO_PROTOCOL), "CORRUPTED PROTOCOL DUMP");
-    goto Exit;
-  }*/
 
   DEBUG ((DEBUG_INFO, "Installing SharedCrypto Protocol...\n"));
   Status = MmSystemTable->MmInstallProtocolInterface (
@@ -264,9 +321,6 @@ MmEntry (
     DEBUG ((DEBUG_ERROR, "Failed to install protocol: %r\n", Status));
     goto Exit;
   }
-
-  DUMP_HEX (DEBUG_INFO, 0, SharedCryptoProtocol, sizeof (SHARED_CRYPTO_PROTOCOL), "");
-  
 
   DEBUG ((DEBUG_INFO, "SharedCrypto Protocol installed successfully.\n"));
 
