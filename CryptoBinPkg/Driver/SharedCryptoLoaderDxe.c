@@ -19,6 +19,7 @@
 #include <Library/DebugLib.h>
 #include <Library/RngLib.h>
 #include <Library/PeCoffGetEntryPointLib.h>
+#include <Protocol/Rng.h>
 
 #include <Library/SharedCryptoDependencySupport.h>
 #include <Protocol/SharedCryptoProtocol.h>
@@ -41,6 +42,12 @@ SHARED_DEPENDENCIES  *mSharedDepends = NULL;
 //
 SHARED_CRYPTO_PROTOCOL  mSharedCryptoProtocol;
 
+//
+// Lazy RNG state tracking
+//
+STATIC BOOLEAN mRngInitAttempted = FALSE;
+STATIC EFI_RNG_PROTOCOL *mCachedRngProtocol = NULL;
+
 /**
  * @brief Asserts that the given EFI_STATUS is not an error.
  *
@@ -56,6 +63,75 @@ AssertEfiError (
   )
 {
   ASSERT_EFI_ERROR (Expression);
+}
+
+/**
+ * @brief Lazy RNG implementation that locates EFI_RNG_PROTOCOL on first use
+ *
+ * This function implements lazy initialization of the RNG protocol to avoid
+ * boot-time hangs. It only attempts to locate the protocol when RNG is first
+ * needed, and caches the result for subsequent calls.
+ *
+ * @param[out] Rand Pointer to buffer to receive the 64-bit random number
+ * @return TRUE if random number generated successfully, FALSE otherwise
+ */
+BOOLEAN
+EFIAPI
+LazyPlatformGetRandomNumber64 (
+  OUT UINT64  *Rand
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       *RandBytes;
+
+  if (Rand == NULL) {
+    DEBUG ((DEBUG_ERROR, "LazyPlatformGetRandomNumber64: Null Rand pointer\n"));
+    return FALSE;
+  }
+
+  //
+  // Only attempt to locate the RNG protocol once
+  //
+  if (!mRngInitAttempted) {
+    DEBUG ((DEBUG_INFO, "LazyPlatformGetRandomNumber64: First call, locating EFI_RNG_PROTOCOL\n"));
+    
+    Status = gBS->LocateProtocol (
+                    &gEfiRngProtocolGuid,
+                    NULL,
+                    (VOID **)&mCachedRngProtocol
+                    );
+    
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_WARN, "LazyPlatformGetRandomNumber64: EFI_RNG_PROTOCOL not available, Status=%r\n", Status));
+      mCachedRngProtocol = NULL;
+    } else {
+      DEBUG ((DEBUG_INFO, "LazyPlatformGetRandomNumber64: EFI_RNG_PROTOCOL located at %p\n", mCachedRngProtocol));
+    }
+    
+    mRngInitAttempted = TRUE;
+  }
+
+  //
+  // If we don't have RNG protocol, fail gracefully
+  //
+  if (mCachedRngProtocol == NULL) {
+    DEBUG ((DEBUG_VERBOSE, "LazyPlatformGetRandomNumber64: No RNG protocol available\n"));
+    return FALSE;
+  }
+
+  //
+  // Use the cached RNG protocol
+  //
+  RandBytes = (UINT8 *)Rand;
+  Status = mCachedRngProtocol->GetRNG (mCachedRngProtocol, NULL, sizeof (UINT64), RandBytes);
+  
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "LazyPlatformGetRandomNumber64: GetRNG failed, Status=%r\n", Status));
+    return FALSE;
+  }
+
+  DEBUG ((DEBUG_VERBOSE, "LazyPlatformGetRandomNumber64: Successfully generated random number\n"));
+  return TRUE;
 }
 
 /**
@@ -75,13 +151,16 @@ InstallSharedDependencies (
   OUT SHARED_DEPENDENCIES  *SharedDepends
   )
 {
-
   SharedDepends->AllocatePool      = AllocatePool;
   SharedDepends->FreePool          = FreePool;
   SharedDepends->ASSERT            = AssertEfiError;
   SharedDepends->DebugPrint        = DebugPrint;
   SharedDepends->GetTime           = gRT->GetTime;
-  SharedDepends->GetRandomNumber64 = GetRandomNumber64;
+  //
+  // Use lazy RNG initialization - will try to locate RNG protocol on first use
+  //
+  SharedDepends->GetRandomNumber64 = LazyPlatformGetRandomNumber64;
+  DEBUG ((DEBUG_INFO, "InstallSharedDependencies: Using lazy RNG initialization\n"));
 }
 
 /**
@@ -202,7 +281,7 @@ GetConstructorFromLoadedImage (
   *Constructor = (CONSTRUCTOR)((EFI_PHYSICAL_ADDRESS)LoadedImage->ImageBase + RVA);
 
   DEBUG ((
-    DEBUG_INFO,
+    DEBUG_ERROR,
     "Crypto Constructor found at address: %p (Base: %p + RVA: 0x%x)\n",
     *Constructor,
     LoadedImage->ImageBase,
@@ -232,6 +311,13 @@ DxeEntryPoint (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
+  //
+  // Add debug output as the very first thing to see if we reach the entry point
+  //
+  if (SystemTable != NULL && SystemTable->ConOut != NULL) {
+    SystemTable->ConOut->OutputString(SystemTable->ConOut, L"*** DXE ENTRY POINT REACHED ***\r\n");
+  }
+
   EFI_STATUS                 Status;
   VOID                       *SectionData;
   UINTN                      SectionSize;
@@ -242,12 +328,16 @@ DxeEntryPoint (
   LoadedImageHandle = NULL;
   LoadedImage       = NULL;
 
+  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: Entry point called\n"));
+
   //
   // This must match the INF for SharedCryptoBin
   //
   EFI_GUID  SharedLibGuid = {
     0x76ABA88D, 0x9D16, 0x49A2, { 0xAA, 0x3A, 0xDB, 0x61, 0x12, 0xFA, 0xC5, 0xCC }
   };
+
+  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: Initializing driver dependencies\n"));
 
   //
   // Initialize the Driver dependencies
@@ -261,10 +351,11 @@ DxeEntryPoint (
     InstallDriverDependencies (*SystemTable);
   }
 
+  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: Setting up shared dependencies\n"));
+
   //
   // Initialize the Shared dependencies
   //
-
   if (mSharedDepends == NULL) {
     mSharedDepends = AllocatePool (sizeof (*mSharedDepends));
     if (mSharedDepends == NULL) {
@@ -277,7 +368,7 @@ DxeEntryPoint (
   //
   // Print out the GUID of the shared library
   //
-  DEBUG ((DEBUG_INFO, "Searching for Shared library GUID: %g\n", SharedLibGuid));
+  DEBUG ((DEBUG_ERROR, "Searching for Shared library GUID: %g\n", SharedLibGuid));
 
   //
   // Get the section data from any FV that contains the shared library
@@ -338,6 +429,9 @@ DxeEntryPoint (
   mSharedCryptoProtocol.Minor    = VERSION_MINOR;
   mSharedCryptoProtocol.Revision = VERSION_REVISION;
 
+  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: About to call library constructor at %p\n", Constructor));
+  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: Constructor args - mSharedDepends=%p, protocol=%p\n", mSharedDepends, &mSharedCryptoProtocol));
+
   //
   // Call library constructor to generate the protocol
   //
@@ -346,6 +440,8 @@ DxeEntryPoint (
     DEBUG ((DEBUG_ERROR, "Failed to call LibConstructor: %r\n", Status));
     goto Exit;
   }
+
+  DEBUG ((DEBUG_ERROR, "SharedCryptoDxeLoader: Constructor completed successfully\n"));
 
   Status = SystemTable->BootServices->InstallMultipleProtocolInterfaces (
                                         &ImageHandle,
@@ -358,7 +454,7 @@ DxeEntryPoint (
     goto Exit;
   }
 
-  DEBUG ((DEBUG_INFO, "SharedCrypto Protocol installed successfully.\n"));
+  DEBUG ((DEBUG_ERROR, "SharedCrypto Protocol installed successfully.\n"));
 
   Status = EFI_SUCCESS;
 

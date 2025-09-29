@@ -1,5 +1,36 @@
 /** @file
-  SharedCryptoLoaderStandaloneMM.c
+  SharedCryptoLoaderMm.c
+
+  Copyright (c) Microsoft Corporation.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+
+  This file contains the implementation of the SharedCryptoLoader MM driver,
+  which is responsible for loading and initializing the shared cryptographic
+  library and its dependencies.
+
+  IMPORTANT SECURITY CONSIDERATIONS:
+  
+  This MM (Management Mode) loader operates in a restricted environment where:
+  
+  1. RNG LIMITATIONS:
+     - No EFI_RNG_PROTOCOL is available in MM phase
+     - Uses BaseRngLibNull by default (always returns FALSE)
+     - Cryptographic operations requiring entropy will fail
+     - This is intentional for security - MM phase should not perform
+       operations requiring random numbers without explicit platform provision
+  
+  2. RECOMMENDED USAGE:
+     - Use MM crypto only for deterministic operations (hashing, signature verification)
+     - Avoid random number generation, key generation, or operations requiring entropy
+     - For entropy-dependent operations, perform them in DXE phase before MM
+  
+  3. PLATFORM CUSTOMIZATION:
+     - Platforms requiring MM phase entropy must override RngLib in their DSC:
+       [Components.X64.MM_STANDALONE]
+         CryptoBinPkg/Driver/SharedCryptoLoaderMm.inf {
+           <LibraryClasses>
+             RngLib|YourPlatformPkg/Library/MmRngLib/MmRngLib.inf
+         }
 
   Copyright (c) Microsoft Corporation.
   SPDX-License-Identifier: BSD-2-Clause-Patent

@@ -44,9 +44,13 @@
   RngLib
 
 [Protocols]
-  ## TODO Add protocols here
   gEfiMemoryAttributeProtocolGuid     ## CONSUMES
   gSharedCryptoDxeProtocolGuid        ## PRODUCES
+  gEfiRngProtocolGuid                 ## CONSUMES
 
 [Depex]
   TRUE
+  
+# Using TRUE DEPEX with lazy RNG initialization
+# RNG protocol will be located on first use rather than at driver load time
+# This prevents boot hangs when RNG protocol is not immediately available

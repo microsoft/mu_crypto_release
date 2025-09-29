@@ -23,4 +23,6 @@
 [Protocols]
   gEfiMemoryAttributeProtocolGuid     ## CONSUMES
   gSharedCryptoDxeProtocolGuid        ## PRODUCES
+  gEfiRngProtocolGuid                 ## CONSUMES
+
 
