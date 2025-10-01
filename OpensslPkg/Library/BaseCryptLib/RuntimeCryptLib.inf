@@ -39,31 +39,31 @@
   Hash/CryptMd5Null.c         ## MS_CHANGE_162948 MSChange - Remove support for deprecated crypto.
   Hash/CryptSha1.c
   Hash/CryptSha256.c
-  Hash/CryptSm3.c
   Hash/CryptSha512.c
+  Hash/CryptSm3.c                    ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
   Hash/CryptParallelHashNull.c
   Hmac/CryptHmac.c
   Kdf/CryptHkdf.c
   Cipher/CryptAes.c
-  Cipher/CryptAeadAesGcmNull.c
+  Cipher/CryptAeadAesGcm.c               ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
   Pk/CryptRsaBasic.c
-  Pk/CryptRsaExtNull.c
-  Pk/CryptPkcs1OaepNull.c
+  Pk/CryptRsaExt.c                       ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
+  Pk/CryptPkcs1Oaep.c                    ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
   Pk/CryptPkcs5Pbkdf2.c                  ## MU_CHANGE TCBZ2997
-  Pk/CryptPkcs7SignNull.c
+  Pk/CryptPkcs7Sign.c                    ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
   Pk/CryptPkcs7VerifyCommon.c
   Pk/CryptPkcs7VerifyRuntime.c
   Pk/CryptPkcs7VerifyEkuRuntime.c
   Pk/CryptPkcs7Encrypt.c
-  Pk/CryptDhNull.c
+  Pk/CryptDh.c                           ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
   Pk/CryptX509.c
-  Pk/CryptAuthenticodeNull.c
-  Pk/CryptTsNull.c
-  Pk/CryptRsaPssNull.c
-  Pk/CryptRsaPssSignNull.c
-  Pk/CryptEcNull.c
+  Pk/CryptAuthenticode.c                 ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
+  Pk/CryptTs.c                           ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
+  Pk/CryptRsaPss.c                       ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
+  Pk/CryptRsaPssSign.c                   ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
+  Pk/CryptEc.c                           ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
   Pem/CryptPem.c
-  Bn/CryptBnNull.c
+  Bn/CryptBn.c                           ## MU_CHANGE Complete Crypto Algorithm Support for Runtime
 
   SysCall/CrtWrapper.c
   SysCall/TimerWrapper.c
