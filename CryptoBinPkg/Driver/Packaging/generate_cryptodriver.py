@@ -160,8 +160,9 @@ def ParseCommandLineOptions():
                            help="Enable Compile Time check for generated library files")
     ParserObj.add_argument("--disable-null-only", dest="eno", default=True, action='store_false',
                            help="Disable config to use Nulls for protocol instead of unsupported function")
-    ParserObj.add_argument("--order-file", dest="order_file", default=None,
-                           help="JSON file specifying the order of function types and individual functions")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    ParserObj.add_argument("--order-file", dest="order_file", default=os.path.join(script_dir, 'crypto.order.json'))
+
     # parse the args
     options = ParserObj.parse_args()
 
@@ -234,6 +235,12 @@ def get_flavors():
             "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "RsaOaepEncrypt", "RsaOaepDecrypt", "RsaGetPublicKeyFromX509", "RsaPssSign", "RsaPssVerify", "EcGetPublicKeyFromX509", "EcFree", "EcDsaVerify", "Asn1GetTag"],
             "exclude": ["Sha1HashAll", "Pkcs7Sign", "Pkcs7GetCertificatesList", "ImageTimestampVerify"],
             "guid": "bdee011f-87f2-4a7f-bc5e-44b6b61fef00"
+        },
+        "ALL": {
+            "families": ["HMACSHA256", "PKCS", "SHA1", "SHA256", "SHA384", "SHA512", "RANDOM", "TLS", "TLSGET", "TLSSET", "X509", "AES"],
+            "individuals": ["RsaPkcs1Verify", "RsaNew", "RsaFree", "RsaSetKey", "RsaOaepEncrypt", "RsaOaepDecrypt", "RsaGetPublicKeyFromX509", "RsaPssSign", "RsaPssVerify", "EcGetPublicKeyFromX509", "EcFree", "EcDsaVerify", "Asn1GetTag"],
+            "exclude": [],
+            "guid": "0b2780c6-4608-4dd2-afed-0b8b4e06bded"
         }
     }
 
@@ -981,7 +988,7 @@ def get_crypto_dsc(options, functions):
     lines = []
     # Check to make sure crypto services is configured
     lines.append("[Defines]")
-    all_flavors = "ALL NONE PACKAGE "+" ".join(list(flavors))
+    all_flavors = "NONE PACKAGE "+" ".join(list(flavors))
     lines.append("!ifndef CRYPTO_SERVICES")
     lines.append(" DEFINE CRYPTO_SERVICES = PACKAGE")
     lines.append("!endif")
@@ -1217,7 +1224,7 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
     dsc_lines = []
     dsc_lines.append("# this is to be included by a platform :)")
     dsc_lines.append("[Defines]")
-    all_flavors = "ALL NONE "+" ".join(list(flavors))
+    all_flavors = "NONE "+" ".join(list(flavors))
     for phase in phases:
         phase = phase.upper()
         dsc_lines.append(f"!ifndef {phase}_CRYPTO_SERVICES")
