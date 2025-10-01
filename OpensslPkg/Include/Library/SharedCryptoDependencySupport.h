@@ -130,6 +130,77 @@ BOOLEAN
   OUT UINT64  *Rand
   );
 
+/**
+  Function pointer type for safe UINTN addition.
+
+  Performs addition of two UINTN values with overflow checking.
+
+  @param[in]   Augend     A number to which addend will be added
+  @param[in]   Addend     A number to be added to another
+  @param[out]  Result     Pointer to the result of addition
+
+  @retval  RETURN_SUCCESS            Successful addition
+  @retval  RETURN_BUFFER_TOO_SMALL   Overflow
+  @retval  RETURN_INVALID_PARAMETER  Result is NULL
+**/
+typedef
+RETURN_STATUS
+(EFIAPI *SAFE_UINTN_ADD)(
+  IN  UINTN  Augend,
+  IN  UINTN  Addend,
+  OUT UINTN  *Result
+  );
+
+/**
+  Function pointer type for safe UINTN multiplication.
+
+  Performs multiplication of two UINTN values with overflow checking.
+
+  @param[in]   Multiplicand   A number that is to be multiplied by another
+  @param[in]   Multiplier     A number by which the multiplicand is to be multiplied
+  @param[out]  Result         Pointer to the result of multiplication
+
+  @retval  RETURN_SUCCESS            Successful multiplication
+  @retval  RETURN_BUFFER_TOO_SMALL   Overflow
+  @retval  RETURN_INVALID_PARAMETER  Result is NULL
+**/
+typedef
+RETURN_STATUS
+(EFIAPI *SAFE_UINTN_MULT)(
+  IN  UINTN  Multiplicand,
+  IN  UINTN  Multiplier,
+  OUT UINTN  *Result
+  );
+
+/**
+  Function pointer type for zeroing memory.
+
+  @param[out] Buffer  Pointer to the buffer to zero.
+  @param[in]  Length  Number of bytes to zero.
+
+  @return Buffer.
+**/
+typedef
+VOID *
+(EFIAPI *ZERO_MEM)(
+  OUT VOID  *Buffer,
+  IN  UINTN Length
+  );
+
+/**
+  Function pointer type for writing 32-bit value to unaligned address.
+
+  @param[out] Buffer  Pointer to the buffer to write to.
+  @param[in]  Value   32-bit value to write.
+
+  @return Value.
+**/
+typedef
+UINT32
+(EFIAPI *WRITE_UNALIGNED_32)(
+  OUT UINT32  *Buffer,
+  IN  UINT32  Value
+  );
 
 /**
   Structure to hold function pointers for shared crypto dependencies.
@@ -156,6 +227,11 @@ typedef struct  _SHARED_DEPENDENCIES {
   GET_TIME                GetTime;              ///< System time retrieval function
   DEBUG_PRINT             DebugPrint;           ///< Debug message output function
   GET_RANDOM_NUMBER_64    GetRandomNumber64;    ///< 64-bit random number generation function
+  SAFE_UINTN_ADD          SafeUintnAdd;         ///< Safe UINTN addition function
+  SAFE_UINTN_MULT         SafeUintnMult;        ///< Safe UINTN multiplication function
+  ZERO_MEM                ZeroMem;              ///< Zero memory function
+  WRITE_UNALIGNED_32      WriteUnaligned32;     ///< Write unaligned 32-bit function
+  VOID                    *Reserved1;           ///< Reserved (was DivS64x64Remainder - now implemented locally)
 } SHARED_DEPENDENCIES;
 
 SHARED_DEPENDENCIES  *gSharedDepends;

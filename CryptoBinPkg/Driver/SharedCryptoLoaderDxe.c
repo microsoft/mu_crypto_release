@@ -8,12 +8,14 @@
   which is responsible for loading and initializing the shared cryptographic
   library and its dependencies.
 
-**/
+**/ 
 
 #include <Library/DebugLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/BaseLib.h>
+#include <Library/BaseMemoryLib.h>
+#include <Library/SafeIntLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DxeServicesLib.h>
 #include <Library/DebugLib.h>
@@ -160,6 +162,16 @@ InstallSharedDependencies (
   // Use lazy RNG initialization - will try to locate RNG protocol on first use
   //
   SharedDepends->GetRandomNumber64 = LazyPlatformGetRandomNumber64;
+  //
+  // Safe integer operations
+  //
+  SharedDepends->SafeUintnAdd      = SafeUintnAdd;
+  SharedDepends->SafeUintnMult     = SafeUintnMult;
+  //
+  // Memory and utility functions
+  //
+  SharedDepends->ZeroMem           = ZeroMem;
+  SharedDepends->WriteUnaligned32  = WriteUnaligned32;
   DEBUG ((DEBUG_INFO, "InstallSharedDependencies: Using lazy RNG initialization\n"));
 }
 

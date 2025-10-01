@@ -12,9 +12,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #undef _WIN32
 #undef _WIN64
 #include <CrtLibSupport.h>
+#include <Library/SharedCryptoDependencySupport.h>
 #include <Protocol/Tls.h>
 #include <IndustryStandard/Tls1.h>
-#include <Library/SafeIntLib.h>
 #include <Library/PcdLib.h>
 #include <openssl/obj_mac.h>
 #include <openssl/ssl.h>
@@ -37,5 +37,11 @@ typedef struct {
   //
   BIO    *OutBio;
 } TLS_CONNECTION;
+
+//
+// Macros to redirect SafeInt function calls to the dependency structure
+//
+#define SafeUintnAdd(Augend, Addend, Result)        gSharedDepends->SafeUintnAdd(Augend, Addend, Result)
+#define SafeUintnMult(Multiplicand, Multiplier, Result)  gSharedDepends->SafeUintnMult(Multiplicand, Multiplier, Result)
 
 #endif

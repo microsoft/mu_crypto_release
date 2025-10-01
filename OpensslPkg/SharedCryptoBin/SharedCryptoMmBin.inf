@@ -29,12 +29,13 @@
   BasePrintLib
   BaseMemoryLib
   OpensslLib
-  SafeIntLib
+  
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   OpensslPkg/OpensslPkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec
 
 [Sources]

@@ -48,16 +48,16 @@
 
 [LibraryClasses.common.MM_STANDALONE]
   UefiBootServicesTableLib    |MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
-  StackCheckFailureHookLib    |MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
-  BaseLib                     |MdePkg/Library/BaseLib/BaseLib.inf
-  BaseMemoryLib               |MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
-  BasePrintLib                |MdePkg/Library/BasePrintLib/BasePrintLib.inf
-  SafeIntLib                  |MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
+  BaseLib                     |OneCryptoPkg/Library/MinimalBaseLib/MinimalBaseLib.inf # Minimal BaseLib to satisfy dependencies
+  BaseMemoryLib               |OneCryptoPkg/Library/MinimalBaseMemoryLib/MinimalBaseMemoryLib.inf
+  BasePrintLib                |OneCryptoPkg/Library/MinimalBasePrintLib/MinimalBasePrintLib.inf
   MmServicesTableLib          |MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
-  StandaloneMmDriverEntryPoint|MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf #TODO Support AARCH64
+  StandaloneMmDriverEntryPoint|OneCryptoPkg/Library/BaseStandaloneMmDriverEntryPoint/BaseStandaloneMmDriverEntryPoint.inf
   PcdLib                      |MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf # Required for UEFI applications - NULL implementation
   DebugLib                    |MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf # Required for UEFI applications - NULL implementation
-  NULL                        |MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
+  
+  # TODO - what to do in an agnostic way
+  # NULL                        |MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
   IntrinsicLib                |OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
   FltUsedLib                  |MdePkg/Library/FltUsedLib/FltUsedLib.inf
   OpensslLib                  |OpensslPkg/Library/OpensslLib/OpenssLibShared.inf
@@ -88,6 +88,9 @@
 
 [BuildOptions]
   *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES
+  # Disable security features to avoid linker issues with minimal dependencies
+  MSFT:*_*_*_CC_FLAGS = /GS-
+  MSFT:*_*_*_DLINK_FLAGS = /IGNORE:4217
 !if $(CRYPTO_SERVICES) IN "PACKAGE ALL"
   MSFT:*_*_*_CC_FLAGS = /D ENABLE_MD5_DEPRECATED_INTERFACES
   INTEL:*_*_*_CC_FLAGS = /D ENABLE_MD5_DEPRECATED_INTERFACES

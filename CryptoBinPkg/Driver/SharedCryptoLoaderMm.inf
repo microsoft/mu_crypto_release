@@ -38,6 +38,7 @@
   BaseMemoryLib
   PeCoffLib
   DebugLib
+  SafeIntLib
   #PrePiLib
   HobLib
   RngLib

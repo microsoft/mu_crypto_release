@@ -42,7 +42,9 @@
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/MmServicesTableLib.h>
+#include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/SafeIntLib.h>
 #include <Library/RngLib.h>
 #include <Library/HobLib.h>
 #include <Guid/FirmwareFileSystem2.h>
@@ -195,6 +197,16 @@ InstallSharedDependencies (
   // Use lazy RNG initialization for MM environment - will assert if protocol unavailable
   //
   SharedDepends->GetRandomNumber64 = LazyMmGetRandomNumber64;
+  //
+  // Safe integer operations
+  //
+  SharedDepends->SafeUintnAdd      = SafeUintnAdd;
+  SharedDepends->SafeUintnMult     = SafeUintnMult;
+  //
+  // Memory and utility functions
+  //
+  SharedDepends->ZeroMem           = ZeroMem;
+  SharedDepends->WriteUnaligned32  = WriteUnaligned32;
   DEBUG ((DEBUG_INFO, "InstallSharedDependencies: Using lazy MM RNG initialization with assertion\n"));
 }
 

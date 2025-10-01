@@ -8,6 +8,7 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
+#include <Library/SharedCryptoDependencySupport.h>
 #include <CrtLibSupport.h>
 
 /**
@@ -140,4 +141,52 @@ GetRandomNumber64 (
   }
 
   return gSharedDepends->GetRandomNumber64 (Rand);
+}
+
+/**
+  Fills a target buffer with zeros.
+
+  @param[out] Buffer  Pointer to the buffer to zero.
+  @param[in]  Length  Number of bytes to zero.
+
+  @return Buffer.
+**/
+VOID *
+EFIAPI
+ZeroMem (
+  OUT VOID  *Buffer,
+  IN  UINTN Length
+  )
+{
+  if ((gSharedDepends == NULL) || (gSharedDepends->ZeroMem == NULL)) {
+    ASSERT (gSharedDepends != NULL);
+    ASSERT (gSharedDepends->ZeroMem != NULL);
+    return Buffer;
+  }
+
+  return gSharedDepends->ZeroMem (Buffer, Length);
+}
+
+/**
+  Writes a 32-bit value to memory that may be unaligned.
+
+  @param[out] Buffer  Pointer to the buffer to write to.
+  @param[in]  Value   32-bit value to write.
+
+  @return Value.
+**/
+UINT32
+EFIAPI
+WriteUnaligned32 (
+  OUT UINT32  *Buffer,
+  IN  UINT32  Value
+  )
+{
+  if ((gSharedDepends == NULL) || (gSharedDepends->WriteUnaligned32 == NULL)) {
+    ASSERT (gSharedDepends != NULL);
+    ASSERT (gSharedDepends->WriteUnaligned32 != NULL);
+    return Value;
+  }
+
+  return gSharedDepends->WriteUnaligned32 (Buffer, Value);
 }

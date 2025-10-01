@@ -41,6 +41,7 @@
   CacheMaintenanceLib
   DxeServicesTableLib
   UefiBootServicesTableLib
+  SafeIntLib
   RngLib
 
 [Protocols]
