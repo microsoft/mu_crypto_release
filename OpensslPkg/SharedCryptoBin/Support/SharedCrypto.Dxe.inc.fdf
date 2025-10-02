@@ -1,0 +1,16 @@
+## @file
+#  SharedCrypto.inc.fdf includes the SharedCrypto binary component
+#
+#  Copyright (c) Microsoft Corporation
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+#
+# This INF file describes the SharedCryptoLoader DXE driver, which is part of the 
+# MU_BASECORE CryptoPkg. The driver is responsible for loading and initializing 
+# the shared cryptographic library for use in the UEFI environment. It provides 
+# cryptographic services to other components in the firmware.
+#
+INF $(SHARED_SHARED_CRYPTO_PATH)/bin/shared/SharedCryptoDxeLoader.inf

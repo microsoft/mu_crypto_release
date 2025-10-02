@@ -1,0 +1,36 @@
+## @file
+#  Minimal Memory Intrinsic Functions Library.
+#
+#  Provides memory intrinsic functions (memset, memcpy) needed when
+#  IntrinsicLib is disabled but OpenSSL still needs function symbols
+#  for function pointer usage.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MemoryIntrinsicLib
+  FILE_GUID                      = 12345678-1234-5678-9ABC-123456789012
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MemoryIntrinsicLib
+
+[Sources]
+  MemoryIntrinsics.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+
+[BuildOptions]
+   #
+   # Override MSFT build option to remove /Oi and /GL to avoid conflicts
+   # with memory intrinsic function definitions
+   #
+   MSFT:*_*_*_CC_FLAGS            =  /Oi-
+   # Remove /GL flag by using custom flags without it
+   MSFT:DEBUG_*_X64_CC_FLAGS      == /nologo /c /WX /GS- /X /W4 /Gs32768 /D UNICODE /O1b2s /Gy /FIAutoGen.h /EHs-c- /GR- /GF /Zi /Gm
+   MSFT:RELEASE_*_X64_CC_FLAGS    == /nologo /c /WX /GS- /X /W4 /Gs32768 /D UNICODE /O1b2s /Gy /FIAutoGen.h /EHs-c- /GR- /GF

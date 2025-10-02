@@ -1,0 +1,28 @@
+## @file
+#  This module provides SharedCrypto DXE Loader Binary implementation.
+# TODO [SHARED_CRYPTO] Generate this from the INF that builds the binary
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SharedCryptoDxeLoader
+  FILE_GUID                      = 4F25834D-11D0-4A8F-9860-72B303B9F242
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = DxeEntryPoint
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/SharedCryptoPkg.dec
+
+[Binaries.X64]
+  PE32|SharedCryptoDxeLoader.efi
+  DXE_DEPEX|SharedCryptoDxeLoader.depex
+
+[Protocols]
+  gEfiMemoryAttributeProtocolGuid     ## CONSUMES
+  gSharedCryptoDxeProtocolGuid        ## PRODUCES
+  gEfiRngProtocolGuid                 ## CONSUMES
+
+

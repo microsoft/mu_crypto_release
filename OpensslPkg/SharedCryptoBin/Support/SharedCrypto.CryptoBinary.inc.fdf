@@ -1,0 +1,16 @@
+## @file
+#  SharedCrypto.inc.fdf includes the SharedCrypto binary component
+#
+#  Copyright (c) Microsoft Corporation
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+# 
+# The Phase Independent Binary
+# Correct placement of the Independent Binary is critical
+# Incorrect placement will cause the binary to not be found on first boot
+# 
+#  - The binary must be located in the same Fv as the StandaloneMm environment 
+INF $(SHARED_SHARED_CRYPTO_PATH)/bin/shared/SharedCryptoMmBin.inf
