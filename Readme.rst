@@ -8,22 +8,19 @@ drivers to power the `BaseCryptOnProtocol/Ppi` infrastructure.
 
 These releases will be tagged and tracked in this repo, but published to the Mu Nuget feed.
 
-This repository is part of Project Mu. Please see Project Mu for details https://microsoft.github.io/mu
-
+This repository is part of Project Mu. Please see Project Mu for details   <https://microsoft.github.io/mu>
 
 Using Shared Crypto
-===================
+-------------------
 
 If you simply want to use shared crypto in your project, view the [shared crypto driver instructions](CryptoBinPkg/Driver/readme.md).
 
 The remaining instructions are for those working directly in this repository to build new shared crypto releases.
 
-
 Repo Scripts
-============
+------------
 
 Here is a brief description of the scripts in this repository and how they are used.
-
 
 CommonBuildSettings.py
 ----------------------
@@ -35,7 +32,6 @@ this is the place to do it.
 Note that any changes to names might require additional changes in other scripts that look for those names
 when copying files around.
 
-
 SingleFlavorBuild.py
 --------------------
 
@@ -44,7 +40,6 @@ This script will run an EDK2 build of a single flavor and a single target of Cry
 must be set up independently. This script is called multiple times by the ``MultiFlavorBuild.py`` script.
 
 Should have good support for ``-h`` and print a useful help menu.
-
 
 MultiFlavorBuild.py
 -------------------
@@ -57,37 +52,26 @@ Calling this script without any parameters default to all available targets, arc
 
 Should have good support for ``-h`` and print a useful help menu.
 
-
-AssembleNugetPackage.py
------------------------
-
-This script will take in a directory of build artifacts and reorganize them into the Nuget package layout.
-
-Should have good support for ``-h`` and print a useful help menu.
-
-
 Building on a Local Dev System
-==============================
+------------------------------
 
 Building locally for test consists of two primary pieces:
 
 - Run the ``MultiFlavorBuild.py`` script to build the drivers, depexes, and other release collateral.
-- Run the ``AssembleNugetPackage.py`` script to organize the release collateral into the format for
-   the release package. Just point at the ``Build`` directory as the input directory.
 
 The steps are:
 
 1) Make sure that you've updated your pip requirements
 2) Run the ``MultiFlavorBuild.py`` script with ``--setup``
 3) Run the ``MultiFlavorBuild.py`` script with ``--update``
-4) Run the ``MultiFlavorBuild.py`` script with whatever flavors and architectures you would like in
+4) Run the ``CryptoBinPkg\Driver\Packaging\generate_cryptodriver.py`` script
+5) Run the ``MultiFlavorBuild.py`` script with whatever flavors and architectures you would like in
    your binary package. This is the primary build and may take a while
-5) Run the ``MultiFlavorBuild.py`` script with ``--bundle`` to create the Nuget package layout
-   in the ``Bundle`` directory
-
+6) Run the ``MultiFlavorBuild.py`` script with ``--bundle`` to create the Nuget package layout
+   in the ``Bundle`` directory. Note: Can --bundle can be run as part of the build step
 
 Building OpensslPkg
-===================
+-------------------
 
 ``OpensslPkg`` is built using normal Stuart build commands. The package, target, and architecture are specified as
 parameters to ``.pytool/CISettings.py``.
@@ -99,9 +83,8 @@ Example to build the ``DEBUG`` target for the ``X64`` architecture:
 Note that the ``OpensslPkg`` build is not required to build the crypto binaries only to build and verify CI checks
 against the code in the package.
 
-
 Releasing a Pipeline Build
-==========================
+--------------------------
 
 TODO: How to support the security patch repos? (This isn't essential if there are no security
       patches for CryptoPkg, but it's a necessary piece to figure out for the process.)
@@ -112,7 +95,6 @@ the following steps.
 
 If you're already on an existing release branch and you've just updated CryptoPkg and want
 to release a new CryptoBin, you can skip to the `Regular Release Steps`_.
-
 
 First Steps (for a new integration)
 -----------------------------------
@@ -134,8 +116,8 @@ Then, in this repo:
    - Make sure that all submodules have a matching ``release/*`` branch and that they
      have all been tagged as ``*_CIBuild``
    - Example: if we're trying to make a new package on the ``release/202202`` branch, we
-     must first check `Basecore <https://github.com/microsoft/mu_basecore.git>`_ and
-     `Silicon Arm Tiano <https://github.com/microsoft/mu_silicon_arm_tiano.git>`_ to make
+     must first check both `Basecore <https://github.com/microsoft/mu_basecore.git>`_
+     and `Silicon Arm Tiano <https://github.com/microsoft/mu_silicon_arm_tiano.git>`_ to make
      sure that they have ``2202_CIBuild`` tags, proving that they're valid to perform a new
      release
 
@@ -144,7 +126,6 @@ Then, in this repo:
 4) Update ``pip-requirements.txt`` file to match Basecore for this release
 5) Update pipeline tools to match Basecore for the new release (right now, this is just
    the ``python_version`` variable)
-
 
 Regular Release Steps
 ---------------------
@@ -196,25 +177,22 @@ pipeline is located in the public Project Mu DevOps organization. To release a n
 
 Once successfully released, tag the commit with the version (e.g. ``2022.02.1``) and push tag to the server.
 
-
 Code of Conduct
-===============
+---------------
 
-This project has adopted the Microsoft Open Source Code of Conduct https://opensource.microsoft.com/codeofconduct/
+This project has adopted the Microsoft Open Source Code of Conduct <https://opensource.microsoft.com/codeofconduct/>
 
-For more information see the Code of Conduct FAQ https://opensource.microsoft.com/codeofconduct/faq/
+For more information see the Code of Conduct FAQ <https://opensource.microsoft.com/codeofconduct/faq/>
 or contact `opencode@microsoft.com <mailto:opencode@microsoft.com>`_. with any additional questions or comments.
 
-
 Contributions
-=============
+-------------
 
 Contributions are always welcome and encouraged!
-Please open any issues in the Project Mu GitHub tracker and read https://microsoft.github.io/mu/How/contributing/
-
+Please open any issues in the Project Mu GitHub tracker and read <https://microsoft.github.io/mu/How/contributing/>
 
 Copyright & License
-===================
+-------------------
 
 | Copyright (C) Microsoft Corporation
 | SPDX-License-Identifier: BSD-2-Clause-Patent
