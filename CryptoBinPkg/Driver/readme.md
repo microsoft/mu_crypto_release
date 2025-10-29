@@ -53,6 +53,154 @@ participate in all aspects of shared crypto including code contributions and fee
 There are different flavors of shared crypto binaries available, with different functions supported. For example, if
 HMAC is not required in the PEI phase of your project, you can simply select the flavor without HMAC support.
 
+## Crypto Functions by Flavor
+
+The following table shows which cryptographic functions are available in each flavor of the shared crypto binaries:
+
+| Function Family | Function Name | ALL | STANDARD | SMALL_SHA_RSA | MINIMAL_SHA_SM3 | TINY_SHA |
+|---|---|---|---|---|---|---|
+| **HMAC SHA256** | HmacSha256New | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | HmacSha256Free | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | HmacSha256SetKey | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | HmacSha256Duplicate | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | HmacSha256Update | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | HmacSha256Final | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | HmacSha256All | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **PKCS** | Pkcs5HashPassword | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Pkcs1v2Encrypt | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | Pkcs1v2Decrypt | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | Pkcs7GetSigners | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | Pkcs7FreeSigners | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | Pkcs7GetCertificatesList | ✅ | ❌ | ❌ | ❌ | ❌ |
+| | Pkcs7Sign | ✅ | ❌ | ❌ | ❌ | ❌ |
+| | Pkcs7Verify | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | VerifyEKUsInPkcs7Signature | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | Pkcs7GetAttachedContent | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | AuthenticodeVerify | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | ImageTimestampVerify | ✅ | ❌ | ❌ | ❌ | ❌ |
+| | Pkcs7Encrypt | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Random** | RandomSeed | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | RandomBytes | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **SHA1** | Sha1GetContextSize | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha1Init | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha1Duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha1Update | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha1Final | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha1HashAll | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **SHA256** | Sha256GetContextSize | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha256Init | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha256Duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha256Update | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha256Final | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha256HashAll | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **SHA384** | Sha384GetContextSize | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha384Init | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha384Duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha384Update | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha384Final | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Sha384HashAll | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **SHA512** | Sha512GetContextSize | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | Sha512Init | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | Sha512Duplicate | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | Sha512Update | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | Sha512Final | ✅ | ✅ | ✅ | ✅ | ❌ |
+| | Sha512HashAll | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **SM3** | Sm3GetContextSize | ✅ | ❌ | ✅ | ✅ | ❌ |
+| | Sm3Init | ✅ | ❌ | ✅ | ✅ | ❌ |
+| | Sm3Duplicate | ✅ | ❌ | ✅ | ✅ | ❌ |
+| | Sm3Update | ✅ | ❌ | ✅ | ✅ | ❌ |
+| | Sm3Final | ✅ | ❌ | ✅ | ✅ | ❌ |
+| | Sm3HashAll | ✅ | ❌ | ✅ | ✅ | ❌ |
+| **X.509** | X509GetSubjectName | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetCommonName | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetOrganizationName | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509VerifyCert | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509ConstructCertificate | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509ConstructCertificateStackV | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509ConstructCertificateStack | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509Free | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509StackFree | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetTBSCert | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetVersion | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetSerialNumber | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetIssuerName | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetSignatureAlgorithm | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetExtensionData | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetValidity | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509FormatDateTime | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetKeyUsage | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetExtendedKeyUsage | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509VerifyCertChain | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetCertFromCertChain | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | X509GetExtendedBasicConstraints | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **AES** | AesGetContextSize | ✅ | ❌ | ❌ | ❌ | ❌ |
+| | AesInit | ✅ | ❌ | ❌ | ❌ | ❌ |
+| | AesCbcEncrypt | ✅ | ❌ | ❌ | ❌ | ❌ |
+| | AesCbcDecrypt | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **TLS** | TlsInitialize | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsCtxFree | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsCtxNew | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsFree | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsNew | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsInHandshake | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsDoHandshake | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsHandleAlert | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsCloseNotify | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsCtrlTrafficOut | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsCtrlTrafficIn | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsRead | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsWrite | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsShutdown | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **TLS Set** | TlsSetVersion | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetConnectionEnd | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetCipherList | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetCompressionMethod | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetVerify | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetVerifyHost | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetSessionId | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetCaCertificate | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetHostPublicCert | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetHostPrivateKeyEx | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetHostPrivateKey | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetCertRevocationList | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetSignatureAlgoList | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsSetEcCurve | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **TLS Get** | TlsGetVersion | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetConnectionEnd | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetCurrentCipher | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetCurrentCompressionId | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetVerify | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetSessionId | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetClientRandom | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetServerRandom | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetKeyMaterial | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetCaCertificate | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetHostPublicCert | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetHostPrivateKey | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetCertRevocationList | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | TlsGetExportKey | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **RSA** | RsaNew | ✅ | ✅ | ✅ | ❌ | ❌ |
+| | RsaFree | ✅ | ✅ | ✅ | ❌ | ❌ |
+| | RsaSetKey | ✅ | ✅ | ✅ | ❌ | ❌ |
+| | RsaPkcs1Verify | ✅ | ✅ | ✅ | ❌ | ❌ |
+| | RsaPssSign | ✅ | ✅ | ✅ | ❌ | ❌ |
+| | RsaPssVerify | ✅ | ✅ | ✅ | ❌ | ❌ |
+| | RsaGetPublicKeyFromX509 | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | RsaOaepEncrypt | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | RsaOaepDecrypt | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **ASN.1** | Asn1GetTag | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **EC** | EcFree | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | EcGetPublicKeyFromX509 | ✅ | ✅ | ❌ | ❌ | ❌ |
+| | EcDsaVerify | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+### Flavor Summary
+
+- **ALL**: Complete crypto functionality including all algorithms and features
+- **STANDARD**: Full crypto functionality except for AES, some PKCS functions (Pkcs7GetCertificatesList, Pkcs7Sign, ImageTimestampVerify), and SM3 algorithms
+- **SMALL_SHA_RSA**: SHA algorithms (including SM3) plus basic RSA functionality and HMAC
+- **MINIMAL_SHA_SM3**: SHA algorithms (including SM3) and HMAC - no RSA or certificate handling
+- **TINY_SHA**: Basic SHA algorithms and PKCS5 password hashing only
+
 ## Adoption/Migration Considerations
 
 Transitioning to using these binaries for platforms that previously relied on BaseCryptLib have a few decisions during
