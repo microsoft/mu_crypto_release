@@ -115,13 +115,23 @@ def main():
             # TODO: define this somewhere globally
             c_lib_file_path = os.path.join(options.out_dir, "temp_CryptLib.c")
             target_lib_path = os.path.join(ROOT_DIR, "MU_BASECORE", "CryptoPkg", "Library", "BaseCryptLibOnProtocolPpi", "CryptLib.c")
-            
+
             # Read the generated file and write to target with proper line endings
             with open(c_lib_file_path, 'r') as f:
                 content = f.read()
             write_file_with_line_endings(target_lib_path, content)
 
     generate_platform_files(_get_edk2_crypto_version(h_file_path))   # TODO: Refactor. Copied from separate script.
+
+    # Cleanup temp_* files (temp_CryptLib.c, temp_crypto_pcd.inc.dsc, etc)
+    for filename in os.listdir(options.out_dir):
+        if filename.startswith("temp_"):
+            file_path = os.path.join(options.out_dir, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
 
     print("Success. Thanks for playing :)")
 
@@ -1001,7 +1011,7 @@ def get_crypto_dsc(options, functions):
     # Set the default file guids
     lines.append("  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = d6f4500f-ad73-4368-9149-842c49f3aa00")
     lines.append("  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = 254e0f83-c675-4578-bc16-d44111c34e01")
-    lines.append("  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = c7ade7a2-3fc9-4762-9c9a-d7ae1ed2e9c3")
+    #lines.append("  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = c7ade7a2-3fc9-4762-9c9a-d7ae1ed2e9c3")
     lines.append("  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = be5b74af-e07f-456b-a9e4-296c8fee9502")
     lines.append("  DEFINE STANDALONEMM_MMSUPERVISOR_CRYPTO_DRIVER_FILE_GUID = 9c6714d5-33da-4488-9a9c-2a7070635140")
     lines.append("  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = da9d63cb-c131-4e75-b7b5-a2de62b1c179")
@@ -1019,7 +1029,7 @@ def get_crypto_dsc(options, functions):
         lines.append(f"!if $(CRYPTO_SERVICES) == {flavor}")
         lines.append(f"  DEFINE PEI_CRYPTO_DRIVER_FILE_GUID = {pei_guid}")
         lines.append(f"  DEFINE DXE_CRYPTO_DRIVER_FILE_GUID = {dxe_guid}")
-        lines.append(f"  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = {runtime_dxe_guid}")
+        #lines.append(f"  DEFINE RUNTIMEDXE_CRYPTO_DRIVER_FILE_GUID = {runtime_dxe_guid}")
         lines.append(f"  DEFINE SMM_CRYPTO_DRIVER_FILE_GUID = {smm_guid}")
         lines.append(f"  DEFINE STANDALONEMM_MMSUPERVISOR_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_mm_supv_guid}")
         lines.append(f"  DEFINE STANDALONEMM_CRYPTO_DRIVER_FILE_GUID = {standalone_mm_guid}")
@@ -1103,7 +1113,7 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
         out_dir = DEFAULT_OUTPUT_DIR
         verbose = False
     flavors = get_flavors()
-    phases = ["Pei", "Dxe", "RuntimeDxe", "Smm", "StandaloneMm_MmSupv", "StandaloneMm"]
+    phases = ["Pei", "Dxe", "Smm", "StandaloneMm_MmSupv", "StandaloneMm"]
     # Arm is currently disabled
     arches = ["X64", "AARCH64", "IA32", ]  # "ARM"
     targets = ["DEBUG", "RELEASE"]
