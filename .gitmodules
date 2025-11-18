@@ -16,3 +16,7 @@
 [submodule "Common/MU"]
 	path = Common/MU
 	url = https://github.com/microsoft/mu_plus.git
+[submodule "Common/MU_TIANO"]
+	path = Common/MU_TIANO
+	url = https://github.com/microsoft/mu_tiano_plus.git
+	branch = release/202502
