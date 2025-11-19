@@ -55,30 +55,33 @@ The MU_BASECORE repository contains the core UEFI/EDK2 code with OneCrypto integ
   - Null implementation that returns errors for all functions
   - Used when crypto is not available or during early boot phases
 
-### OpensslPkg
+### CryptoBinPkg
 
-The OpensslPkg provides the OpenSSL cryptographic library and a traditional BaseCryptLib implementation. In the OneCrypto architecture, this package is used to build the `OneCryptoMmBin.efi` binary but is not required by platforms at build time.
+CryptoBinPkg builds the small loader drivers that find, load, and initialize `OneCryptoMmBin.efi` in each phase. These loaders have no build-time dependency on OpenSSL or OneCryptoPkg.
 
 **Key Components:**
 
-- **`Library/OpensslLib/`**
-  - Wrapper around the OpenSSL submodule
-  - Provides the actual cryptographic implementations
-  - Large library with all OpenSSL functionality
+- **`Driver/OneCryptoLoaderDxe.c` / `OneCryptoLoaderDxe.inf`**
+  - DXE phase loader driver (~15 KB)
+  - Searches the FV for OneCryptBin
+  - Loads the binary into memory that DXE can access
+  - Provides phase specific dependencies to OneCryptoBin
+  - Publishes `ONE_CRYPTO_PROTOCOL`
 
-- **`Library/BaseCryptLib/`**
-  - Traditional implementation of BaseCryptLib using OpenSSL directly
-  - Used by OneCryptoMmBin to implement crypto functions
-  - Statically linked into OneCryptoMmBin.efi
+- **`Driver/OneCryptoLoaderMm.c` / `OneCryptoLoaderMm.inf`**
+  - MM phase loader driver (~4 KB)
+  - Locates the private protocol shared by the OneCryptoBin entry
+  - Provides phase specific dependencies to OneCryptoBin
+  - Publishes `ONE_CRYPTO_PROTOCOL`
 
-- **`Library/IntrinsicLib/`**
-  - Compiler intrinsic functions required by OpenSSL
-  - Platform-specific assembly and C implementations
+- **`Support/OneCryptoDxeLoader.inf`** and **`Support/OneCryptoLoaderMm.inf`**
+  - Library-style INF files for platform integration
+  - Allow platforms to include loaders as dependencies
 
-**Alternatives:**
-
-> [!NOTE]
-> OpensslPkg can be compiled against standard EDK2 or other forks. Additionally, alternative cryptographic packages could be created (e.g., `SymCryptPkg`, `MbedTlsPkg`) following the same pattern to provide different crypto backend implementations.
+**Build Outputs:**
+- `OneCryptoDxeLoader.efi` - DXE loader (~15 KB uncompressed)
+- `OneCryptoLoaderMm.efi` - MM loader (~4 KB uncompressed)
+- `OneCryptoBinMm.efi` - Phase agnostic crypto provider (~1.4 MB uncompressed)
 
 ### OneCryptoPkg
 
@@ -117,48 +120,32 @@ OneCryptoPkg builds the standalone crypto binary (`OneCryptoMmBin.efi`) that con
 - Contains complete crypto implementation
 - Phase-independent, relocatable PE32 binary
 
-### CryptoBinPkg
+### OpensslPkg
 
-CryptoBinPkg builds the small loader drivers that find, load, and initialize `OneCryptoMmBin.efi` in each phase. These loaders have no build-time dependency on OpenSSL or OneCryptoPkg.
+The OpensslPkg provides the OpenSSL cryptographic library and a traditional BaseCryptLib implementation. In the OneCrypto architecture, this package is used to build the `OneCryptoMmBin.efi` binary but is not required by platforms at build time.
 
 **Key Components:**
 
-- **`Driver/OneCryptoLoaderDxe.c` / `OneCryptoLoaderDxe.inf`**
-  - DXE phase loader driver (~15 KB)
-  - Entry: `DxeEntryPoint()`
-  - Uses `GetSectionFromAnyFv()` to search firmware volumes for OneCryptoMmBin GUID
-  - Uses `gBS->LoadImage()` to load PE32 into memory with relocations
-  - Parses PE export directory to find `Constructor` function
-  - Populates `ONE_CRYPTO_DEPENDENCIES` with Boot Services and Runtime Services
-  - Calls Constructor to get `ONE_CRYPTO_PROTOCOL`
-  - Installs protocol with `gBS->InstallMultipleProtocolInterfaces()`
+- **`Library/OpensslLib/`**
+  - Wrapper around the OpenSSL submodule
+  - Provides the actual cryptographic implementations
+  - Large library with all OpenSSL functionality
 
-- **`Driver/OneCryptoLoaderMm.c` / `OneCryptoLoaderMm.inf`**
-  - MM phase loader driver (~4 KB)
-  - Entry: `MmEntry()`
-  - OneCryptoMmBin already loaded by MM Foundation
-  - Uses `gMmst->MmLocateProtocol()` to find private protocol
-  - Private protocol provides Constructor function pointer directly
-  - Populates `ONE_CRYPTO_DEPENDENCIES` with MM Services (GetTime=NULL)
-  - Calls Constructor to get `ONE_CRYPTO_PROTOCOL`
-  - Installs protocol with `gMmst->MmInstallProtocolInterface()`
+- **`Library/BaseCryptLib/`**
+  - Traditional implementation of BaseCryptLib using OpenSSL directly
+  - Used by OneCryptoMmBin to implement crypto functions
+  - Statically linked into OneCryptoMmBin.efi
 
-- **`Driver/OneCryptoLoaderDriverSupport.h`**
-  - Common structures and definitions shared by loaders
-  - `DRIVER_DEPENDENCIES` structure for loader-specific state
+- **`Library/IntrinsicLib/`**
+  - Compiler intrinsic functions required by OpenSSL
+  - Platform-specific assembly and C implementations
 
-- **`Driver/PeCoffLib.c` / `PeCoffLib.h`**
-  - PE/COFF parsing utilities for DXE loader
-  - Export directory parsing to find Constructor function
-  - Image validation and symbol resolution
+**Alternatives:**
 
-- **`Support/OneCryptoDxeLoader.inf`** and **`Support/OneCryptoLoaderMm.inf`**
-  - Library-style INF files for platform integration
-  - Allow platforms to include loaders as dependencies
+> [!NOTE]
+> OpensslPkg can be compiled against standard EDK2 or other forks. Additionally, alternative cryptographic packages could be created (e.g., `SymCryptPkg`, `MbedTlsPkg`) following the same pattern to provide different crypto backend implementations.
 
-**Build Outputs:**
-- `OneCryptoDxeLoader.efi` - DXE loader (~15 KB)
-- `OneCryptoLoaderMm.efi` - MM loader (~4 KB)
+
 
 ### Package Dependencies
 
@@ -198,6 +185,136 @@ OneCryptoMmBin.efi (contains OpenSSL)
 6. **Loader Flexibility**: Different loaders for DXE, MM, SMM, SupvMm without changing OneCryptoMmBin
 
 ## Architecture & Design
+
+### High-Level Concept
+
+The OneCrypto architecture separates interface definition from implementation, enabling flexible cryptographic provider selection while maintaining a consistent API for platform consumers.
+
+```mermaid
+---
+config:
+  layout: elk
+---
+
+classDiagram
+
+  namespace Platform_Consumers {
+    class PlatformDrivers {
+      <<Consumers>>
+      Uses crypto functions
+    }
+  }
+
+  namespace Library_Interfaces {
+    class BaseCryptLib:::interface {
+      <<Library Interface>>
+      Superset of crypto functions
+      Platform-facing API
+    }
+
+    class BaseLibs:::interface {
+      <<Library Interface>>
+      Superset of crypto functions
+      Platform-facing API
+    }
+    
+    class BaseCryptLibOnOneCrypto:::implementation {
+      <<Library Implementation>>
+      Locates and calls protocol
+    }
+  }
+
+  namespace Protocol_Layer {
+    class OneCryptoProtocol:::protocol {
+      <<Protocol Interface>>
+      Strongly-defined subset
+      Version: Major.Minor
+    }
+    
+    class CryptoLoaders:::loader {
+      <<DXE/MM Loaders>>
+      Provide dependencies
+      Publish protocol
+    }
+  }
+
+  namespace Binary_Implementation {
+    class OneCryptoMmBin:::binary {
+      <<Crypto Binary>>
+      OpenSSL implementation
+      Phase-independent
+    }
+    
+    class OpensslLib:::provider {
+      <<Crypto Provider>>
+      OpenSSL / SymCrypt / MbedTLS
+      Swappable backend
+    }
+    
+    class BaseCryptCrtLib:::interface {
+      <<Support Libraries>>
+      Base libraries
+      CRT abstraction
+    }
+  }
+
+  %% Platform to Library Interface
+  PlatformDrivers <-- BaseCryptLib : Uses
+
+  %% Library Interface to Implementation
+  BaseCryptLib <|.. BaseCryptLibOnOneCrypto : implements
+
+  %% Implementation to Protocol
+  BaseCryptLibOnOneCrypto --> OneCryptoProtocol : Locates & Calls
+
+  %% Protocol published by Loaders
+  CryptoLoaders --> OneCryptoProtocol : Publishes
+
+  %% Loaders initialize Binary
+  CryptoLoaders --> OneCryptoMmBin : Loads & Provides Dependencies
+
+  %% Binary returns Protocol
+  OneCryptoMmBin --> CryptoLoaders : Returns protocol structure
+
+  %% Binary sets up support libraries
+  OneCryptoMmBin --> BaseCryptCrtLib : Sets up with dependencies
+
+  %% Binary uses Provider
+  OneCryptoMmBin <-- OpensslLib : Links against
+
+  %% Provider uses Support
+  OpensslLib <-- BaseCryptCrtLib : Uses for phase specific CRT functions
+
+  %% Build time non phase specific dependencies
+  OpensslLib <-- BaseLibs : Uses non-phase specific dependencies
+
+
+
+  classDef interface fill:#40bcd8,stroke:#333,stroke-width:2px
+  classDef protocol fill:#d63230,stroke:#333,stroke-width:2px
+  classDef loader fill:#1c77c3,stroke:#333,stroke-width:2px
+  classDef binary fill:#1c77c3,stroke:#333,stroke-width:2px
+  classDef provider fill:#ff8c00,stroke:#333,stroke-width:2px
+  classDef support fill:#dda0dd,stroke:#333,stroke-width:2px
+```
+
+**Key Architectural Layers:**
+
+1. **Library Interfaces** - `BaseCryptLib` represents the superset of cryptographic functionality that a platform could implement. This is the stable, platform-facing API that all consumer drivers depend on.
+
+2. **Protocol Layer** - `OneCryptoProtocol` provides a strongly-defined subset of those cryptographic functions with explicit versioning (Major.Minor). This protocol is the runtime contract between loaders and the binary.
+
+3. **Loaders** - The `CryptoLoaders` (DXE/MM specific) provide the necessary dependencies to `OneCryptoMmBin` and publish the protocol returned by the binary, making it available to the platform.
+
+4. **Binary Implementation** - `OneCryptoMmBin` is the phase-independent binary containing the cryptographic implementation. It receives dependencies from the loader and sets up `BaseCryptCrtLib` with these dependencies, enabling `OpensslPkg` to use phase-specific services (memory allocation, debug, time, RNG).
+
+5. **Crypto Provider** - `OpensslPkg` (or alternatives like `SymCryptPkg`, `MbedTlsPkg`) provides the actual cryptographic algorithms. Through Base libraries and `BaseCryptCrtLib`, we satisfy all requirements for the crypto provider, enabling swappable backends.
+
+**Design Benefits:**
+- **Abstraction**: Platform code depends on stable `BaseCryptLib` interface, not implementation details
+- **Flexibility**: Crypto provider can be swapped (OpenSSL → SymCrypt) without platform changes
+- **Versioning**: Protocol version enables gradual platform updates and new feature adoption
+- **Phase Independence**: Single binary works across DXE, MM, SMM through dependency injection
 
 ### Consumer Design
 
