@@ -231,7 +231,7 @@ classDiagram
       Version: Major.Minor
     }
     
-    class CryptoLoaders:::loader {
+    class CryptoLoaders:::binary {
       <<DXE/MM Loaders>>
       Provide dependencies
       Publish protocol
@@ -291,8 +291,8 @@ classDiagram
 
 
   classDef interface fill:#40bcd8,stroke:#333,stroke-width:2px
+  classDef implementation fill:#187286,stroke:#333,stroke-width:2px
   classDef protocol fill:#d63230,stroke:#333,stroke-width:2px
-  classDef loader fill:#1c77c3,stroke:#333,stroke-width:2px
   classDef binary fill:#1c77c3,stroke:#333,stroke-width:2px
   classDef provider fill:#ff8c00,stroke:#333,stroke-width:2px
   classDef support fill:#dda0dd,stroke:#333,stroke-width:2px
@@ -351,12 +351,12 @@ classDiagram
         <<library interface>>
     }
 
-    class BaseCryptLibOnOneCrypto_Mm {
+    class BaseCryptLibOnOneCrypto_Mm:::loader {
         <<library class>>
 
     }
 
-    class BaseCryptLibOnOneCrypto_Dxe {
+    class BaseCryptLibOnOneCrypto_Dxe:::loader {
         <<library class>>
 
     }
@@ -384,11 +384,11 @@ classDiagram
 
     }
 
-    class OneCryptoDxeLoader {
+    class OneCryptoDxeLoader:::binary {
         entry()  
     }
 
-    class OneCryptoLoaderMm {
+    class OneCryptoLoaderMm:::binary {
         entry()  
     }
   }
@@ -420,10 +420,12 @@ classDiagram
 
   OneCryptoMmBin --* openssl
 
-  classDef libinterface fill:#8255,stroke-dasharray: 5 5
-  classDef protocolinterface fill:#1155,stroke-dasharray: 5 5
-  classDef example fill:#668899
-  classDef struct fill:#990055,stroke-dasharray: 5 5
+  classDef interface fill:#40bcd8,stroke:#333,stroke-width:2px
+  classDef protocol fill:#d63230,stroke:#333,stroke-width:2px
+  classDef loader fill:#1c77c3,stroke:#333,stroke-width:2px
+  classDef binary fill:#1c77c3,stroke:#333,stroke-width:2px
+  classDef provider fill:#ff8c00,stroke:#333,stroke-width:2px
+  classDef library fill:#40bcd8,stroke:#333,stroke-width:2px
 
 ```
 
