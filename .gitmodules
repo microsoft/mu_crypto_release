@@ -1,5 +1,5 @@
-[submodule "CryptoPkg/Library/OpensslLib/openssl"]
-	path = CryptoPkg/Library/OpensslLib/openssl
+[submodule "OpensslPkg/Library/OpensslLib/openssl"]
+	path = OpensslPkg/Library/OpensslLib/openssl
 	url = https://github.com/openssl/openssl
 [submodule "CryptoPkg/Library/MbedTlsLib/mbedtls"]
 	path = CryptoPkg/Library/MbedTlsLib/mbedtls
