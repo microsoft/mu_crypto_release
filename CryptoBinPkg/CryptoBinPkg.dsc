@@ -283,4 +283,3 @@ GCC:*_*_*_CC_FLAGS = -mbranch-protection=standard
 
 [BuildOptions.AARCH64.EDKII.MM_STANDALONE]
   GCC:*_*_*_CC_FLAGS = -mstrict-align -march=armv8-a
-
