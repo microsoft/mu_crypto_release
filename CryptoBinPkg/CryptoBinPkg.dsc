@@ -268,6 +268,9 @@ MSFT:RELEASE_*_*_DLINK_FLAGS = /DEBUG /OPT:REF /OPT:ICF=10 /PDBALTPATH:$(MODULE_
 MSFT:RELEASE_*_*_ASM_FLAGS = /Zi
 MSFT:RELEASE_*_*_NASM_FLAGS = -g
 
+[BuildOptions.AARCH64]
+GCC:*_*_*_CC_FLAGS = -mbranch-protection=standard
+
 [BuildOptions.X64.EDKII.PEIM, BuildOptions.AARCH64.EDKII.PEIM]
   MSFT:*_*_*_DLINK_FLAGS = /FILEALIGN:0x1000 # meet requirement for PEIM section and file alignment to match.
 
@@ -280,3 +283,4 @@ MSFT:RELEASE_*_*_NASM_FLAGS = -g
 
 [BuildOptions.AARCH64.EDKII.MM_STANDALONE]
   GCC:*_*_*_CC_FLAGS = -mstrict-align -march=armv8-a
+
