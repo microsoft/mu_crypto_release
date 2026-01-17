@@ -1,0 +1,28 @@
+## @file
+#  OneCrypto DXE Loader - Loads OneCryptoBin and installs crypto protocol in DXE.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderDxe
+  FILE_GUID                      = 4F25834D-11D0-4A8F-9860-72B303B9F242
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = DxeEntryPoint
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries.X64]
+  PE32|OneCryptoLoaderDxe.efi
+  DXE_DEPEX|OneCryptoLoaderDxe.depex
+
+[Protocols]
+  gOneCryptoProtocolGuid              ## PRODUCES
+  gEfiRngProtocolGuid                 ## CONSUMES
