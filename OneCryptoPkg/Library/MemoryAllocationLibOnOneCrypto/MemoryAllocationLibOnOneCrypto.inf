@@ -1,0 +1,29 @@
+## @file
+#  Memory Allocation Library implementation for OneCrypto
+#
+#  This library provides memory allocation wrappers that call into OneCrypto's
+#  dependency structure. Unused functions assert.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MemoryAllocationLibOnOneCrypto
+  FILE_GUID                      = 8B2E5E5F-9F3A-4A7B-8C5D-6E7F8A9B0C1D
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MemoryAllocationLib
+
+[Sources]
+  MemoryAllocationLibOnOneCrypto.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  OneCryptoCrtLib
+  DebugLib

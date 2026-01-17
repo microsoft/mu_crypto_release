@@ -1,0 +1,37 @@
+## @file
+#  Debug Library implementation for OneCrypto
+#
+#  This library provides debug output wrappers that call into OneCrypto's
+#  dependency structure. It implements the DEBUG macro by using OneCrypto's
+#  DebugPrint function pointer.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DebugLibOnOneCrypto
+  FILE_GUID                      = 9A8B7C6D-5E4F-3210-ABCD-EF9876543210
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = DebugLib
+
+[Sources]
+  DebugLibOnOneCrypto.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  OneCryptoCrtLib
+  BaseLib
+  PrintLib
+  BaseMemoryLib
+  PcdLib
+
+[Pcd]
+  gOneCryptoPkgTokenSpaceGuid.PcdDebugPropertyMask          ## CONSUMES
+  gOneCryptoPkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel  ## CONSUMES
+  gOneCryptoPkgTokenSpaceGuid.PcdDebugClearMemoryValue      ## CONSUMES
