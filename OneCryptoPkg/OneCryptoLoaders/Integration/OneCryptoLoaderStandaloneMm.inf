@@ -1,0 +1,27 @@
+## @file
+#  OneCrypto StandaloneMM Loader - Loads OneCryptoBin and installs crypto protocol in StandaloneMM.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderStandaloneMm
+  FILE_GUID                      = 56FDC6F4-8820-40F5-95C1-83E289C4A45C
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = MmEntry
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries.X64]
+  PE32|OneCryptoLoaderStandaloneMm.efi
+  SMM_DEPEX|OneCryptoLoaderStandaloneMm.depex
+
+[Protocols]
+  gOneCryptoProtocolGuid          ## PRODUCES
