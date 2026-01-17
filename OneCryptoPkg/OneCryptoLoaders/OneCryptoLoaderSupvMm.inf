@@ -1,0 +1,47 @@
+## @file
+#  Loads OneCryptoBin driver and installs the OneCrypto protocol interface.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderSupvMm
+  FILE_GUID                      = 101024FF-877A-4D5B-A557-5ED44F12341E
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = MmEntry
+
+[Sources]
+  OneCryptoLoaderMm.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  StandaloneMmPkg/StandaloneMmPkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  StandaloneMmDriverEntryPoint
+  PeCoffGetEntryPointLib
+  MemoryAllocationLib
+  CacheMaintenanceLib
+  BaseMemoryLib
+  PeCoffLib
+  DebugLib
+  SafeIntLib
+  HobLib
+  RngLib
+  FvLib
+
+[Protocols]
+  gOneCryptoProtocolGuid           ## PRODUCES
+  gOneCryptoPrivateProtocolGuid    ## CONSUMES
+  gEfiRngProtocolGuid              ## CONSUMES
+
+[Depex]
+  gOneCryptoPrivateProtocolGuid
