@@ -1,0 +1,27 @@
+## @file
+#  This module builds the OneCryptoSupvMm binary thats meant to be used
+#  in conjunction with a Supervisor MM environment.
+#
+#  This module must have the GUID `76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC`.
+#  Otherwise, the loaders will not be able to locate it.
+#
+#  Copyright (C) Microsoft Corporation
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoBinSupvMm
+  FILE_GUID                      = 76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MmEntry
+  PI_SPECIFICATION_VERSION       = 0x00010032
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries.X64]
+  PE32|OneCryptoBinSupvMm.efi
+  SMM_DEPEX|OneCryptoBinSupvMm.depex
