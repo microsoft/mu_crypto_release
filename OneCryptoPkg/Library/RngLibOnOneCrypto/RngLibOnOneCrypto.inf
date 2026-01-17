@@ -1,0 +1,29 @@
+## @file
+#  RNG Library implementation for OneCrypto
+#
+#  This library provides random number generation wrappers that call into OneCrypto's
+#  dependency structure. It implements RngLib by using OneCrypto's GetRandomNumber64
+#  function pointer.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RngLibOnOneCrypto
+  FILE_GUID                      = 1F2E3D4C-5B6A-7980-CDEF-123456789ABC
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = RngLib
+
+[Sources]
+  RngLibOnOneCrypto.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  OneCryptoCrtLib
