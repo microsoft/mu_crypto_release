@@ -64,7 +64,6 @@ LazyPlatformGetRandomNumber64 (
   )
 {
   EFI_STATUS  Status;
-  UINT8       *RandBytes;
 
   if (Rand == NULL) {
     DEBUG ((DEBUG_ERROR, "LazyPlatformGetRandomNumber64: Null Rand pointer\n"));
@@ -85,22 +84,14 @@ LazyPlatformGetRandomNumber64 (
 
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_WARN, "LazyPlatformGetRandomNumber64: EFI_RNG_PROTOCOL not available, Status=%r\n", Status));
+      return FALSE;
     }
-  }
-
-  //
-  // If we don't have RNG protocol, fail gracefully
-  //
-  if (mCachedRngProtocol == NULL) {
-    DEBUG ((DEBUG_VERBOSE, "LazyPlatformGetRandomNumber64: No RNG protocol available\n"));
-    return FALSE;
   }
 
   //
   // Use the cached RNG protocol
   //
-  RandBytes = (UINT8 *)Rand;
-  Status    = mCachedRngProtocol->GetRNG (mCachedRngProtocol, NULL, sizeof (UINT64), RandBytes);
+  Status = mCachedRngProtocol->GetRNG (mCachedRngProtocol, NULL, sizeof (UINT64), (UINT8 *)Rand);
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "LazyPlatformGetRandomNumber64: GetRNG failed, Status=%r\n", Status));
@@ -140,6 +131,12 @@ InstallSharedDependencies (
   // Use lazy RNG initialization - will try to locate RNG protocol on first use
   //
   OneCryptoDepends->GetRandomNumber64 = LazyPlatformGetRandomNumber64;
+  //
+  // This doesn't appear to be needed since sleep is only used in
+  // HTTP / QUIC / CMP - none of which are used by UEFI firmware.
+  // gBS->Stall is only being provided to be consistent with upstream
+  //
+  OneCryptoDepends->MicroSecondDelay = gBS->Stall;
 }
 
 /**
