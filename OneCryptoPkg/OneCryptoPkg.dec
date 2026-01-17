@@ -1,0 +1,66 @@
+## @file
+# OneCryptoPkg Package Declaration
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = OneCryptoPkg
+  PACKAGE_GUID                   = 36470E80-36F2-4BA0-8CC8-937C7D9FF888
+  PACKAGE_VERSION                = 1.0
+
+[Includes]
+  Include
+
+[LibraryClasses]
+  BaseCryptLib
+
+[Guids]
+  gOneCryptoPkgTokenSpaceGuid = { 0x36470E80, 0x36F2, 0x4BA0, { 0x8C, 0xC8, 0x93, 0x7C, 0x7D, 0x9F, 0xF8, 0x88 } }
+
+[Protocols]
+  ## OneCrypto Private Protocol
+  ##
+  ## The private OneCrypto protocol is for the StMM loader to communicate with the OneCryptoMmBin.
+  ##
+  gOneCryptoPrivateProtocolGuid = { 0x854bce61, 0x8d35, 0x4ff5, { 0x9d, 0xb7, 0x30, 0x3a, 0xfb, 0x79, 0x80, 0xe2 }}
+
+[PcdsFixedAtBuild]
+  ## The mask is used to control DebugLib behavior.<BR><BR>
+  #  BIT0 - Enable Debug Assert.<BR>
+  #  BIT1 - Enable Debug Print.<BR>
+  #  BIT2 - Enable Debug Code.<BR>
+  #  BIT3 - Enable Clear Memory.<BR>
+  # @Prompt Debug Property.
+  # @Expression 0x80000002 | (gOneCryptoPkgTokenSpaceGuid.PcdDebugPropertyMask & 0xF0) == 0
+  gOneCryptoPkgTokenSpaceGuid.PcdDebugPropertyMask|0x06|UINT8|0x00000001
+
+  ## This flag is used to control the print out Debug message.<BR><BR>
+  #  BIT0  - Initialization message.<BR>
+  #  BIT1  - Warning message.<BR>
+  #  BIT2  - Load Event message.<BR>
+  #  BIT3  - File System message.<BR>
+  #  BIT4  - Allocate or Free Pool message.<BR>
+  #  BIT5  - Allocate or Free Page message.<BR>
+  #  BIT6  - Information message.<BR>
+  #  BIT7  - Dispatcher message.<BR>
+  #  BIT8  - Variable message.<BR>
+  #  BIT10 - Boot Manager message.<BR>
+  #  BIT12 - BlockIo Driver message.<BR>
+  #  BIT14 - Network Driver message.<BR>
+  #  BIT16 - UNDI Driver message.<BR>
+  #  BIT17 - LoadFile message.<BR>
+  #  BIT19 - Event message.<BR>
+  #  BIT20 - Global Coherency Database changes message.<BR>
+  #  BIT21 - Memory range cachability changes message.<BR>
+  #  BIT22 - Detailed debug message.<BR>
+  #  BIT31 - Error message.<BR>
+  # @Prompt Fixed Debug Message Print Level.
+  gOneCryptoPkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0xFFFFFFFF|UINT32|0x00000002
+
+  ## The value is used to fill a segment of memory when PcdDebugPropertyMask Clear Memory is enabled.
+  # @Prompt Debug Clear Memory Value.
+  gOneCryptoPkgTokenSpaceGuid.PcdDebugClearMemoryValue|0xAF|UINT8|0x00000003
