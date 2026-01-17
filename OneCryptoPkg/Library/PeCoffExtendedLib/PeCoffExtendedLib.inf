@@ -1,0 +1,35 @@
+## @file
+#  PE/COFF Extended Library - Provides functions for parsing PE/COFF export directories.
+#
+#  This library extends the standard PeCoffLib with functions to:
+#  - Get the export directory from a PE/COFF image
+#  - Print exported functions
+#  - Find specific exported functions by name
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PeCoffExtendedLib
+  FILE_GUID                      = 8F7D4A3E-9C2B-4F1E-A5D6-3E8B9C1A2F4D
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PeCoffExtendedLib
+
+
+[Sources]
+  PeCoffExtendedLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  PeCoffGetEntryPointLib
+  PeCoffLib
