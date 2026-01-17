@@ -1,0 +1,27 @@
+## @file
+#  OneCrypto SupvMm Loader - Loads OneCryptoBin and installs crypto protocol in SupvMm.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderSupvMm
+  FILE_GUID                      = 101024FF-877A-4D5B-A557-5ED44F12341E
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = MmEntry
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries.X64]
+  PE32|OneCryptoLoaderSupvMm.efi
+  SMM_DEPEX|OneCryptoLoaderSupvMm.depex
+
+[Protocols]
+  gOneCryptoProtocolGuid           ## PRODUCES
