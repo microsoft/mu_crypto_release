@@ -1,0 +1,28 @@
+## @file
+#  Real Time Clock Library implementation for OneCrypto.
+#
+#  This library provides RTC access by routing through OneCryptoCrtLib's
+#  GetTime function which uses dependency injection.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RealTimeClockOnOneCrypto
+  FILE_GUID                      = 8B5E9F2A-1C3D-4E6F-9A7B-2D4C5E8F1A3B
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = RealTimeClockLib
+
+[Sources]
+  RealTimeClock.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  OneCryptoCrtLib
