@@ -1,0 +1,51 @@
+## @file
+#  This module builds the OneCryptoSupvMm binary thats meant to be used
+#  in conjunction with a SupvMm environment.
+#
+#  This module must have the GUID `76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC`.
+#  Otherwise, the loaders will not be able to locate it.
+#
+#  Copyright (C) Microsoft Corporation
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoBinSupvMm
+  FILE_GUID                      = 76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MmEntry
+  PI_SPECIFICATION_VERSION       = 0x00010032
+
+[LibraryClasses]
+  StandaloneMmDriverEntryPoint
+  IntrinsicLib
+  BaseLib
+  PrintLib
+  BaseMemoryLib
+  BaseCryptLib
+  SafeIntLib
+  OneCryptoCrtLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+  OpensslPkg/OpensslPkg.dec
+  StandaloneMmPkg/StandaloneMmPkg.dec
+
+[Sources]
+  OneCryptoBin.c
+
+[BuildOptions]
+  # These options are needed to get the exported functions to be exported correctly
+  MSFT:*_*_*_DLINK_FLAGS  = /DLL /SUBSYSTEM:CONSOLE /VERSION:1.0
+  MSFT:*_*_*_GENFW_FLAGS = --keepoptionalheader
+
+[Protocols]
+  gOneCryptoPrivateProtocolGuid ## Produces
+
+[Depex]
+  TRUE
