@@ -89,6 +89,7 @@
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
   OpensslPkg/OpensslPkg.dec
+  MdeModulePkg/MdeModulePkg.dec # MU_CHANGE
 
 [LibraryClasses]
   BaseLib
@@ -101,6 +102,7 @@
   PrintLib
   UefiBootServicesTableLib
   SynchronizationLib
+  RealTimeClockLib # MU_CHANGE
 
 [Protocols]
   gEfiMpServiceProtocolGuid

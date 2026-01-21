@@ -9,7 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <Uefi.h>
 #include <CrtLibSupport.h>
-#include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/RealTimeClockLib.h> // MU_CHANGE
 
 //
 // -- Time Management Routines --
@@ -96,7 +96,7 @@ time (
   //
   // Get the current time and date information
   //
-  Status = gRT->GetTime (&Time, NULL);
+  Status = LibGetTime (&Time, NULL); // MU_CHANGE
   if (EFI_ERROR (Status) || (Time.Year < 1970)) {
     return 0;
   }
