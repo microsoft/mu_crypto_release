@@ -102,6 +102,7 @@
   # UefiBootServicesTableLib MU_CHANGE
   # SynchronizationLib MU_CHANGE
   RealTimeClockLib # MU_CHANGE
+  RngLib # MU_CHANGE
 
 [Protocols]
   gEfiMpServiceProtocolGuid

@@ -38,6 +38,9 @@ RandomSeed (
   IN  UINTN         SeedSize
   )
 {
+  CHAR8   DefaultSeed[128]; // MU_CHANGE
+  UINT64  RandomSeedValue;  // MU_CHANGE
+
   if (SeedSize > INT_MAX) {
     return FALSE;
   }
@@ -57,6 +60,19 @@ RandomSeed (
   if (Seed != NULL) {
     RAND_seed (Seed, (UINT32)SeedSize);
   } else {
+    // MU_CHANGE [BEGIN]
+    if (!GetRandomNumber64 (&RandomSeedValue)) {
+      return FALSE;
+    }
+
+    AsciiSPrint (
+      DefaultSeed,
+      sizeof (DefaultSeed),
+      "UEFI Crypto Library default seed (%ld)",
+      RandomSeedValue
+      );
+    // MU_CHANGE [END]
+
     RAND_seed (DefaultSeed, sizeof (DefaultSeed));
   }
 
