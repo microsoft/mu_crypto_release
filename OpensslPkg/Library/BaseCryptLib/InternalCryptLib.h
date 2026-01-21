@@ -21,6 +21,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "CrtLibSupport.h"
 
 // TODO: remove in near future to stop using deprecated OpenSSL APIs
+#undef OPENSSL_NO_DEPRECATED // MU_CHANGE
 #define OPENSSL_NO_DEPRECATED  0
 
 #include <openssl/opensslv.h>
