@@ -62,6 +62,8 @@
   Pem/CryptPem.c
   Bn/CryptBn.c
   Setup/BaseCryptInit.c # MU_CHANG
+  Info/CryptInfo.c # MU_CHANGE
+
 
   SysCall/CrtWrapper.c
   SysCall/TimerWrapper.c
