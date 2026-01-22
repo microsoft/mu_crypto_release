@@ -27,6 +27,7 @@
   BaseCryptLib
   SafeIntLib
   OneCryptoCrtLib
+  TlsLib
 
 [Packages]
   MdePkg/MdePkg.dec
