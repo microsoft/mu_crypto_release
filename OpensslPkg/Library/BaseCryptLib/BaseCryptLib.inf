@@ -106,8 +106,10 @@
   RealTimeClockLib # MU_CHANGE
   RngLib # MU_CHANGE
 
-[Protocols]
-  gEfiMpServiceProtocolGuid
+# MU_CHANGE [BEGIN]
+# [Protocols]
+#  gEfiMpServiceProtocolGuid
+# MU_CHANGE [END]
 
 #
 # Remove these [BuildOptions] after this library is cleaned up
