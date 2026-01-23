@@ -17,7 +17,14 @@
 #include <Library/TlsLib.h>
 #include <Protocol/OneCrypto.h>
 
-#define COMMON_EXPORT_API  __declspec(dllexport)
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+ #define COMMON_EXPORT_API __declspec(dllimport)
+#elif defined(__GNUC__) || defined(__clang__)
+  #define COMMON_EXPORT_API __attribute__((visibility("default")))
+#else
+  #define COMMON_EXPORT_API
+#endif
 
 ONE_CRYPTO_CONSTRUCTOR_PROTOCOL  *mProtocolInstance = NULL;
 

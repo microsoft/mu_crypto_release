@@ -38,7 +38,7 @@
   @retval NULL    Allocation failed.
   @retval Other   Pointer to the allocated buffer.
 **/
-typedef VOID *(*ALLOCATE_POOL)(
+typedef VOID EFIAPI *(*ALLOCATE_POOL)(
   UINTN  AllocationSize
   );
 
@@ -49,7 +49,7 @@ typedef VOID *(*ALLOCATE_POOL)(
 
   @param[in]  Buffer  Pointer to the buffer to free. If NULL, this function has no effect.
 **/
-typedef VOID (*FREE_POOL)(
+typedef VOID EFIAPI (*FREE_POOL)(
   VOID  *Buffer
   );
 

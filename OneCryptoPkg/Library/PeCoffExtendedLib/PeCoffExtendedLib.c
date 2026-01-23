@@ -10,7 +10,7 @@
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 
-#include <library/PeCoffExtendedLib.h>
+#include <Library/PeCoffExtendedLib.h>
 
 /**
   Get the Export Directory in a PE/COFF image.

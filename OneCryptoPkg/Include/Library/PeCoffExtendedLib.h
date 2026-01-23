@@ -43,6 +43,7 @@ typedef struct _INTERNAL_IMAGE_CONTEXT {
   @retval EFI_NOT_FOUND                  The Export Directory is not found.
 **/
 EFI_STATUS
+EFIAPI
 GetExportDirectoryInPeCoffImage (
   IN  INTERNAL_IMAGE_CONTEXT      *Image,
   OUT EFI_IMAGE_EXPORT_DIRECTORY  **ImageExportDirectory

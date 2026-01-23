@@ -10,7 +10,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef OPENSSL_LIB_CONSTRUCTOR_H__
 #define OPENSSL_LIB_CONSTRUCTOR_H__
 
-#include <uefi.h>
+#include <Uefi.h>
 
 /**
   Constructor routine for OpensslLib.

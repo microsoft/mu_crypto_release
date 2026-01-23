@@ -45,7 +45,6 @@ VOID  *mOneCryptoProtocol = NULL;
 //
 // Lazy RNG state tracking
 //
-STATIC BOOLEAN           mRngInitAttempted   = FALSE;
 STATIC EFI_RNG_PROTOCOL  *mCachedRngProtocol = NULL;
 
 /**
