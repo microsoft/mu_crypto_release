@@ -81,8 +81,8 @@ def get_file_layout(arch, target, toolchain):
             ],
             "OneCryptoLoaders": [
                 # OneCryptoBinDxeLoader (OneCryptoLoaderDxe)
-                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.efi", "OneCryptoLoaderDxe.efi"),
-                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.depex", "OneCryptoLoaderDxe.depex"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxeByProtocol/OUTPUT/OneCryptoLoaderDxe.efi", "OneCryptoLoaderDxe.efi"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxeByProtocol/OUTPUT/OneCryptoLoaderDxe.depex", "OneCryptoLoaderDxe.depex"),
                 ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxe.inf", "OneCryptoLoaderDxe.inf"),
                 # OneCryptoBinStandaloneMmLoader (OneCryptoLoaderStandaloneMm)
                 (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.efi", "OneCryptoLoaderStandaloneMm.efi"),
@@ -165,28 +165,47 @@ def get_onecrypto_version():
         logger.warning("Using default version 1.0")
         return (1, 0)
 
-def create_package(output_name=None, version=None, arch=None, target=None, toolchain=None):
+def create_package(output_name=None, version=None, architectures=None, target=None, toolchain=None, arch=None):
     """
     Create a zip package with the specified files.
+
+    Package structure: <target>/<arch>/<BuildInfo|OneCryptoBin|OneCryptoLoaders>/
 
     Args:
         output_name: Name of the output zip file (without .zip extension)
         version: Version string (e.g., "1.0.0" becomes "v1_0_0")
-        arch: Architecture (X64, AARCH64)
+        architectures: List of architectures to include (X64, AARCH64), or None for all available
         target: Build target (DEBUG or RELEASE)
         toolchain: Toolchain used (e.g., VS2022, GCC5)
+        arch: Single architecture (for backward compatibility, use 'architectures' for multiple)
 
     Returns:
         dict with package details on success, None on failure
     """
     # Use defaults if not specified
-    arch = arch or DEFAULT_ARCH
     target = target or DEFAULT_TARGET
     toolchain = toolchain or DEFAULT_TOOLCHAIN
 
-    # Validate architecture
-    if arch not in SUPPORTED_ARCHITECTURES:
-        logger.error(f"Unsupported architecture: {arch}")
+    # Handle backward compatibility: 'arch' parameter for single architecture
+    if arch is not None and architectures is None:
+        architectures = [arch]
+
+    # If no architectures specified, try to include all supported architectures that have builds
+    if architectures is None:
+        architectures = SUPPORTED_ARCHITECTURES
+    elif isinstance(architectures, str):
+        architectures = [architectures]
+
+    # Validate architectures
+    valid_archs = []
+    for arch in architectures:
+        if arch not in SUPPORTED_ARCHITECTURES:
+            logger.warning(f"Unsupported architecture: {arch}, skipping")
+        else:
+            valid_archs.append(arch)
+
+    if not valid_archs:
+        logger.error("No valid architectures specified")
         logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
         return None
 
@@ -198,72 +217,95 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
     # Generate output filename
     if not output_name:
         # Convert version to underscore format (e.g., "1.0" -> "v1_0")
-        version_str = "v" + version.replace(".", "_")
-        output_name = f"Mu_CryptoBin_{version_str}_{arch}_{target}"
+        version_string = "v" + version.replace(".", "_")
+        output_name = f"OneCrypto_Drivers_{version_string}"
 
     # Write output to Build directory
     output_zip = Path(BUILD_BASE) / f"{output_name}.zip"
 
     logger.info(f"Creating package: {output_zip}")
-    logger.info(f"Architecture: {arch}, Target: {target}, Toolchain: {toolchain}")
+    logger.info(f"Target: {target}, Toolchain: {toolchain}")
+    logger.info(f"Architectures: {', '.join(valid_archs)}")
     logger.info("-" * 80)
-
-    # Get architecture-specific file layout
-    file_layout = get_file_layout(arch, target, toolchain)
 
     # Create the zip file
     missing_files = []
     added_files = []
-    folder_sizes = {}  # Track sizes per folder
+    folder_sizes = {}  # Track sizes per folder (includes arch prefix)
     file_details = []  # Track individual file details
+    archs_included = []  # Track which architectures actually had files
 
     with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for folder, files in file_layout.items():
-            logger.info(f"\nProcessing folder: {folder}/")
-            folder_sizes[folder] = 0
+        for arch in valid_archs:
+            # Get architecture-specific file layout
+            file_layout = get_file_layout(arch, target, toolchain)
+            arch_has_files = False
 
-            for src_path, dest_name in files:
-                # Integration files use paths relative to BUILD_BASE (which goes up to repo root)
-                if src_path.startswith("../"):
-                    full_src_path = Path(BUILD_BASE) / src_path
-                else:
-                    full_src_path = Path(BUILD_BASE) / src_path
+            logger.info(f"\n[{target}/{arch}]")
 
-                zip_path = f"{folder}/{dest_name}"
+            for folder, files in file_layout.items():
+                # New structure: <target>/<arch>/<folder>/
+                full_folder = f"{target}/{arch}/{folder}"
+                logger.info(f"  Processing: {full_folder}/")
+                folder_sizes[full_folder] = 0
 
-                if full_src_path.exists():
-                    file_size = full_src_path.stat().st_size
-                    folder_sizes[folder] += file_size
-                    # Show size in KB for .efi files for easier reading
-                    if dest_name.endswith('.efi'):
-                        size_str = f"{file_size:,} bytes ({file_size / 1024:.1f} KB)"
+                for src_path, dest_name in files:
+                    # Integration files use paths relative to BUILD_BASE (which goes up to repo root)
+                    if src_path.startswith("../"):
+                        full_src_path = Path(BUILD_BASE) / src_path
                     else:
-                        size_str = f"{file_size:,} bytes"
-                    logger.info(f"  + {dest_name} ({size_str})")
-                    zipf.write(full_src_path, zip_path)
-                    added_files.append((zip_path, file_size))
-                    file_details.append({
-                        "folder": folder,
-                        "name": dest_name,
-                        "path": str(full_src_path),  # Source file path for analysis
-                        "zip_path": zip_path,
-                        "size": file_size
-                    })
-                else:
-                    logger.warning(f"  - {dest_name} (NOT FOUND: {full_src_path})")
-                    missing_files.append(str(full_src_path))
+                        full_src_path = Path(BUILD_BASE) / src_path
+
+                    zip_path = f"{full_folder}/{dest_name}"
+
+                    if full_src_path.exists():
+                        file_size = full_src_path.stat().st_size
+                        folder_sizes[full_folder] += file_size
+                        # Show size in KB for .efi files for easier reading
+                        if dest_name.endswith('.efi'):
+                            size_str = f"{file_size:,} bytes ({file_size / 1024:.1f} KB)"
+                        else:
+                            size_str = f"{file_size:,} bytes"
+                        logger.info(f"    + {dest_name} ({size_str})")
+                        zipf.write(full_src_path, zip_path)
+                        added_files.append((zip_path, file_size))
+                        file_details.append({
+                            "arch": arch,
+                            "folder": folder,
+                            "name": dest_name,
+                            "path": str(full_src_path),  # Source file path for analysis
+                            "zip_path": zip_path,
+                            "size": file_size
+                        })
+                        arch_has_files = True
+                    else:
+                        logger.warning(f"    - {dest_name} (NOT FOUND: {full_src_path})")
+                        missing_files.append(str(full_src_path))
+
+            if arch_has_files:
+                archs_included.append(arch)
 
     logger.info("\n" + "=" * 80)
     logger.info("Package Summary:")
     logger.info("-" * 40)
 
-    # Show folder size breakdown
+    # Show per-architecture size breakdown
     total_size = 0
-    for folder, size in folder_sizes.items():
+    arch_totals = {}
+    for folder_path, size in folder_sizes.items():
         total_size += size
-        logger.info(f"  {folder}: {size:,} bytes ({size / 1024:.1f} KB)")
+        # Extract arch from path (e.g., "DEBUG/X64/OneCryptoBin" -> "X64")
+        parts = folder_path.split('/')
+        if len(parts) >= 2:
+            arch = parts[1]
+            arch_totals[arch] = arch_totals.get(arch, 0) + size
+
+    for arch in archs_included:
+        arch_size = arch_totals.get(arch, 0)
+        logger.info(f"  {target}/{arch}: {arch_size:,} bytes ({arch_size / 1024:.1f} KB)")
 
     logger.info("-" * 40)
+    logger.info(f"  Architectures included: {', '.join(archs_included)}")
     logger.info(f"  Total uncompressed: {total_size:,} bytes ({total_size / 1024:.1f} KB)")
     logger.info(f"  Total files added: {len(added_files)}")
     logger.info(f"  Missing files: {len(missing_files)}")
@@ -289,6 +331,8 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
         # Return result with details for callers
         return {
             "path": output_zip,
+            "architectures": archs_included,
+            "target": target,
             "folder_sizes": folder_sizes,
             "file_details": file_details,
             "total_uncompressed": total_size,
@@ -302,24 +346,26 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
         output_zip.unlink(missing_ok=True)
         return None
 
-def list_layout(arch=None):
-    """Print the file layout configuration for a specific architecture."""
-    arch = arch or DEFAULT_ARCH
+def list_layout(arch=None, target=None):
+    """Print the file layout configuration for architectures."""
+    target = target or DEFAULT_TARGET
+    archs_to_show = [arch] if arch else SUPPORTED_ARCHITECTURES
 
-    if arch not in SUPPORTED_ARCHITECTURES:
-        logger.error(f"Unsupported architecture: {arch}")
-        logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
-        return
+    for arch in archs_to_show:
+        if arch not in SUPPORTED_ARCHITECTURES:
+            logger.error(f"Unsupported architecture: {arch}")
+            logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
+            continue
 
-    file_layout = get_file_layout(arch, DEFAULT_TARGET, DEFAULT_TOOLCHAIN)
+        file_layout = get_file_layout(arch, target, DEFAULT_TOOLCHAIN)
 
-    logger.info(f"Package Layout for {arch}:")
-    logger.info("=" * 80)
-    for folder, files in file_layout.items():
-        logger.info(f"\n{folder}/")
-        for src_path, dest_name in files:
-            logger.info(f"  {dest_name}")
-            logger.info(f"    <- {BUILD_BASE}/{src_path}")
+        logger.info(f"\nPackage Layout for {target}/{arch}:")
+        logger.info("=" * 80)
+        for folder, files in file_layout.items():
+            logger.info(f"\n{target}/{arch}/{folder}/")
+            for src_path, dest_name in files:
+                logger.info(f"  {dest_name}")
+                logger.info(f"    <- {BUILD_BASE}/{src_path}")
 
 def main():
     """Main entry point."""
@@ -333,12 +379,19 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python package_onecrypto.py
+  python package_onecrypto.py                           # Package all architectures
+  python package_onecrypto.py --arch X64                # Package only X64
+  python package_onecrypto.py --arch X64 --arch AARCH64 # Package specific architectures
   python package_onecrypto.py --output MyPackage
   python package_onecrypto.py --version 1.0.2
-  python package_onecrypto.py --arch AARCH64 --toolchain GCC5
   python package_onecrypto.py --target RELEASE
-  python package_onecrypto.py --list
+  python package_onecrypto.py --list                    # Show layout for all architectures
+  python package_onecrypto.py --list --arch X64         # Show layout for X64 only
+
+Package Structure:
+  <target>/<arch>/BuildInfo/
+  <target>/<arch>/OneCryptoBin/
+  <target>/<arch>/OneCryptoLoaders/
         """
     )
 
@@ -354,7 +407,10 @@ Examples:
     )
     parser.add_argument(
         '--arch', '-a',
-        help=f'Architecture (default: {DEFAULT_ARCH})',
+        action='append',
+        dest='architectures',
+        choices=SUPPORTED_ARCHITECTURES,
+        help='Architecture to include (can be specified multiple times). Default: all supported',
         default=None
     )
     parser.add_argument(
@@ -377,13 +433,18 @@ Examples:
     args = parser.parse_args()
 
     if args.list:
-        list_layout()
+        # Show layout for specified arch or all architectures
+        if args.architectures:
+            for arch in args.architectures:
+                list_layout(arch=arch, target=args.target)
+        else:
+            list_layout(target=args.target)
         return 0
 
     result = create_package(
         output_name=args.output,
         version=args.version,
-        arch=args.arch,
+        architectures=args.architectures,
         target=args.target,
         toolchain=args.toolchain,
     )
