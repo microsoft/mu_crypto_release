@@ -18,7 +18,7 @@ Run the packaging script to create a zip file with all required binaries:
 python OneCryptoPkg\Scripts\package_onecrypto.py
 ```
 
-This creates `Build\Mu_CryptoBin_v1_0_0.zip` and outputs a SHA256 hash.
+This creates `Build\OneCrypto-Drivers.zip` and outputs a SHA256 hash.
 
 ### 3. Start a Local HTTP Server
 
