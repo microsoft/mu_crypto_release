@@ -2,7 +2,7 @@
   "scope": "global",
   "type": "web",
   "name": "edk2-onecrypto-driver-bin",
-  "source": "http://localhost:8000/Mu_CryptoBin_v1_0_0.zip",
+  "source": "http://localhost:8000/OneCrypto_<ARCH>.zip",
   "version": "1.0.0",
   "sha256": "<sha256 from package_onecrypto.py>",
   "compression_type": "zip",
