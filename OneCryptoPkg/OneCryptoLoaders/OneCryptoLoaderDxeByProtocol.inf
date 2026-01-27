@@ -1,0 +1,47 @@
+## @file
+#  Loads OneCrypto via pre-installed private protocol and installs the OneCrypto protocol interface.
+#
+#  This variant uses a pre-installed private protocol to obtain the crypto entry point,
+#  rather than loading from firmware volume. Useful when the crypto binary is pre-loaded
+#  by another driver.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderDxe
+  FILE_GUID                      = 7A3E8B2C-5F91-4D6A-B823-1C4F9E0D5A72
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DxeEntryPoint
+
+[Sources]
+  OneCryptoLoaderDxeByProtocol.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  DebugLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+
+[Protocols]
+  gOneCryptoProtocolGuid              ## PRODUCES
+  gOneCryptoPrivateProtocolGuid       ## CONSUMES
+  gEfiRngProtocolGuid                 ## CONSUMES
+
+[Depex]
+  gOneCryptoPrivateProtocolGuid
+
+# This driver depends on the private protocol being installed first
+# by a separate driver that pre-loads the crypto binary

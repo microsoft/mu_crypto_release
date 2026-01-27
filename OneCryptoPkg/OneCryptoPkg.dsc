@@ -228,6 +228,32 @@
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   }
 
+  ## OneCryptoLoaderDxeByProtocol for AARCH64
+  #
+  # This loader consumes gOneCryptoPrivateProtocolGuid installed by OneCryptoBinDxe
+  # and produces gOneCryptoProtocolGuid for consumers.
+  ##
+  OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderDxeByProtocol.inf {
+    <LibraryClasses>
+      BaseLib                     | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib               | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      PcdLib                      | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      PrintLib                    | MdePkg/Library/BasePrintLib/BasePrintLib.inf
+      UefiLib                     | MdePkg/Library/UefiLib/UefiLib.inf
+      UefiRuntimeServicesTableLib | MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
+      DevicePathLib               | MdePkg/Library/UefiDevicePathLibDevicePathProtocol/UefiDevicePathLibDevicePathProtocol.inf
+      RngLib                      | MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf # Drivers should use the protocol, GetRandomNumber64 will not work.
+      NULL                        | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      RegisterFilterLib           | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      HobLib                      | MdePkg/Library/DxeHobLib/DxeHobLib.inf
+      StackCheckFailureHookLib    | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
+      StackCheckLib               | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      UefiDriverEntryPoint        | MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
+      UefiBootServicesTableLib    | MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
+      MemoryAllocationLib         | MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
+      DebugLib                    | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+  }
+
   #############################################################################
   ## AARCH64 OneCryptoBin END
   #############################################################################
