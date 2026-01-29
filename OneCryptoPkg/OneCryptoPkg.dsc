@@ -36,6 +36,9 @@
   gOneCryptoPkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0x80000000
 !endif
 
+[LibraryClasses.AARCH64]
+  CompilerIntrinsicsLib|MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+
 [Components]
   ## OneCryptBin meant for StandaloneMm
   #
