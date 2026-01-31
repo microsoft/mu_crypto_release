@@ -45,3 +45,6 @@
 
 # This driver depends on the private protocol being installed first
 # by a separate driver that pre-loads the crypto binary
+
+[BuildOptions]
+  GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000
