@@ -45,3 +45,6 @@
 
 [Depex]
   gOneCryptoPrivateProtocolGuid
+
+[BuildOptions]
+  GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000

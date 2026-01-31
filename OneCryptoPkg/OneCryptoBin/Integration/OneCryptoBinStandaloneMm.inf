@@ -22,6 +22,6 @@
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
 
-[Binaries.X64]
+[Binaries]
   PE32|OneCryptoBinStandaloneMm.efi
   SMM_DEPEX|OneCryptoBinStandaloneMm.depex

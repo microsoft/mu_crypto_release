@@ -26,6 +26,6 @@
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
 
-[Binaries.AARCH64]
+[Binaries]
   PE32|OneCryptoBinDxe.efi
   DXE_DEPEX|OneCryptoBinDxe.depex
