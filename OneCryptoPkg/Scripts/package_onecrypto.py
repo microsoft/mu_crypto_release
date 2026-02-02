@@ -165,7 +165,7 @@ def get_onecrypto_version():
         logger.warning("Using default version 1.0")
         return (1, 0)
 
-def create_package(output_name=None, version=None, architectures=None, target=None, toolchain=None, arch=None):
+def create_package(output_name=None, version=None, architectures=None, target=None, toolchain=None, arch=None, targets=None):
     """
     Create a zip package with the specified files.
 
@@ -175,15 +175,24 @@ def create_package(output_name=None, version=None, architectures=None, target=No
         output_name: Name of the output zip file (without .zip extension)
         version: Version string (e.g., "1.0.0" becomes "v1_0_0")
         architectures: List of architectures to include (X64, AARCH64), or None for all available
-        target: Build target (DEBUG or RELEASE)
+        target: Build target (DEBUG or RELEASE) - for backward compatibility
         toolchain: Toolchain used (e.g., VS2022, GCC5)
         arch: Single architecture (for backward compatibility, use 'architectures' for multiple)
+        targets: List of build targets (DEBUG, RELEASE), or None for default
 
     Returns:
         dict with package details on success, None on failure
     """
     # Use defaults if not specified
-    target = target or DEFAULT_TARGET
+    # Handle backward compatibility: 'target' parameter for single target
+    if targets is None:
+        if target is not None:
+            targets = [target]
+        else:
+            targets = [DEFAULT_TARGET]
+    elif isinstance(targets, str):
+        targets = [targets]
+
     toolchain = toolchain or DEFAULT_TOOLCHAIN
 
     # Handle backward compatibility: 'arch' parameter for single architecture
@@ -216,15 +225,13 @@ def create_package(output_name=None, version=None, architectures=None, target=No
 
     # Generate output filename
     if not output_name:
-        # Convert version to underscore format (e.g., "1.0" -> "v1_0")
-        version_string = "v" + version.replace(".", "_")
-        output_name = f"OneCrypto_Drivers_{version_string}"
+        output_name = "OneCrypto-Drivers"
 
     # Write output to Build directory
     output_zip = Path(BUILD_BASE) / f"{output_name}.zip"
 
     logger.info(f"Creating package: {output_zip}")
-    logger.info(f"Target: {target}, Toolchain: {toolchain}")
+    logger.info(f"Targets: {', '.join(targets)}, Toolchain: {toolchain}")
     logger.info(f"Architectures: {', '.join(valid_archs)}")
     logger.info("-" * 80)
 
@@ -236,54 +243,56 @@ def create_package(output_name=None, version=None, architectures=None, target=No
     archs_included = []  # Track which architectures actually had files
 
     with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for arch in valid_archs:
-            # Get architecture-specific file layout
-            file_layout = get_file_layout(arch, target, toolchain)
-            arch_has_files = False
+        for target_build in targets:
+            for arch in valid_archs:
+                # Get architecture-specific file layout
+                file_layout = get_file_layout(arch, target_build, toolchain)
+                arch_has_files = False
 
-            logger.info(f"\n[{target}/{arch}]")
+                logger.info(f"\n[{target_build}/{arch}]")
 
-            for folder, files in file_layout.items():
-                # New structure: <target>/<arch>/<folder>/
-                full_folder = f"{target}/{arch}/{folder}"
-                logger.info(f"  Processing: {full_folder}/")
-                folder_sizes[full_folder] = 0
+                for folder, files in file_layout.items():
+                    # New structure: <target>/<arch>/<folder>/
+                    full_folder = f"{target_build}/{arch}/{folder}"
+                    logger.info(f"  Processing: {full_folder}/")
+                    folder_sizes[full_folder] = 0
 
-                for src_path, dest_name in files:
-                    # Integration files use paths relative to BUILD_BASE (which goes up to repo root)
-                    if src_path.startswith("../"):
-                        full_src_path = Path(BUILD_BASE) / src_path
-                    else:
-                        full_src_path = Path(BUILD_BASE) / src_path
-
-                    zip_path = f"{full_folder}/{dest_name}"
-
-                    if full_src_path.exists():
-                        file_size = full_src_path.stat().st_size
-                        folder_sizes[full_folder] += file_size
-                        # Show size in KB for .efi files for easier reading
-                        if dest_name.endswith('.efi'):
-                            size_str = f"{file_size:,} bytes ({file_size / 1024:.1f} KB)"
+                    for src_path, dest_name in files:
+                        # Integration files use paths relative to BUILD_BASE (which goes up to repo root)
+                        if src_path.startswith("../"):
+                            full_src_path = Path(BUILD_BASE) / src_path
                         else:
-                            size_str = f"{file_size:,} bytes"
-                        logger.info(f"    + {dest_name} ({size_str})")
-                        zipf.write(full_src_path, zip_path)
-                        added_files.append((zip_path, file_size))
-                        file_details.append({
-                            "arch": arch,
-                            "folder": folder,
-                            "name": dest_name,
-                            "path": str(full_src_path),  # Source file path for analysis
-                            "zip_path": zip_path,
-                            "size": file_size
-                        })
-                        arch_has_files = True
-                    else:
-                        logger.warning(f"    - {dest_name} (NOT FOUND: {full_src_path})")
-                        missing_files.append(str(full_src_path))
+                            full_src_path = Path(BUILD_BASE) / src_path
 
-            if arch_has_files:
-                archs_included.append(arch)
+                        zip_path = f"{full_folder}/{dest_name}"
+
+                        if full_src_path.exists():
+                            file_size = full_src_path.stat().st_size
+                            folder_sizes[full_folder] += file_size
+                            # Show size in KB for .efi files for easier reading
+                            if dest_name.endswith('.efi'):
+                                size_str = f"{file_size:,} bytes ({file_size / 1024:.1f} KB)"
+                            else:
+                                size_str = f"{file_size:,} bytes"
+                            logger.info(f"    + {dest_name} ({size_str})")
+                            zipf.write(full_src_path, zip_path)
+                            added_files.append((zip_path, file_size))
+                            file_details.append({
+                                "arch": arch,
+                                "folder": folder,
+                                "name": dest_name,
+                                "path": str(full_src_path),  # Source file path for analysis
+                                "zip_path": zip_path,
+                                "size": file_size,
+                                "target": target_build
+                            })
+                            arch_has_files = True
+                        else:
+                            logger.warning(f"    - {dest_name} (NOT FOUND: {full_src_path})")
+                            missing_files.append(str(full_src_path))
+
+                if arch_has_files:
+                    archs_included.append(arch)
 
     logger.info("\n" + "=" * 80)
     logger.info("Package Summary:")
@@ -300,11 +309,19 @@ def create_package(output_name=None, version=None, architectures=None, target=No
             arch = parts[1]
             arch_totals[arch] = arch_totals.get(arch, 0) + size
 
-    for arch in archs_included:
-        arch_size = arch_totals.get(arch, 0)
-        logger.info(f"  {target}/{arch}: {arch_size:,} bytes ({arch_size / 1024:.1f} KB)")
+    for target_build in targets:
+        for arch in archs_included:
+            folder_key = None
+            for fp, size in folder_sizes.items():
+                if f"{target_build}/" in fp and f"/{arch}/" in fp:
+                    folder_key = fp
+                    break
+            if folder_key:
+                arch_size = folder_sizes[folder_key]
+                logger.info(f"  {target_build}/{arch}: {arch_size:,} bytes ({arch_size / 1024:.1f} KB)")
 
     logger.info("-" * 40)
+    logger.info(f"  Targets: {', '.join(targets)}")
     logger.info(f"  Architectures included: {', '.join(archs_included)}")
     logger.info(f"  Total uncompressed: {total_size:,} bytes ({total_size / 1024:.1f} KB)")
     logger.info(f"  Total files added: {len(added_files)}")
@@ -332,7 +349,7 @@ def create_package(output_name=None, version=None, architectures=None, target=No
         return {
             "path": output_zip,
             "architectures": archs_included,
-            "target": target,
+            "targets": targets,
             "folder_sizes": folder_sizes,
             "file_details": file_details,
             "total_uncompressed": total_size,
@@ -346,26 +363,31 @@ def create_package(output_name=None, version=None, architectures=None, target=No
         output_zip.unlink(missing_ok=True)
         return None
 
-def list_layout(arch=None, target=None):
+def list_layout(arch=None, targets=None):
     """Print the file layout configuration for architectures."""
-    target = target or DEFAULT_TARGET
+    if targets is None:
+        targets = [DEFAULT_TARGET]
+    elif isinstance(targets, str):
+        targets = [targets]
+
     archs_to_show = [arch] if arch else SUPPORTED_ARCHITECTURES
 
-    for arch in archs_to_show:
-        if arch not in SUPPORTED_ARCHITECTURES:
-            logger.error(f"Unsupported architecture: {arch}")
-            logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
-            continue
+    for target in targets:
+        for arch in archs_to_show:
+            if arch not in SUPPORTED_ARCHITECTURES:
+                logger.error(f"Unsupported architecture: {arch}")
+                logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
+                continue
 
-        file_layout = get_file_layout(arch, target, DEFAULT_TOOLCHAIN)
+            file_layout = get_file_layout(arch, target, DEFAULT_TOOLCHAIN)
 
-        logger.info(f"\nPackage Layout for {target}/{arch}:")
-        logger.info("=" * 80)
-        for folder, files in file_layout.items():
-            logger.info(f"\n{target}/{arch}/{folder}/")
-            for src_path, dest_name in files:
-                logger.info(f"  {dest_name}")
-                logger.info(f"    <- {BUILD_BASE}/{src_path}")
+            logger.info(f"\nPackage Layout for {target}/{arch}:")
+            logger.info("=" * 80)
+            for folder, files in file_layout.items():
+                logger.info(f"\n{target}/{arch}/{folder}/")
+                for src_path, dest_name in files:
+                    logger.info(f"  {dest_name}")
+                    logger.info(f"    <- {BUILD_BASE}/{src_path}")
 
 def main():
     """Main entry point."""
@@ -415,8 +437,9 @@ Package Structure:
     )
     parser.add_argument(
         '--target', '-t',
-        help=f'Build target (default: {DEFAULT_TARGET})',
-        choices=['DEBUG', 'RELEASE'],
+        action='append',
+        dest='targets',
+        help=f'Build target(s) to include (can be specified multiple times, or comma-separated). Default: {DEFAULT_TARGET}',
         default=None
     )
     parser.add_argument(
@@ -432,20 +455,42 @@ Package Structure:
 
     args = parser.parse_args()
 
+    # Parse targets: handle both comma-separated and multiple flags
+    targets = []
+    if args.targets:
+        for target_str in args.targets:
+            # Split by comma and strip whitespace
+            targets.extend([t.strip() for t in target_str.split(',')])
+
+    # Validate targets
+    valid_targets = []
+    for target in targets:
+        if target not in ['DEBUG', 'RELEASE']:
+            logger.error(f"Invalid target: {target}")
+            logger.error("Supported targets: DEBUG, RELEASE")
+            return 1
+        valid_targets.append(target)
+
+    # Remove duplicates while preserving order
+    targets = []
+    for t in valid_targets:
+        if t not in targets:
+            targets.append(t)
+
     if args.list:
         # Show layout for specified arch or all architectures
         if args.architectures:
             for arch in args.architectures:
-                list_layout(arch=arch, target=args.target)
+                list_layout(arch=arch, targets=targets if targets else None)
         else:
-            list_layout(target=args.target)
+            list_layout(targets=targets if targets else None)
         return 0
 
     result = create_package(
         output_name=args.output,
         version=args.version,
         architectures=args.architectures,
-        target=args.target,
+        targets=targets if targets else None,
         toolchain=args.toolchain,
     )
 
