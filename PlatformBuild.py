@@ -131,10 +131,14 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                                default=CommonPlatform.TargetsSupported[0],
                                choices=CommonPlatform.TargetsSupported,
                                help="the target to build (DEBUG or RELEASE)")
+        parserObj.add_argument("-sp", "--skip-packaging", dest="skip_packaging",
+                               action="store_true", default=False,
+                               help="skip OneCrypto packaging after build")
 
     def RetrieveCommandLineOptions(self, args):
         self.target = args.target
         self.arch = args.arch if args.arch else list(CommonPlatform.ArchSupported)
+        self.skip_packaging = args.skip_packaging
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -182,6 +186,12 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         return 0
 
     def PlatformPostBuild(self):
+        # Skip packaging if requested
+        if self.skip_packaging:
+            logging.critical("=" * 80)
+            logging.critical("Skipping post-build packaging (--skip-packaging)")
+            return 0
+
         # Package the build artifacts after successful build
         logging.critical("=" * 80)
         logging.critical("Running post-build packaging...")
