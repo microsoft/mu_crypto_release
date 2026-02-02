@@ -47,3 +47,6 @@
 # Using TRUE DEPEX with lazy RNG initialization
 # RNG protocol will be located on first use rather than at driver load time
 # This prevents boot hangs when RNG protocol is not immediately available
+
+[BuildOptions]
+  GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000

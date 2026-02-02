@@ -24,7 +24,9 @@
 [Protocols]
   ## OneCrypto Private Protocol
   ##
-  ## The private OneCrypto protocol is for the StMM loader to communicate with the OneCryptoMmBin.
+  ## The private OneCrypto protocol is used by loaders to communicate with OneCryptoBin.
+  ## - In MM environments: OneCryptoLoaderMm locates this protocol installed by OneCryptoBinStandaloneMm/SupvMm
+  ## - In DXE environments (AARCH64): OneCryptoLoaderDxeProtocol locates this protocol installed by OneCryptoBinDxe
   ##
   gOneCryptoPrivateProtocolGuid = { 0x854bce61, 0x8d35, 0x4ff5, { 0x9d, 0xb7, 0x30, 0x3a, 0xfb, 0x79, 0x80, 0xe2 }}
 

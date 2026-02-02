@@ -52,6 +52,9 @@
 [Sources.X64]
   CopyMem.c
 
+[Sources.AARCH64]
+  CopyMem.c
+
 [Sources.RISCV64]
   CopyMem.c
 
@@ -62,6 +65,9 @@
   BaseLib
   BaseMemoryLib
   FltUsedLib # MU_CHANGE
+
+[LibraryClasses.AARCH64]
+  CompilerIntrinsicsLib  # MU_CHANGE - Required for 128-bit intrinsics (__ashlti3) used by OpenSSL curve448
 
 [BuildOptions]
    #
