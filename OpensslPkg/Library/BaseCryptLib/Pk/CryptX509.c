@@ -612,6 +612,14 @@ RsaGetPublicKeyFromX509 (
     return FALSE;
   }
 
+  //
+  // If CertSize is 0, return FALSE to be safe.
+  //
+  if (CertSize == 0) {
+    *RsaContext = NULL;
+    return FALSE;
+  }
+
   Pkey     = NULL;
   X509Cert = NULL;
 
@@ -930,6 +938,14 @@ EcGetPublicKeyFromX509 (
   // Check input parameters.
   //
   if ((Cert == NULL) || (EcContext == NULL)) {
+    return FALSE;
+  }
+
+  //
+  // If CertSize is 0, return FALSE to be safe.
+  //
+  if (CertSize == 0) {
+    *EcContext = NULL;
     return FALSE;
   }
 
