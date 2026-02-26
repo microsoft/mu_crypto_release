@@ -46,7 +46,6 @@
             "Library/Include/fcntl.h",
             # These directories contain auto-generated OpenSSL content
             "Library/OpensslLib",
-            "Library/IntrinsicLib",
             "Library/BaseCryptLib/Pk/CryptPkcs7VerifyBase.c"
         ]
     },
@@ -61,6 +60,7 @@
             "MdePkg/MdePkg.dec",
             "MdeModulePkg/MdeModulePkg.dec",
             "CryptoPkg/CryptoPkg.dec",
+            "IntrinsicPkg/IntrinsicPkg.dec",
             "OpensslPkg/OpensslPkg.dec",
         ],
         # For host based unit tests
@@ -74,13 +74,15 @@
         "IgnoreInf": [
             "OpensslPkg/Library/OpensslLib/OpensslLibAccel.inf",
             "OpensslPkg/Library/OpensslLib/OpensslLibFull.inf",
-            "OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf"
+            "OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf",
+            "OpensslPkg/Library/OpensslLib/OpensslLibSm3.inf"
         ]
     },
     "GuidCheck": {
         "IgnoreGuidName": [],
         "IgnoreGuidValue": [
-            "63850097-3E97-4C4F-A52D-C811A0106105"  # MU_CHANGE
+            "63850097-3E97-4C4F-A52D-C811A0106105",  # MU_CHANGE
+            "6BD7DE60-9EF7-4899-97D0-ABFFFD-E970F2"  # gEfiCryptoPkgTokenSpaceGuid - shared with CryptoPkg
         ],
         "IgnoreFoldersAndFiles": [
             "MU_BASECORE"  # MU_CHANGE

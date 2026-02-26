@@ -47,7 +47,7 @@ class Settings(
         """return iterable of edk2 packages supported by this build.
         These should be edk2 workspace relative paths"""
 
-        return ("CryptoPkg", "OpensslPkg", "MbedTlsPkg")
+        return ("CryptoPkg", "OpensslPkg", "MbedTlsPkg", "IntrinsicPkg")
 
     def GetArchitecturesSupported(self):
         """return iterable of edk2 architectures supported by this build"""
@@ -120,7 +120,7 @@ class Settings(
         if is_linux and self.ActualToolChainTag.upper().startswith("GCC"):
             if "AARCH64" in self.ActualArchitectures:
                 scopes += ("gcc_aarch64_linux",)
-
+                
         return scopes
 
     def GetRequiredSubmodules(self):

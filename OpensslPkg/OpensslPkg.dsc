@@ -100,6 +100,10 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x06
 
+[PcdsFeatureFlag]
+  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStyleNasm|TRUE
+  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStylePe|FALSE
+
 ###################################################################################################
 #
 # Components Section - list of the modules and components that will be processed by compilation
