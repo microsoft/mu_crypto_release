@@ -19,10 +19,32 @@
 [Includes.Common.Private]
   Private
   Library/Include
+  Library/OpensslLib/openssl
   Library/OpensslLib/openssl/include
+  Library/OpensslLib/openssl/providers/common/include
+  Library/OpensslLib/openssl/providers/fips/include
+  Library/OpensslLib/openssl/providers/implementations/include
+  Library/OpensslLib/OpensslGen/include
+  Library/OpensslLib/OpensslGen/providers/common/include
 
 [LibraryClasses.Common.Private]
   ##  @libraryclass  Provides library functions from the openssl project.
   #
   OpensslLib|Private/Library/OpensslLib.h
+
+[Guids]
+  ## CryptoPkg token space GUID - referenced for PCD declarations.
+  gEfiCryptoPkgTokenSpaceGuid      = { 0x6bd7de60, 0x9ef7, 0x4899, { 0x97, 0xd0, 0xab, 0xff, 0xfd, 0xe9, 0x70, 0xf2 } }
+
+[PcdsFeatureFlag]
+  ## Indicates whether the OpenSSL assembly source files use NASM syntax.
+  #  TRUE  - Use NASM-style assembly (.nasm) for MSFT/CLANGPDB tool chains.
+  #  FALSE - Use GNU-style assembly (.S) for GCC tool chains.
+  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStyleNasm|FALSE|BOOLEAN|0x00001000
+
+  ## Indicates whether the OpenSSL assembly source files use PE/COFF style for AARCH64.
+  #  TRUE  - Use PE/COFF-style assembly for MSFT/CLANGPDB tool chains.
+  #  FALSE - Use ELF-style assembly for GCC tool chains.
+  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStylePe|FALSE|BOOLEAN|0x00001001
+
 
