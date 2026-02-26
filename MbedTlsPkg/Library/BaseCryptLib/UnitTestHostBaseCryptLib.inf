@@ -61,7 +61,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  CryptoPkg/CryptoPkg.dec
+  MbedTlsPkg/MbedTlsPkg.dec # MU_CHANGE
 
 [LibraryClasses]
   BaseLib
