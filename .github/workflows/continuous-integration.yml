@@ -1,0 +1,75 @@
+# CI workflow that builds OpensslPkg and MbedTlsPkg with stuart.
+#
+##
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.pytool/**'
+      - 'OpensslPkg/**'
+      - 'MbedTlsPkg/**'
+      - 'MU_BASECORE/**'
+      - '.github/workflows/openssl-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.pytool/**'
+      - 'OpensslPkg/**'
+      - 'MbedTlsPkg/**'
+      - 'MU_BASECORE/**'
+      - '.github/workflows/openssl-ci.yml'
+
+env:
+  TOOL_CHAIN_TAG: CLANGPDB
+
+jobs:
+  crypto-ci:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - OpensslPkg
+          - MbedTlsPkg
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Safe Directory
+        run: git config --global --add safe.directory '*'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r pip-requirements.txt
+
+      - name: Setup
+        run: stuart_setup -c .pytool/CISettings.py -p ${{ matrix.package }}
+
+      - name: CI setup
+        run: stuart_ci_setup -c .pytool/CISettings.py -p ${{ matrix.package }}
+
+      - name: Update
+        run: stuart_update -c .pytool/CISettings.py -p ${{ matrix.package }}
+
+      - name: Build ${{ matrix.package }} (${{ env.TOOL_CHAIN_TAG }})
+        run: stuart_ci_build -c .pytool/CISettings.py -p ${{ matrix.package }} TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
+
+      - name: Upload CI logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-${{ env.TOOL_CHAIN_TAG }}-logs
+          path: |
+            Build/*.txt
+            Build/**/*.txt
