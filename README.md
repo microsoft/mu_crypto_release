@@ -1,25 +1,49 @@
-# EDK II Crypto
+# Project Mu Crypto Release
 
-This repository currently hosts forward-looking development of crypto code for use in the EDK II project. It is
-currently under active development as a separate repsository to facilitate easier collaboration and code review for
-crypto changes.
+[![MU_CRYPTO_RELEASE CI](https://github.com/Microsoft/mu_crypto_release/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/Microsoft/mu_crypto_release/actions/workflows/continuous-integration.yml)
 
-Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for details on contributing to this repository.
+This repository hosts the cryptographic library packages for
+[Project Mu](https://microsoft.github.io/mu/). It decomposes the monolithic
+`CryptoPkg` into independent, backend-specific packages so that each crypto
+implementation can be built, tested, and maintained separately.
 
-If you are interested in using crypto in a production UEFI platform, please see
-[CryptoPkg](https://github.com/tianocore/edk2/tree/master/CryptoPkg) in the main EDK II repository.
+## Repository Structure
+
+| Package | Description |
+|---|---|
+| **OpensslPkg** | BaseCryptLib, OpensslLib, TlsLib, and supporting headers backed by OpenSSL. |
+| **MbedTlsPkg** | BaseCryptLib, MbedTlsLib, and supporting headers backed by Mbed TLS. |
+| **MU_BASECORE** | Git submodule providing core EDK II packages (MdePkg, MdeModulePkg, CryptoPkg interfaces, etc.). |
 
 ## Building
 
-To build the code in this repository, you will need to set up an EDK II build environment. Please refer to
-[How to Build EDK II With Stuart](https://github.com/tianocore/tianocore.github.io/wiki/How-to-Build-With-Stuart)
-and use the following commmands specific to this repository:
+Building uses [stuart](https://github.com/tianocore/edk2-pytool-extensions) and
+has been tested on Windows with VS2022 / CLANGPDB and on Linux with CLANGPDB.
 
-These instructions have only been tested on Windows with Visual Studio 2022. It is assumed developers currently
-working in the repo are familiar with workspace setup in their preferred environment.
+```bash
+# One-time setup
+git submodule update --init --recursive
+pip install -r pip-requirements.txt
 
-- Setup: `stuart_ci_setup -c ./.pytool/CISettings.py -p CryptoPkg`
-- Update: `stuart_update -c ./.pytool/CISettings.py -p CryptoPkg`
-- Submodule Update: `git submodule update --init`
-- One-Time Tools Build: `python .\EDK2\BaseTools\Edk2ToolsBuild.py -t VS2022`
-- Build: `stuart_ci_build -c ./.pytool/CISettings.py -p CryptoPkg`
+# Stuart workflow (replace <Pkg> with OpensslPkg or MbedTlsPkg)
+stuart_setup    -c .pytool/CISettings.py -p <Pkg>
+stuart_ci_setup -c .pytool/CISettings.py -p <Pkg>
+stuart_update   -c .pytool/CISettings.py -p <Pkg>
+stuart_ci_build -c .pytool/CISettings.py -p <Pkg> TOOL_CHAIN_TAG=CLANGPDB
+```
+
+## Continuous Integration
+
+A GitHub Actions workflow (`.github/workflows/continuous-integration.yml`) builds
+both **OpensslPkg** and **MbedTlsPkg** with CLANGPDB on every pull request and
+push to `main`.
+
+## Contributing
+
+Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for
+guidelines.
+
+## License
+
+This project is licensed under the BSD-2-Clause-Patent license. See the
+[License.txt](MU_BASECORE/License.txt) file for details.
