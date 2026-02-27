@@ -1,0 +1,6 @@
+.vscode/
+Conf/
+Build/
+MU_BASECORE/
+__pycache__/
+*.pyc
