@@ -26,6 +26,3 @@
   #
   OpensslLib|Private/Library/OpensslLib.h
 
-  ##  @libraryclass  Provides compiler intrinsic functions required to link openssl project.
-  #
-  IntrinsicLib|Private/Library/IntrinsicLib.h
