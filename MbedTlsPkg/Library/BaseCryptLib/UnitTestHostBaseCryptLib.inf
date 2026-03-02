@@ -14,7 +14,7 @@
 [Defines]
   INF_VERSION                    = 0x00010005
   BASE_NAME                      = BaseCryptLib
-  FILE_GUID                      = 5C14CE62-000E-4CC6-803C-683018EA5F97
+  FILE_GUID                      = D6E229EF-5BB3-43F2-AB0C-9694B019BFFC # MU_CHANGE Conflicts with MU_BASECORE
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = BaseCryptLib|HOST_APPLICATION
@@ -32,7 +32,7 @@
   Hash/CryptSha256.c
   Hash/CryptSha512.c
   Hash/CryptParallelHashNull.c
-  Hash/CryptSm3.c
+  Hash/CryptSm3Null.c # MU_CHANGE mbedtls does not appear to include sm3.h
   Hmac/CryptHmac.c
   Kdf/CryptHkdf.c
   Cipher/CryptAes.c
@@ -61,6 +61,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
   MbedTlsPkg/MbedTlsPkg.dec # MU_CHANGE
 
 [LibraryClasses]

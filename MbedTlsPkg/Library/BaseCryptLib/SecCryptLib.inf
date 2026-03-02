@@ -32,7 +32,7 @@
   Hash/CryptMd5Null.c
   Hash/CryptSha1Null.c
   Hash/CryptSha256Null.c
-  Hash/CryptSm3Null.c
+  Hash/CryptSm3Null.c # MU_CHANGE mbedtls does not appear to include sm3.h
   Hash/CryptParallelHashNull.c
   Hmac/CryptHmacNull.c
   Kdf/CryptHkdfNull.c
@@ -58,6 +58,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
   MbedTlsPkg/MbedTlsPkg.dec # MU_CHANGE
 
 [LibraryClasses]
