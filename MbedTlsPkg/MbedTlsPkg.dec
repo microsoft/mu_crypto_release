@@ -17,8 +17,10 @@
 
 [Includes.Common.Private]
   Private
+  Library/Include
   Library/MbedTlsLib/Include
   Library/MbedTlsLib/mbedtls/include
+  Library/MbedTlsLib/mbedtls/include/mbedtls
   Library/MbedTlsLib/mbedtls/library
 
 [LibraryClasses.Common.Private]
