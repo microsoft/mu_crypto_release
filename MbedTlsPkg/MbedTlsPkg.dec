@@ -25,7 +25,3 @@
   ##  @libraryclass  Provides library functions from the mbedtls project.
   #
   MbedTlsLib|Private/Library/MbedTlsLib.h
-
-  ##  @libraryclass  Provides compiler intrinsic functions required to link mbedtls project.
-  #
-  IntrinsicLib|Private/Library/IntrinsicLib.h

@@ -38,7 +38,7 @@
   DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
   FltUsedLib|MdePkg/Library/FltUsedLib/FltUsedLib.inf
   HashApiLib|CryptoPkg/Library/BaseHashApiLib/BaseHashApiLib.inf
-  IntrinsicLib|MbedTlsPkg/Library/IntrinsicLib/IntrinsicLib.inf
+  IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   MbedTlsLib|MbedTlsPkg/Library/MbedTlsLib/MbedTlsLib.inf
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
@@ -110,7 +110,6 @@
   MbedTlsPkg/Library/BaseCryptLib/PeiCryptLib.inf
   MbedTlsPkg/Library/BaseCryptLib/RuntimeCryptLib.inf
   MbedTlsPkg/Library/BaseCryptLib/SecCryptLib.inf
-  MbedTlsPkg/Library/IntrinsicLib/IntrinsicLib.inf
   MbedTlsPkg/Library/MbedTlsLib/MbedTlsLib.inf
   MbedTlsPkg/Library/MbedTlsLib/MbedTlsLibFull.inf
 
