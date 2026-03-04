@@ -470,7 +470,7 @@ Pkcs7Sign (
   UINT8               Signature[MAX_SIGNATURE_SIZE];
   UINTN               SignatureLen;
   UINT8               *NewPrivateKey;
-  mbedtls_x509_crt    *Crt;
+  mbedtls_x509_crt    Crt;  // MU_CHANGE [TCBZ3925] - Parse DER cert instead of casting
 
   MbedtlsPkcs7            Pkcs7;
   MbedtlsPkcs7SignerInfo  SignerInfo;
@@ -496,13 +496,23 @@ Pkcs7Sign (
   BufferSize = 4096;
 
   SignatureLen = MAX_SIGNATURE_SIZE;
-  Crt          = (mbedtls_x509_crt *)SignCert;
+
+  // MU_CHANGE [TCBZ3925] [BEGIN] - Parse DER-encoded certificate
+  mbedtls_x509_crt_init (&Crt);
+  Ret = mbedtls_x509_crt_parse_der (&Crt, SignCert, SignCertSize);
+  if (Ret != 0) {
+    mbedtls_x509_crt_free (&Crt);
+    return FALSE;
+  }
+
+  // MU_CHANGE [TCBZ3925] [END] - Parse DER-encoded certificate
 
   NewPrivateKey = NULL;
   if (PrivateKey[PrivateKeySize - 1] != 0) {
     NewPrivateKey = AllocateZeroPool (PrivateKeySize + 1);
     if (NewPrivateKey == NULL) {
-      return FALSE;
+      Status = FALSE; // MU_CHANGE [TCBZ3925]
+      goto Cleanup;   // MU_CHANGE [TCBZ3925]
     }
 
     CopyMem (NewPrivateKey, PrivateKey, PrivateKeySize);
@@ -511,7 +521,8 @@ Pkcs7Sign (
   } else {
     NewPrivateKey = AllocateZeroPool (PrivateKeySize);
     if (NewPrivateKey == NULL) {
-      return FALSE;
+      Status = FALSE; // MU_CHANGE [TCBZ3925]
+      goto Cleanup;   // MU_CHANGE [TCBZ3925]
     }
 
     CopyMem (NewPrivateKey, PrivateKey, PrivateKeySize);
@@ -560,8 +571,8 @@ Pkcs7Sign (
   ZeroMem (&Pkcs7, sizeof (MbedtlsPkcs7));
   Pkcs7.SignedData.Version = 1;
 
-  Crt->next                     = (mbedtls_x509_crt *)OtherCerts;
-  Pkcs7.SignedData.Certificates = *Crt;
+  Crt.next                      = (mbedtls_x509_crt *)OtherCerts;  // MU_CHANGE [TCBZ3925]
+  Pkcs7.SignedData.Certificates = Crt;                             // MU_CHANGE [TCBZ3925]
 
   SignerInfo.Next              = NULL;
   SignerInfo.Sig.p             = Signature;
@@ -580,8 +591,8 @@ Pkcs7Sign (
     }
   }
 
-  SignerInfo.Serial            = ((mbedtls_x509_crt *)SignCert)->serial;
-  SignerInfo.IssuerRaw         = ((mbedtls_x509_crt *)SignCert)->issuer_raw;
+  SignerInfo.Serial            = Crt.serial;      // MU_CHANGE [TCBZ3925]
+  SignerInfo.IssuerRaw         = Crt.issuer_raw;  // MU_CHANGE [TCBZ3925]
   Pkcs7.SignedData.SignerInfos = SignerInfo;
 
   Buffer = AllocateZeroPool (BufferSize);
@@ -624,6 +635,8 @@ Pkcs7Sign (
   Status = TRUE;
 
 Cleanup:
+  mbedtls_x509_crt_free (&Crt);  // MU_CHANGE [TCBZ3925]
+
   if (&Pkey != NULL) {
     mbedtls_pk_free (&Pkey);
   }
