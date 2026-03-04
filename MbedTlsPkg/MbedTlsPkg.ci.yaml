@@ -32,6 +32,10 @@
     "CompilerPlugin": {
         "DscPath": "MbedTlsPkg.dsc"
     },
+    ## options defined .pytool/Plugin/HostUnitTestCompilerPlugin
+    "HostUnitTestCompilerPlugin": {
+        "DscPath": "Test/MbedTlsPkgHostUnitTest.dsc"
+    },
     "CharEncodingCheck": {
         "IgnoreFiles": []
     },
@@ -52,7 +56,8 @@
         "DscPath": "MbedTlsPkg.dsc",
         "IgnoreInf": [
             "MbedTlsPkg/Library/MbedTlsLib/MbedTlsLibFull.inf",
-            "MbedTlsPkg/Library/BaseCryptLib/TestBaseCryptLib.inf"
+            "MbedTlsPkg/Library/BaseCryptLib/TestBaseCryptLib.inf",
+            "MbedTlsPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf"
         ]
     },
     "GuidCheck": {
