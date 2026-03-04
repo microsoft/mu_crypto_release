@@ -52,6 +52,10 @@
     "CompilerPlugin": {
         "DscPath": "OpensslPkg.dsc"
     },
+    ## options defined .pytool/Plugin/HostUnitTestCompilerPlugin
+    "HostUnitTestCompilerPlugin": {
+        "DscPath": "Test/OpensslPkgHostUnitTest.dsc"
+    },
     "CharEncodingCheck": {
         "IgnoreFiles": []
     },
@@ -75,7 +79,8 @@
             "OpensslPkg/Library/OpensslLib/OpensslLibAccel.inf",
             "OpensslPkg/Library/OpensslLib/OpensslLibFull.inf",
             "OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf",
-            "OpensslPkg/Library/OpensslLib/OpensslLibSm3.inf"
+            "OpensslPkg/Library/OpensslLib/OpensslLibSm3.inf",
+            "OpensslPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf"
         ]
     },
     "GuidCheck": {
