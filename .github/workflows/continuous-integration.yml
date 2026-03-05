@@ -15,7 +15,7 @@ on:
       - 'OpensslPkg/**'
       - 'MbedTlsPkg/**'
       - 'MU_BASECORE/**'
-      - '.github/workflows/openssl-ci.yml'
+      - '.github/workflows/continuous-integration.yml'
   push:
     branches:
       - main
@@ -24,7 +24,7 @@ on:
       - 'OpensslPkg/**'
       - 'MbedTlsPkg/**'
       - 'MU_BASECORE/**'
-      - '.github/workflows/openssl-ci.yml'
+      - '.github/workflows/continuous-integration.yml'
 
 env:
   TOOL_CHAIN_TAG: CLANGPDB
@@ -40,6 +40,10 @@ jobs:
         package:
           - OpensslPkg
           - MbedTlsPkg
+        target:
+          - DEBUG
+          - RELEASE
+          - NO-TARGET
 
     steps:
       - name: Checkout
@@ -62,14 +66,14 @@ jobs:
       - name: Update
         run: stuart_update -c .pytool/CISettings.py -p ${{ matrix.package }}
 
-      - name: Build ${{ matrix.package }} (${{ env.TOOL_CHAIN_TAG }})
-        run: stuart_ci_build -c .pytool/CISettings.py -p ${{ matrix.package }} TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
+      - name: Build ${{ matrix.package }} ${{ matrix.target }} (${{ env.TOOL_CHAIN_TAG }})
+        run: stuart_ci_build -c .pytool/CISettings.py -p ${{ matrix.package }} -t ${{ matrix.target }} TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
 
       - name: Upload CI logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.package }}-${{ env.TOOL_CHAIN_TAG }}-logs
+          name: ${{ matrix.package }}-${{ matrix.target }}-${{ env.TOOL_CHAIN_TAG }}-logs
           path: |
             Build/*.txt
             Build/**/*.txt
