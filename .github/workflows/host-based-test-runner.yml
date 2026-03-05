@@ -1,0 +1,82 @@
+# Host-based unit test workflow that builds and runs NOOPT host tests with GCC5.
+#
+# CLANGPDB uses llvm-lib for static linking which cannot process ELF objects
+# produced by HOST_APPLICATION modules on Linux. GCC5 uses ar/gcc natively
+# and handles host-based unit tests correctly.
+#
+##
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: Host-Based Unit Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.pytool/**'
+      - 'OpensslPkg/**'
+      - 'MbedTlsPkg/**'
+      - 'MU_BASECORE/**'
+      - '.github/workflows/host-based-test-runner.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.pytool/**'
+      - 'OpensslPkg/**'
+      - 'MbedTlsPkg/**'
+      - 'MU_BASECORE/**'
+      - '.github/workflows/host-based-test-runner.yml'
+
+env:
+  TOOL_CHAIN_TAG: GCC5
+
+jobs:
+  host-based-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - OpensslPkg
+          # TODO: Enable MbedTlsPkg host-based tests once existing failures are resolved
+          # - MbedTlsPkg
+        target:
+          - NOOPT
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Safe Directory
+        run: git config --global --add safe.directory '*'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r pip-requirements.txt
+
+      - name: Setup
+        run: stuart_setup -c .pytool/CISettings.py -p ${{ matrix.package }}
+
+      - name: CI setup
+        run: stuart_ci_setup -c .pytool/CISettings.py -p ${{ matrix.package }}
+
+      - name: Update
+        run: stuart_update -c .pytool/CISettings.py -p ${{ matrix.package }}
+
+      - name: Run Host-Based Tests for ${{ matrix.package }} ${{ matrix.target }} (${{ env.TOOL_CHAIN_TAG }})
+        run: stuart_ci_build -c .pytool/CISettings.py -p ${{ matrix.package }} -t ${{ matrix.target }} -d HostUnitTestCompilerPlugin=run TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
+
+      - name: Upload Test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-${{ matrix.target }}-${{ env.TOOL_CHAIN_TAG }}-HostTest-logs
+          path: |
+            Build/*.txt
+            Build/**/*.txt
