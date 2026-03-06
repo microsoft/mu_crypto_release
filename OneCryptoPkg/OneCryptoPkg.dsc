@@ -71,7 +71,7 @@
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
-      TimerLib                       | UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
+      TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
   }
 
@@ -129,7 +129,7 @@
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
-      TimerLib                       | UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
+      TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
   }
 
@@ -234,7 +234,7 @@
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
-      TimerLib                       | UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
+      TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   }
 
