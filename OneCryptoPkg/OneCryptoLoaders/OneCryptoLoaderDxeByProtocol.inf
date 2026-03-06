@@ -42,26 +42,7 @@
 
 [Depex]
   gOneCryptoPrivateProtocolGuid
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-# This driver depends on the private protocol being installed first
-# by a separate driver that pre-loads the crypto binary
-<<<<<<< HEAD
-=======
-[BuildOptions]
-  GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000
-  GCC:*_CLANGPDB_*_DLINK_FLAGS = /ALIGN:4096
->>>>>>> eec771f (fixup! OneCryptoPkg: Add protocol-based DXE loader for AARCH64)
-=======
-<<<<<<< HEAD
-[BuildOptions]
-  GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000
-  GCC:*_CLANGPDB_*_DLINK_FLAGS = /ALIGN:4096
->>>>>>> 89ddfa7 (fixup! OneCryptoPkg: Add protocol-based DXE loader for AARCH64)
-=======
 
 [BuildOptions]
   GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000
->>>>>>> a917d8b (OneCryptoPkg: Remove architecture-specific Binaries sections)
->>>>>>> 9b37dec (OneCryptoPkg: Remove architecture-specific Binaries sections)
+  GCC:*_CLANGPDB_*_DLINK_FLAGS = /ALIGN:4096
