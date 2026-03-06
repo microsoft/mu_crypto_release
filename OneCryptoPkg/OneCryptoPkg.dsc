@@ -73,6 +73,7 @@
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
       TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
+      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf # MU_CHANGE - AARCH64 memcpy
   }
 
     OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
@@ -234,6 +235,7 @@
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
       TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf # MU_CHANGE - AARCH64 memcpy
   }
 
   ## OneCryptoLoaderDxeByProtocol for AARCH64
