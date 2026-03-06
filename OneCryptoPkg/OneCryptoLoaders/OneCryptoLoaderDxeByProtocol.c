@@ -140,6 +140,12 @@ InstallSharedDependencies (
   // Use lazy RNG initialization - will try to locate RNG protocol on first use
   //
   OneCryptoDepends->GetRandomNumber64 = LazyPlatformGetRandomNumber64;
+  //
+  // This doesn't appear to be needed since sleep is only used in
+  // HTTP / QUIC / CMP - none of which are used by UEFI firmware.
+  // gBS->Stall is only being provided to be consistent with upstream
+  //
+  OneCryptoDepends->MicroSecondDelay = gBS->Stall;
 }
 
 /**
