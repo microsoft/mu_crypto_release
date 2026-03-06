@@ -121,6 +121,19 @@ OneCryptoGetRandomNumber64 (
   );
 
 /**
+  Stalls the CPU for at least the given number of microseconds.
+
+  @param[in]  MicroSeconds  The minimum number of microseconds to delay.
+
+  @return     The value of MicroSeconds input.
+**/
+UINTN
+EFIAPI
+OneCryptoMicroSecondDelay (
+  IN UINTN  MicroSeconds
+  );
+
+/**
   Print debug messages.
 
   This function outputs debug messages using the DebugPrint function pointer
