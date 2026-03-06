@@ -109,7 +109,11 @@ class SettingsManager(UpdateSettingsManager, SetupSettingsManager):
 
     def GetPackagesPath(self):
         ''' Return a list of paths that should be mapped as edk2 PackagesPath '''
-        return CommonPlatform.GetAllSubmodulePaths()
+        result = list(CommonPlatform.GetAllSubmodulePaths())
+        # MU_BASECORE provides MdePkg, MdeModulePkg, CryptoPkg, etc.
+        if "MU_BASECORE" not in result:
+            result.append("MU_BASECORE")
+        return result
 
 
 # ####################################################################################### #
@@ -146,7 +150,11 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def GetPackagesPath(self):
         ''' Return a list of workspace relative paths that should be mapped as edk2 PackagesPath '''
-        return CommonPlatform.GetAllSubmodulePaths()
+        result = list(CommonPlatform.GetAllSubmodulePaths())
+        # MU_BASECORE provides MdePkg, MdeModulePkg, CryptoPkg, etc.
+        if "MU_BASECORE" not in result:
+            result.append("MU_BASECORE")
+        return result
 
     def GetActiveScopes(self):
         ''' return tuple containing scopes that should be active for this process '''
