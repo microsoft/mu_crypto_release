@@ -60,7 +60,7 @@
       StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
       BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
       TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
-      IntrinsicLib                   | OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
+      IntrinsicLib                   | CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
       OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
       StandaloneMmDriverEntryPoint   | OneCryptoPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
       #############################################################################
@@ -118,7 +118,7 @@
       StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
       BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
       TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
-      IntrinsicLib                   | OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
+      IntrinsicLib                   | CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
       OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
       StandaloneMmDriverEntryPoint   | OneCryptoPkg/Library/SupvStandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
       #############################################################################
@@ -222,7 +222,7 @@
       StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
       BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
       TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
-      IntrinsicLib                   | OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
+      IntrinsicLib                   | CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
       OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
       UefiDriverEntryPoint           | MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
       UefiBootServicesTableLib       | MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
