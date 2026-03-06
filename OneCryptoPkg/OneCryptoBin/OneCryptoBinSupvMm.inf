@@ -49,6 +49,8 @@
   GCC:*_GCC5_*_DLINK_FLAGS = -Wl,--undefined=CryptoEntry -z common-page-size=0x1000
   GCC:*_GCC5_*_OBJCOPY_STRIPFLAG = --strip-unneeded -R .eh_frame --keep-symbol=CryptoEntry
   GCC:*_GCC5_*_GENFW_FLAGS = --export-symbol=CryptoEntry
+  GCC:*_CLANGPDB_*_DLINK_FLAGS = /EXPORT:CryptoEntry /ALIGN:4096
+  GCC:*_CLANGPDB_*_GENFW_FLAGS = --keepoptionalheader
 
 [Protocols]
   gOneCryptoPrivateProtocolGuid ## Produces
