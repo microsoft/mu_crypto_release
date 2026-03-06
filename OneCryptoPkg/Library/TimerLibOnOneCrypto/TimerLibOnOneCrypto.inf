@@ -1,0 +1,32 @@
+## @file
+#  Timer Library implementation for OneCrypto
+#
+#  This library provides TimerLib implementation for OneCrypto that calls into
+#  OneCryptoCrtLib's MicroSecondDelay function pointer.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = TimerLibOnOneCrypto
+  FILE_GUID                      = 9CBFB1E0-E4F3-4784-9574-2A438AFA9FB3
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = TimerLib
+
+#
+# VALID_ARCHITECTURES = IA32 X64 AARCH64
+#
+
+[Sources]
+  TimerLibOnOneCrypto.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  OneCryptoCrtLib

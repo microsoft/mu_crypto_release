@@ -122,6 +122,27 @@ LazyMmGetRandomNumber64 (
 }
 
 /**
+ * @brief Stub implementation of MicroSecondDelay for MM environment
+ *
+ * This doesn't appear to be needed since sleep is only used in
+ * HTTP / QUIC / CMP - none of which are used by UEFI firmware.
+ *
+ * @param[in] MicroSeconds The number of microseconds to delay (ignored)
+ * @return The input MicroSeconds value (no actual delay occurs)
+ */
+UINTN
+EFIAPI
+StubMicroSecondDelay (
+  IN UINTN  MicroSeconds
+  )
+{
+  //
+  // Stub implementation - returns immediately.
+  //
+  return MicroSeconds;
+}
+
+/**
  * @brief Installs shared dependencies required for the application.
  *
  * This function handles the installation of shared dependencies that are
@@ -149,6 +170,10 @@ InstallSharedDependencies (
   // Use lazy RNG initialization for MM environment - will assert if protocol unavailable
   //
   OneCryptoDepends->GetRandomNumber64 = LazyMmGetRandomNumber64;
+  //
+  // Use stub for MicroSecondDelay - not needed in MM environment
+  //
+  OneCryptoDepends->MicroSecondDelay = StubMicroSecondDelay;
 }
 
 /**
