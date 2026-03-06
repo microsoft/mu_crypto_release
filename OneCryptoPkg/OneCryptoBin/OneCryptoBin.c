@@ -17,11 +17,12 @@
 
 #if defined (_MSC_EXTENSIONS)
   #define COMMON_EXPORT_API  __declspec(dllexport)
+#elif defined(__clang__)
+  // Check clang before __GNUC__ since clang also defines __GNUC__
+  #define COMMON_EXPORT_API  __attribute__((used, visibility("default"), noinline, optnone))
 #elif defined(__GNUC__)
   // noipa = no interprocedural analysis (GCC 8+), prevents LTO from inlining/merging
   #define COMMON_EXPORT_API  __attribute__((used, visibility("default"), externally_visible, noinline, noipa))
-#elif defined(__clang__)
-  #define COMMON_EXPORT_API  __attribute__((used, visibility("default"), noinline, optnone))
 #else
   #define COMMON_EXPORT_API
 #endif

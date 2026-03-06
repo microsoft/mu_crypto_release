@@ -48,9 +48,9 @@
   # These options are needed to get the exported functions to be exported correctly
   MSFT:*_*_*_DLINK_FLAGS  = /DLL /SUBSYSTEM:CONSOLE /VERSION:1.0
   MSFT:*_*_*_GENFW_FLAGS = --keepoptionalheader
-  GCC:*_*_*_DLINK_FLAGS = -Wl,--undefined=CryptoEntry -z common-page-size=0x1000
-  GCC:*_*_*_OBJCOPY_STRIPFLAG = --strip-unneeded -R .eh_frame --keep-symbol=CryptoEntry
-  GCC:*_*_*_GENFW_FLAGS = --export-symbol=CryptoEntry
+  GCC:*_GCC5_*_DLINK_FLAGS = -Wl,--undefined=CryptoEntry -z common-page-size=0x1000
+  GCC:*_GCC5_*_OBJCOPY_STRIPFLAG = --strip-unneeded -R .eh_frame --keep-symbol=CryptoEntry
+  GCC:*_GCC5_*_GENFW_FLAGS = --export-symbol=CryptoEntry
 
 [Protocols]
   gOneCryptoPrivateProtocolGuid ## PRODUCES
