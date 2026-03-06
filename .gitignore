@@ -2,5 +2,8 @@
 Conf/
 Build/
 MU_BASECORE/
+Silicon/Arm/MU_TIANO/
+Features/MM_SUPV/
+Common/MU/
 __pycache__/
 *.pyc
