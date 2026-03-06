@@ -9,6 +9,7 @@ import io
 import logging
 
 from edk2toolext.environment.uefi_build import UefiBuilder
+from edk2toolext.invocables.edk2_ci_setup import CiSetupSettingsManager
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
 from edk2toolext.invocables.edk2_setup import SetupSettingsManager, RequiredSubmodule
 from edk2toolext.invocables.edk2_update import UpdateSettingsManager
@@ -67,11 +68,37 @@ class CommonPlatform():
                                default=valid_archs,
                                help="target architecture(s) for the build {%s}" % valid_archs)
 
+    @staticmethod
+    def GetDependencies():
+        ''' Return Git Repository Dependencies '''
+        return [
+            {
+                "Path": "MU_BASECORE",
+                "Url": "https://github.com/microsoft/mu_basecore.git",
+                "Branch": "release/202511"
+            },
+            {
+                "Path": "Silicon/Arm/MU_TIANO",
+                "Url": "https://github.com/microsoft/mu_silicon_arm_tiano.git",
+                "Branch": "release/202511"
+            },
+            {
+                "Path": "Features/MM_SUPV",
+                "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
+                "Branch": "main"
+            },
+            {
+                "Path": "Common/MU",
+                "Url": "https://github.com/microsoft/mu_plus.git",
+                "Branch": "release/202511"
+            }
+        ]
+
 
 # ####################################################################################### #
 #                         Configuration for Update & Setup                                #
 # ####################################################################################### #
-class SettingsManager(UpdateSettingsManager, SetupSettingsManager):
+class SettingsManager(UpdateSettingsManager, SetupSettingsManager, CiSetupSettingsManager):
 
     def GetPackagesSupported(self):
         ''' return iterable of edk2 packages supported by this build.
@@ -118,12 +145,16 @@ class SettingsManager(UpdateSettingsManager, SetupSettingsManager):
     def GetName(self):
         return "OneCryptoPkg"
 
+    def GetDependencies(self):
+        ''' Return Git Repository Dependencies '''
+        return CommonPlatform.GetDependencies()
+
     def GetPackagesPath(self):
         ''' Return a list of paths that should be mapped as edk2 PackagesPath '''
         result = list(CommonPlatform.GetAllSubmodulePaths())
-        # MU_BASECORE provides MdePkg, MdeModulePkg, CryptoPkg, etc.
-        if "MU_BASECORE" not in result:
-            result.append("MU_BASECORE")
+        for dep in CommonPlatform.GetDependencies():
+            if dep["Path"] not in result:
+                result.append(dep["Path"])
         return result
 
 
@@ -158,9 +189,9 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
     def GetPackagesPath(self):
         ''' Return a list of workspace relative paths that should be mapped as edk2 PackagesPath '''
         result = list(CommonPlatform.GetAllSubmodulePaths())
-        # MU_BASECORE provides MdePkg, MdeModulePkg, CryptoPkg, etc.
-        if "MU_BASECORE" not in result:
-            result.append("MU_BASECORE")
+        for dep in CommonPlatform.GetDependencies():
+            if dep["Path"] not in result:
+                result.append(dep["Path"])
         return result
 
     def GetActiveScopes(self):
