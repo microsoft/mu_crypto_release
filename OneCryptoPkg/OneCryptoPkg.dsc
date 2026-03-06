@@ -19,6 +19,10 @@
 [PcdsPatchableInModule.X64]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
 
+[PcdsFeatureFlag.X64]
+  # Enable NASM assembly source style for accelerated OpenSSL crypto
+  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStyleNasm|TRUE
+
 [PcdsFixedAtBuild.X64]
   # Ensure DEBUG prints are enabled (excluding VERBOSE: 0x8040004F & ~0x00400000 = 0x8000004F)
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
@@ -67,6 +71,7 @@
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
+      TimerLib                       | UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf  # MU_CHANGE - for sleep()
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   }
 
@@ -124,6 +129,7 @@
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
+      TimerLib                       | UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf  # MU_CHANGE - for sleep()
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
   }
 
@@ -228,6 +234,7 @@
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
+      TimerLib                       | UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf  # MU_CHANGE - for sleep()
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   }
 
