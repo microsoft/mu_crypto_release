@@ -44,6 +44,8 @@
   Kdf/CryptHkdf.c
   Cipher/CryptAes.c
   Cipher/CryptAeadAesGcm.c
+  Setup/BaseCryptInit.c       # MU_CHANGE
+  Info/CryptInfo.c            # MU_CHANGE
   Pk/CryptRsaBasic.c
   Pk/CryptRsaExt.c
   Pk/CryptPkcs1Oaep.c
