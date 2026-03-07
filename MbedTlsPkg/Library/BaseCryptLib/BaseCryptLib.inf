@@ -59,13 +59,16 @@
 [Packages]
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
-  MbedTlsPkg/MbedTlsPkg.dec # MU_CHANGE
+  MbedTlsPkg/MbedTlsPkg.dec     # MU_CHANGE
+  MdeModulePkg/MdeModulePkg.dec # MU_CHANGE
 
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
   MemoryAllocationLib
-  UefiRuntimeServicesTableLib
+  # UefiRuntimeServicesTableLib # MU_CHANGE
+  RealTimeClockLib              # MU_CHANGE
+  TimerLib                      # MU_CHANGE
   DebugLib
   MbedTlsLib
   OpensslLib
