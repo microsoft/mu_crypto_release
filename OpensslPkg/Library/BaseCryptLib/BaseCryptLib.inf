@@ -85,18 +85,22 @@
 [Packages]
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
-  OpensslPkg/OpensslPkg.dec # MU_CHANGE
+  OpensslPkg/OpensslPkg.dec     # MU_CHANGE
+  MdeModulePkg/MdeModulePkg.dec # MU_CHANGE
 
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
   MemoryAllocationLib
-  UefiRuntimeServicesTableLib
+  # UefiRuntimeServicesTableLib # MU_CHANGE
   DebugLib
   OpensslLib
   IntrinsicLib
   PrintLib
-  UefiBootServicesTableLib
+  RealTimeClockLib           # MU_CHANGE
+  TimerLib                   # MU_CHANGE
+  RngLib                     # MU_CHANGE
+  # UefiBootServicesTableLib # MU_CHANGE
   SynchronizationLib
 
 [Protocols]
