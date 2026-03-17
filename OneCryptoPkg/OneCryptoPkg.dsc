@@ -36,11 +36,63 @@
   gOneCryptoPkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0x80000000
 !endif
 
-[Components.X64]
+[Components]
+  ## OneCryptBin meant for StandaloneMm
+  #
+  # This binary provides the crypto for a StandaloneMm based platform.
+  ##
+  OneCryptoPkg/OneCryptoBin/OneCryptoBinStandaloneMm.inf {
+    <LibraryClasses>
+      BaseLib                        | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib                  | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      PrintLib                       | MdePkg/Library/BasePrintLib/BasePrintLib.inf
+      PcdLib                         | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      RegisterFilterLib              | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      SafeIntLib                     | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
+      StackCheckLib                  | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
+      BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
+      IntrinsicLib                   | OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
+      OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
+      StandaloneMmDriverEntryPoint   | OneCryptoPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+      #############################################################################
+      ## Crypto Provider
+      #############################################################################
+      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
+      DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
+      MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
+      RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+  }
 
-  #############################################################################
-  ## OneCryptoBin START
-  #############################################################################
+    OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
+    <LibraryClasses>
+      BaseLib                      | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib                | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      DebugLib                     | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+      PcdLib                       | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      RngLib                       | MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf # Drivers should use the protocol, GetRandomNumber64 will not work.
+      RegisterFilterLib            | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      PeCoffExtraActionLib         | MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
+      HobLib                       | MdePkg/Library/DxeHobLib/DxeHobLib.inf
+      StackCheckFailureHookLib     | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
+      StackCheckLib                | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      SafeIntLib                   | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
+      PeCoffLib                    | MdePkg/Library/BasePeCoffLib/BasePeCoffLib.inf
+      PeCoffExtendedLib            | OneCryptoPkg/Library/PeCoffExtendedLib/PeCoffExtendedLib.inf
+      PeCoffGetEntryPointLib       | MdePkg/Library/BasePeCoffGetEntryPointLib/BasePeCoffGetEntryPointLib.inf
+      CacheMaintenanceLib          | MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
+      NULL                         | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      StandaloneMmDriverEntryPoint | MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+      MmServicesTableLib           | MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+      MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
+      HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
+      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+  }
+
+[Components.X64]
 
   ## OneCryptBin meant for SupvMm
   #
@@ -71,44 +123,6 @@
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
   }
-
-  ## OneCryptBin meant for StandaloneMm
-  #
-  # This binary provides the crypto for a StandaloneMm based platform.
-  ##
-  OneCryptoPkg/OneCryptoBin/OneCryptoBinStandaloneMm.inf {
-    <LibraryClasses>
-      BaseLib                        | MdePkg/Library/BaseLib/BaseLib.inf
-      BaseMemoryLib                  | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
-      PrintLib                       | MdePkg/Library/BasePrintLib/BasePrintLib.inf
-      PcdLib                         | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-      RegisterFilterLib              | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
-      SafeIntLib                     | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
-      StackCheckLib                  | MdePkg/Library/StackCheckLib/StackCheckLib.inf
-      StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
-      BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
-      TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
-      IntrinsicLib                   | OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
-      OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
-      StandaloneMmDriverEntryPoint   | OneCryptoPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
-      #############################################################################
-      ## Crypto Provider
-      #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
-      RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
-      DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
-      MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
-      RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
-      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
-  }
-
-  #############################################################################
-  ## OneCryptoBin END
-  #############################################################################
-
-  #############################################################################
-  ## OneCryptoLoader START
-  #############################################################################
 
   OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderDxe.inf {
     <LibraryClasses>
@@ -167,37 +181,56 @@
       FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
   }
 
-  OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
+[Components.AARCH64]
+  #############################################################################
+  ## AARCH64 OneCryptoBin START
+  ##
+  ## AARCH64 requires 4 binaries instead of the normal 3 for X64:
+  ##   1. OneCryptoBinDxe            - DXE binary that installs private protocol
+  ##   2. OneCryptoLoaderDxeProtocol - DXE loader (consumes private protocol)
+  ##   3. OneCryptoBinStandaloneMm   - MM binary for secure world
+  ##   4. OneCryptoLoaderStandaloneMm - MM loader
+  ##
+  ## This is because the DXE loader cannot locate the StMM binary due to
+  ## secure world layout differences on AARCH64. The protocol-based approach
+  ## avoids PE/COFF export parsing which may not work on AARCH64.
+  #############################################################################
+
+  ## OneCryptoBinDxe for AARCH64
+  #
+  # This binary provides the crypto for DXE phase on AARCH64 platforms.
+  # It installs gOneCryptoPrivateProtocolGuid for the protocol-based loader.
+  ##
+  OneCryptoPkg/OneCryptoBin/OneCryptoBinDxe.inf {
     <LibraryClasses>
-      BaseLib                      | MdePkg/Library/BaseLib/BaseLib.inf
-      BaseMemoryLib                | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
-      DebugLib                     | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
-      PcdLib                       | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-      RngLib                       | MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf # Drivers should use the protocol, GetRandomNumber64 will not work.
-      RegisterFilterLib            | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
-      PeCoffExtraActionLib         | MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
-      HobLib                       | MdePkg/Library/DxeHobLib/DxeHobLib.inf
-      StackCheckFailureHookLib     | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
-      StackCheckLib                | MdePkg/Library/StackCheckLib/StackCheckLib.inf
-      SafeIntLib                   | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
-      PeCoffLib                    | MdePkg/Library/BasePeCoffLib/BasePeCoffLib.inf
-      PeCoffExtendedLib            | OneCryptoPkg/Library/PeCoffExtendedLib/PeCoffExtendedLib.inf
-      PeCoffGetEntryPointLib       | MdePkg/Library/BasePeCoffGetEntryPointLib/BasePeCoffGetEntryPointLib.inf
-      CacheMaintenanceLib          | MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
-      NULL                         | MdePkg/Library/StackCheckLib/StackCheckLib.inf
-      StandaloneMmDriverEntryPoint | MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
-      MmServicesTableLib           | MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
-      MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
-      HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
-      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+      BaseLib                        | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib                  | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      PrintLib                       | MdePkg/Library/BasePrintLib/BasePrintLib.inf
+      PcdLib                         | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      RegisterFilterLib              | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      SafeIntLib                     | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
+      StackCheckLib                  | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
+      BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
+      IntrinsicLib                   | OpensslPkg/Library/IntrinsicLib/IntrinsicLib.inf
+      OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
+      UefiDriverEntryPoint           | MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
+      UefiBootServicesTableLib       | MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
+      #############################################################################
+      ## Crypto Provider
+      #############################################################################
+      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
+      DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
+      MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
+      RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   }
 
   #############################################################################
-  ## OneCryptoLoader END
+  ## AARCH64 OneCryptoBin END
   #############################################################################
-
-[Components.AARCH64]
-  # AARCH64 components will be added in a follow-up PR
 
 [BuildOptions]
   *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES -D ENABLE_MD5_DEPRECATED_INTERFACES

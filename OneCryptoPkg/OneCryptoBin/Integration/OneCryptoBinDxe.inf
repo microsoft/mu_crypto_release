@@ -1,0 +1,31 @@
+## @file
+#  This module builds the OneCryptoBinDxe binary that installs a private protocol
+#  for protocol-based DXE loaders to discover.
+#
+#  This approach is used on AARCH64 (and optionally X64) where PE/COFF export
+#  parsing may not work reliably. The DXE loader discovers this binary via
+#  gOneCryptoPrivateProtocolGuid instead of parsing PE/COFF exports.
+#
+#  This module must have the GUID `A7D8A8E6-2B1C-4D5F-9E3A-1C8F6B2D4E5A`.
+#  Otherwise, the loaders will not be able to locate it.
+#
+#  Copyright (C) Microsoft Corporation
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoBinDxe
+  FILE_GUID                      = A7D8A8E6-2B1C-4D5F-9E3A-1C8F6B2D4E5A
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DxeEntry
+  PI_SPECIFICATION_VERSION       = 0x00010032
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries.AARCH64]
+  PE32|OneCryptoBinDxe.efi
+  DXE_DEPEX|OneCryptoBinDxe.depex

@@ -1,21 +1,19 @@
 /** @file
   This file implements the OneCryptoBin protocol initialization and constructor logic.
   It sets up the ONE_CRYPTO_PROTOCOL structure with function pointers for cryptographic operations,
-  and provides entry points for MM driver integration.
+  and provides entry points for MM driver integration and DXE driver integration (AARCH64).
 
   Copyright (C) Microsoft Corporation
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include <Uefi.h>
-// #include <Library/StandaloneMmDriverEntryPoint.h> # Intentionally not included
-#include <Library/MmServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/OneCryptoCrtLib.h>
 #include <Library/BaseCryptLib.h>
-#include <Private/OneCryptoDependencySupport.h>
 #include <Library/TlsLib.h>
 #include <Protocol/OneCrypto.h>
+#include "OneCryptoBin.h"
 
 #if defined (_MSC_EXTENSIONS)
   #define COMMON_EXPORT_API  __declspec(dllexport)
@@ -474,62 +472,4 @@ CryptoEntry (
   // Delegate to the main CryptoEntry function
   //
   return NoSetupCryptoEntry (Depends, Crypto, CryptoSize);
-}
-
-/**
-  MM Entry Point for the Shared Crypto MM Driver.
-
-  @param[in] ImageHandle      The firmware allocated handle for the EFI image.
-  @param[in] MmSystemTable    A pointer to the MM System Table.
-
-  @retval EFI_SUCCESS         The entry point executed successfully.
-  @retval EFI_OUT_OF_RESOURCES Failed to allocate memory.
-  @retval other               Error returned by protocol installation.
-**/
-EFI_STATUS
-EFIAPI
-MmEntry (
-  IN EFI_HANDLE           ImageHandle,
-  IN EFI_MM_SYSTEM_TABLE  *MmSystemTable
-  )
-{
-  EFI_STATUS  Status;
-  EFI_HANDLE  Handle = NULL;
-
-  if (MmSystemTable == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  Status = MmSystemTable->MmAllocatePool (
-                            EfiRuntimeServicesData,
-                            sizeof (ONE_CRYPTO_CONSTRUCTOR_PROTOCOL),
-                            (VOID **)&mProtocolInstance
-                            );
-
-  if (EFI_ERROR (Status) || (mProtocolInstance == NULL)) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  mProtocolInstance->Signature   = ONE_CRYPTO_CONSTRUCTOR_PROTOCOL_SIGNATURE;
-  mProtocolInstance->Version     = 1;
-  //
-  // Use NoSetupCryptoEntry because MmEntry is called by the standard UEFI loader,
-  // which has already executed library constructors (including BaseCryptInit).
-  //
-  mProtocolInstance->Entry       = NoSetupCryptoEntry;
-
-  Status = MmSystemTable->MmInstallProtocolInterface (
-                            &Handle,
-                            &gOneCryptoPrivateProtocolGuid,
-                            EFI_NATIVE_INTERFACE,
-                            mProtocolInstance
-                            );
-
-  if (EFI_ERROR (Status)) {
-    MmSystemTable->MmFreePool (mProtocolInstance);
-    mProtocolInstance = NULL;
-    return Status;
-  }
-
-  return EFI_SUCCESS;
 }

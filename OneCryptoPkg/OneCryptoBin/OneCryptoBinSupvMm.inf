@@ -39,6 +39,8 @@
 
 [Sources]
   OneCryptoBin.c
+  OneCryptoBin.h
+  OneCryptoBinMmEntry.c
 
 [BuildOptions]
   # These options are needed to get the exported functions to be exported correctly
