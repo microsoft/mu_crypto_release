@@ -42,68 +42,87 @@ BUILD_BASE = "Build"
 # Default build configuration
 DEFAULT_ARCH = "X64"
 DEFAULT_TARGET = "DEBUG"
-DEFAULT_TOOLCHAIN = "VS2022"
+DEFAULT_TOOLCHAIN = "CLANGPDB"
 DEFAULT_VERSION = "1.0"  # Default version for package naming
 
-# File layout: destination_folder -> list of (source_path, destination_name)
-# Source paths are relative to BUILD_BASE or repo root (for Integration files)
-FILE_LAYOUT = {
-    "OneCryptoBin": [
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoBin/OneCryptoBinSupvMm/OUTPUT/OneCryptoBinSupvMm.efi",
-            "OneCryptoBinSupvMm.efi"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoBin/OneCryptoBinSupvMm/OUTPUT/OneCryptoBinSupvMm.depex",
-            "OneCryptoBinSupvMm.depex"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.efi",
-            "OneCryptoBinStandaloneMm.efi"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.depex",
-            "OneCryptoBinStandaloneMm.depex"
-        ),
-        # Integration INF files from source tree
-        ("../OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinSupvMm.inf", "OneCryptoBinSupvMm.inf"),
-        ("../OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinStandaloneMm.inf", "OneCryptoBinStandaloneMm.inf"),
-    ],
-    "OneCryptoLoaders": [
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.efi",
-            "OneCryptoLoaderDxe.efi"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.depex",
-            "OneCryptoLoaderDxe.depex"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderSupvMm/OUTPUT/OneCryptoLoaderSupvMm.efi",
-            "OneCryptoLoaderSupvMm.efi"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderSupvMm/OUTPUT/OneCryptoLoaderSupvMm.depex",
-            "OneCryptoLoaderSupvMm.depex"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.efi",
-            "OneCryptoLoaderStandaloneMm.efi"
-        ),
-        (
-            f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/{DEFAULT_ARCH}/OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.depex",
-            "OneCryptoLoaderStandaloneMm.depex"
-        ),
-        # Integration INF files from source tree
-        ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxe.inf", "OneCryptoLoaderDxe.inf"),
-        ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderSupvMm.inf", "OneCryptoLoaderSupvMm.inf"),
-        ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderStandaloneMm.inf", "OneCryptoLoaderStandaloneMm.inf"),
-    ],
-    "BuildInfo": [
-        # Build report for reproducibility and debugging
-        (f"OneCryptoPkg/{DEFAULT_TARGET}_{DEFAULT_TOOLCHAIN}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
-    ],
-}
+# Supported architectures
+SUPPORTED_ARCHITECTURES = ["X64", "AARCH64"]
+
+
+def get_file_layout(arch, target, toolchain):
+    """
+    Get the file layout for a specific architecture.
+
+    Architecture-specific layouts:
+    - AARCH64: OneCryptoBinDxe, OneCryptoBinDxeLoader, OneCryptoBinStandaloneMm, OneCryptoBinStandaloneMmLoader
+    - X64: OneCryptoBinLoader, OneCryptoBinStandaloneMm, OneCryptoBinStandaloneMmLoader, OneCryptoBinSupvMm, OneCryptoBinSupvMmLoader
+
+    Args:
+        arch: Architecture (X64, AARCH64)
+        target: Build target (DEBUG, RELEASE)
+        toolchain: Toolchain (CLANGPDB, VS2022, GCC5, etc.)
+
+    Returns:
+        dict: File layout for the specified architecture
+    """
+    build_path = f"OneCryptoPkg/{target}_{toolchain}/{arch}/OneCryptoPkg"
+
+    if arch == "AARCH64":
+        return {
+            "OneCryptoBin": [
+                # OneCryptoBinDxe
+                (f"{build_path}/OneCryptoBin/OneCryptoBinDxe/OUTPUT/OneCryptoBinDxe.efi", "OneCryptoBinDxe.efi"),
+                (f"{build_path}/OneCryptoBin/OneCryptoBinDxe/OUTPUT/OneCryptoBinDxe.depex", "OneCryptoBinDxe.depex"),
+                ("../OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinDxe.inf", "OneCryptoBinDxe.inf"),
+                # OneCryptoBinStandaloneMm
+                (f"{build_path}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.efi", "OneCryptoBinStandaloneMm.efi"),
+                (f"{build_path}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.depex", "OneCryptoBinStandaloneMm.depex"),
+                ("../OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinStandaloneMm.inf", "OneCryptoBinStandaloneMm.inf"),
+            ],
+            "OneCryptoLoaders": [
+                # OneCryptoBinDxeLoader (OneCryptoLoaderDxe)
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.efi", "OneCryptoLoaderDxe.efi"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.depex", "OneCryptoLoaderDxe.depex"),
+                ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxe.inf", "OneCryptoLoaderDxe.inf"),
+                # OneCryptoBinStandaloneMmLoader (OneCryptoLoaderStandaloneMm)
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.efi", "OneCryptoLoaderStandaloneMm.efi"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.depex", "OneCryptoLoaderStandaloneMm.depex"),
+                ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderStandaloneMm.inf", "OneCryptoLoaderStandaloneMm.inf"),
+            ],
+            "BuildInfo": [
+                (f"OneCryptoPkg/{target}_{toolchain}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
+            ],
+        }
+    else:  # X64 (default)
+        return {
+            "OneCryptoBin": [
+                # OneCryptoBinStandaloneMm
+                (f"{build_path}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.efi", "OneCryptoBinStandaloneMm.efi"),
+                (f"{build_path}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.depex", "OneCryptoBinStandaloneMm.depex"),
+                ("../OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinStandaloneMm.inf", "OneCryptoBinStandaloneMm.inf"),
+                # OneCryptoBinSupvMm
+                (f"{build_path}/OneCryptoBin/OneCryptoBinSupvMm/OUTPUT/OneCryptoBinSupvMm.efi", "OneCryptoBinSupvMm.efi"),
+                (f"{build_path}/OneCryptoBin/OneCryptoBinSupvMm/OUTPUT/OneCryptoBinSupvMm.depex", "OneCryptoBinSupvMm.depex"),
+                ("../OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinSupvMm.inf", "OneCryptoBinSupvMm.inf"),
+            ],
+            "OneCryptoLoaders": [
+                # OneCryptoBinLoader (OneCryptoLoaderDxe)
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.efi", "OneCryptoLoaderDxe.efi"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderDxe/OUTPUT/OneCryptoLoaderDxe.depex", "OneCryptoLoaderDxe.depex"),
+                ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxe.inf", "OneCryptoLoaderDxe.inf"),
+                # OneCryptoBinStandaloneMmLoader (OneCryptoLoaderStandaloneMm)
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.efi", "OneCryptoLoaderStandaloneMm.efi"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm/OUTPUT/OneCryptoLoaderStandaloneMm.depex", "OneCryptoLoaderStandaloneMm.depex"),
+                ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderStandaloneMm.inf", "OneCryptoLoaderStandaloneMm.inf"),
+                # OneCryptoBinSupvMmLoader (OneCryptoLoaderSupvMm)
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderSupvMm/OUTPUT/OneCryptoLoaderSupvMm.efi", "OneCryptoLoaderSupvMm.efi"),
+                (f"{build_path}/OneCryptoLoaders/OneCryptoLoaderSupvMm/OUTPUT/OneCryptoLoaderSupvMm.depex", "OneCryptoLoaderSupvMm.depex"),
+                ("../OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderSupvMm.inf", "OneCryptoLoaderSupvMm.inf"),
+            ],
+            "BuildInfo": [
+                (f"OneCryptoPkg/{target}_{toolchain}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
+            ],
+        }
 
 # =============================================================================
 # Functions
@@ -153,17 +172,23 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
     Args:
         output_name: Name of the output zip file (without .zip extension)
         version: Version string (e.g., "1.0.0" becomes "v1_0_0")
-        arch: Architecture (e.g., X64, AARCH64)
+        arch: Architecture (X64, AARCH64)
         target: Build target (DEBUG or RELEASE)
         toolchain: Toolchain used (e.g., VS2022, GCC5)
 
     Returns:
-        Path to the created zip file
+        dict with package details on success, None on failure
     """
     # Use defaults if not specified
     arch = arch or DEFAULT_ARCH
     target = target or DEFAULT_TARGET
     toolchain = toolchain or DEFAULT_TOOLCHAIN
+
+    # Validate architecture
+    if arch not in SUPPORTED_ARCHITECTURES:
+        logger.error(f"Unsupported architecture: {arch}")
+        logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
+        return None
 
     # Get version from protocol header if not specified
     if not version:
@@ -183,17 +208,8 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
     logger.info(f"Architecture: {arch}, Target: {target}, Toolchain: {toolchain}")
     logger.info("-" * 80)
 
-    # Update file layout with current build configuration
-    updated_layout = {}
-    for folder, files in FILE_LAYOUT.items():
-        updated_files = []
-        for src_path, dest_name in files:
-            # Replace placeholders in source path
-            src_path = src_path.replace(DEFAULT_ARCH, arch)
-            src_path = src_path.replace(DEFAULT_TARGET, target)
-            src_path = src_path.replace(DEFAULT_TOOLCHAIN, toolchain)
-            updated_files.append((src_path, dest_name))
-        updated_layout[folder] = updated_files
+    # Get architecture-specific file layout
+    file_layout = get_file_layout(arch, target, toolchain)
 
     # Create the zip file
     missing_files = []
@@ -202,7 +218,7 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
     file_details = []  # Track individual file details
 
     with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for folder, files in updated_layout.items():
+        for folder, files in file_layout.items():
             logger.info(f"\nProcessing folder: {folder}/")
             folder_sizes[folder] = 0
 
@@ -286,11 +302,20 @@ def create_package(output_name=None, version=None, arch=None, target=None, toolc
         output_zip.unlink(missing_ok=True)
         return None
 
-def list_layout():
-    """Print the current file layout configuration."""
-    logger.info("Current Package Layout:")
+def list_layout(arch=None):
+    """Print the file layout configuration for a specific architecture."""
+    arch = arch or DEFAULT_ARCH
+
+    if arch not in SUPPORTED_ARCHITECTURES:
+        logger.error(f"Unsupported architecture: {arch}")
+        logger.error(f"Supported architectures: {', '.join(SUPPORTED_ARCHITECTURES)}")
+        return
+
+    file_layout = get_file_layout(arch, DEFAULT_TARGET, DEFAULT_TOOLCHAIN)
+
+    logger.info(f"Package Layout for {arch}:")
     logger.info("=" * 80)
-    for folder, files in FILE_LAYOUT.items():
+    for folder, files in file_layout.items():
         logger.info(f"\n{folder}/")
         for src_path, dest_name in files:
             logger.info(f"  {dest_name}")
@@ -360,7 +385,7 @@ Examples:
         version=args.version,
         arch=args.arch,
         target=args.target,
-        toolchain=args.toolchain
+        toolchain=args.toolchain,
     )
 
     return 0 if result else 1
