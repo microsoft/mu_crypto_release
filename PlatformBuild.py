@@ -7,6 +7,7 @@
 import os
 import io
 import logging
+from pathlib import Path
 
 from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_ci_setup import CiSetupSettingsManager
@@ -27,7 +28,7 @@ class CommonPlatform():
     ArchSupported = ("X64", "AARCH64")
     TargetsSupported = ("DEBUG", "RELEASE")
     Scopes = ('OneCrypto', 'edk2-build')
-    WorkspaceRoot = os.path.dirname(os.path.abspath(__file__))
+    WorkspaceRoot = str(Path(__file__).resolve().parent)
 
     @staticmethod
     def GetAllSubmodules():
@@ -250,7 +251,6 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
         from package_onecrypto import create_package
         from uefi_compress import analyze_efi_compression
-        from pathlib import Path
 
         # Get the toolchain from environment
         toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "VS2022")
