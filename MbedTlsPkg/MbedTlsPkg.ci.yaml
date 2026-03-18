@@ -57,7 +57,8 @@
         "IgnoreInf": [
             "MbedTlsPkg/Library/MbedTlsLib/MbedTlsLibFull.inf",
             "MbedTlsPkg/Library/BaseCryptLib/TestBaseCryptLib.inf",
-            "MbedTlsPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf"
+            "MbedTlsPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf",
+            "MbedTlsPkg/Test/HostTest/TestBaseCryptLibHost.inf"
         ]
     },
     "GuidCheck": {
