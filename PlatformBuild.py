@@ -242,7 +242,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         from uefi_compress import analyze_efi_compression
 
         # Get the toolchain from environment
-        toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "VS2022")
+        toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "CLANGPDB")
         workspace_root = Path(CommonPlatform.WorkspaceRoot)
 
         # Package all architectures that were built into a single package
