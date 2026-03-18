@@ -10,7 +10,7 @@
   Uses OpenSSL 3.x EVP_PKEY provider-based APIs instead of deprecated RSA APIs.
 
 Copyright (c) 2009 - 2020, Intel Corporation. All rights reserved.<BR>
-(c) Copyright 2025 HP Development Company, L.P.
+Copyright (c) Microsoft Corporation.
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/

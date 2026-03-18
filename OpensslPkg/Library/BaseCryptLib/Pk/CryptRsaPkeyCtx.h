@@ -6,7 +6,7 @@
   object, and declares helper functions for building and managing EVP_PKEY
   instances from stored BIGNUM key components.
 
-  Copyright (c) 2025, HP Development Company, L.P.
+  Copyright (c) Microsoft Corporation.
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/

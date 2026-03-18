@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 #include <openssl/pkcs7.h>
+#include <openssl/pem.h>
 
 /**
   Creates a PKCS#7 signedData as described in "PKCS #7: Cryptographic Message
@@ -56,8 +57,8 @@ Pkcs7Sign (
   X509      *Cert;      // MU_CHANGE [TCBZ3925] - Pkcs7Sign is broken
   EVP_PKEY  *Key;
   BIO       *DataBio;
+  BIO       *PemBio;
   PKCS7     *Pkcs7;
-  UINT8     *RsaContext;
   UINT8     *P7Data;
   UINTN     P7DataSize;
   UINT8     *Tmp;
@@ -71,27 +72,37 @@ Pkcs7Sign (
     return FALSE;
   }
 
-  RsaContext = NULL;
-  Cert       = NULL;    // MU_CHANGE [TCBZ3925] - Pkcs7Sign is broken
-  Key        = NULL;
-  Pkcs7      = NULL;
-  DataBio    = NULL;
-  Status     = FALSE;
+  Cert    = NULL;    // MU_CHANGE [TCBZ3925] - Pkcs7Sign is broken
+  Key     = NULL;
+  Pkcs7   = NULL;
+  DataBio = NULL;
+  PemBio  = NULL;
+  Status  = FALSE;
 
   //
-  // Retrieve RSA private key from PEM data.
+  // Retrieve RSA private key from PEM data as EVP_PKEY directly.
   //
-  Status = RsaGetPrivateKeyFromPem (
-             PrivateKey,
-             PrivateKeySize,
-             (CONST CHAR8 *)KeyPassword,
-             (VOID **)&RsaContext
-             );
-  if (!Status) {
-    return Status;
+  if (EVP_add_cipher (EVP_aes_128_cbc ()) == 0) {
+    goto _Exit;
   }
 
-  Status = FALSE;
+  if (EVP_add_cipher (EVP_aes_192_cbc ()) == 0) {
+    goto _Exit;
+  }
+
+  if (EVP_add_cipher (EVP_aes_256_cbc ()) == 0) {
+    goto _Exit;
+  }
+
+  PemBio = BIO_new_mem_buf (PrivateKey, (int)PrivateKeySize);
+  if (PemBio == NULL) {
+    goto _Exit;
+  }
+
+  Key = PEM_read_bio_PrivateKey (PemBio, NULL, NULL, (void *)KeyPassword);
+  if (Key == NULL) {
+    goto _Exit;
+  }
 
   //
   // Register & Initialize necessary digest algorithms and PRNG for PKCS#7 Handling
@@ -120,18 +131,6 @@ Pkcs7Sign (
   }
 
   // MU_CHANGE [TCBZ3925] [END] - Pkcs7Sign is broken
-
-  //
-  // Construct OpenSSL EVP_PKEY for private key.
-  //
-  Key = EVP_PKEY_new ();
-  if (Key == NULL) {
-    goto _Exit;
-  }
-
-  if (EVP_PKEY_assign_RSA (Key, (RSA *)RsaContext) == 0) {
-    goto _Exit;
-  }
 
   //
   // Convert the data to be signed to BIO format.
@@ -210,6 +209,10 @@ _Exit:
 
   if (DataBio != NULL) {
     BIO_free (DataBio);
+  }
+
+  if (PemBio != NULL) {
+    BIO_free (PemBio);
   }
 
   if (Pkcs7 != NULL) {

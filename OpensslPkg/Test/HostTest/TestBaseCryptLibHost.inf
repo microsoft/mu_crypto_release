@@ -47,7 +47,7 @@
   ../../../MU_BASECORE/CryptoPkg/Test/UnitTest/Library/BaseCryptLib/RandTests.c
   ../../../MU_BASECORE/CryptoPkg/Test/UnitTest/Library/BaseCryptLib/Pkcs7EkuTests.c
   ../../../MU_BASECORE/CryptoPkg/Test/UnitTest/Library/BaseCryptLib/OaepEncryptTests.c
-  RsaPssTests.c
+  ../../../MU_BASECORE/CryptoPkg/Test/UnitTest/Library/BaseCryptLib/RsaPssTests.c
   # ParallelhashTests.c # MU_CHANGE
   ../../../MU_BASECORE/CryptoPkg/Test/UnitTest/Library/BaseCryptLib/HkdfTests.c
   ../../../MU_BASECORE/CryptoPkg/Test/UnitTest/Library/BaseCryptLib/AeadAesGcmTests.c
