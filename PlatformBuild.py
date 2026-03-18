@@ -55,21 +55,6 @@ class CommonPlatform():
         return (sm.path for sm in CommonPlatform.GetAllSubmodules())
 
     @staticmethod
-    def AddCommandLineOptions(parserObj):
-        ''' Add command line options to the argparser '''
-        valid_archs = ",".join(CommonPlatform.ArchSupported)
-
-        def validate_arch(arch_arg: str):
-            archs = tuple(arch.strip() for arch in arch_arg.split(","))
-            for arch in archs:
-                if arch not in CommonPlatform.ArchSupported:
-                    raise ValueError("must be in set: {%s}" % valid_archs)
-            return archs
-        parserObj.add_argument("-a", "--arch", dest="arch", type=validate_arch,
-                               default=valid_archs,
-                               help="target architecture(s) for the build {%s}" % valid_archs)
-
-    @staticmethod
     def GetDependencies():
         ''' Return Git Repository Dependencies '''
         return [
@@ -168,7 +153,11 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def AddCommandLineOptions(self, parserObj):
         ''' Add command line options to the argparser '''
-        CommonPlatform.AddCommandLineOptions(parserObj)
+        parserObj.add_argument("-a", "--arch", dest="arch",
+                               action="append",
+                               choices=CommonPlatform.ArchSupported,
+                               default=None,
+                               help="target architecture(s) for the build, can be specified multiple times")
 
         parserObj.add_argument("-t", "--target", dest="target", type=str,
                                default=CommonPlatform.TargetsSupported[0],
@@ -180,7 +169,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def RetrieveCommandLineOptions(self, args):
         self.target = args.target
-        self.arch = args.arch
+        self.arch = args.arch if args.arch else list(CommonPlatform.ArchSupported)
         self.skip_packaging = args.skip_packaging
 
     def GetWorkspaceRoot(self):
