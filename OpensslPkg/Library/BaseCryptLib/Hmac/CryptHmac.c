@@ -7,13 +7,23 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include "InternalCryptLib.h"
-#include <openssl/hmac.h>
+#include <openssl/evp.h>
+#include <openssl/params.h>
+#include <openssl/core_names.h>
+
+//
+// Wrapper structure to hold EVP_MAC_CTX so that HmacMdDuplicate can
+// replace the inner context while preserving the outer pointer.
+//
+typedef struct {
+  EVP_MAC_CTX    *Ctx;
+} HMAC_CTX_WRAPPER;
 
 /**
-  Allocates and initializes one HMAC_CTX context for subsequent HMAC-MD use.
+  Allocates and initializes one EVP_MAC_CTX context for subsequent HMAC-MD use.
 
-  @return  Pointer to the HMAC_CTX context that has been initialized.
-           If the allocations fails, HmacMdNew() returns NULL.
+  @return  Pointer to the HMAC_CTX_WRAPPER that has been initialized.
+           If the allocation fails, HmacMdNew() returns NULL.
 
 **/
 STATIC
@@ -22,16 +32,42 @@ HmacMdNew (
   VOID
   )
 {
+  EVP_MAC           *Mac;
+  HMAC_CTX_WRAPPER  *Wrapper;
+
   //
-  // Allocates & Initializes HMAC_CTX Context by OpenSSL HMAC_CTX_new()
+  // Fetch the HMAC algorithm from the default provider.
   //
-  return (VOID *)HMAC_CTX_new ();
+  Mac = EVP_MAC_fetch (NULL, "HMAC", NULL);
+  if (Mac == NULL) {
+    return NULL;
+  }
+
+  Wrapper = AllocateZeroPool (sizeof (HMAC_CTX_WRAPPER));
+  if (Wrapper == NULL) {
+    EVP_MAC_free (Mac);
+    return NULL;
+  }
+
+  //
+  // Allocate EVP_MAC_CTX.  The context holds its own reference to the
+  // EVP_MAC object, so we can free it immediately after ctx creation.
+  //
+  Wrapper->Ctx = EVP_MAC_CTX_new (Mac);
+  EVP_MAC_free (Mac);
+
+  if (Wrapper->Ctx == NULL) {
+    FreePool (Wrapper);
+    return NULL;
+  }
+
+  return (VOID *)Wrapper;
 }
 
 /**
-  Release the specified HMAC_CTX context.
+  Release the specified HMAC_CTX_WRAPPER context.
 
-  @param[in]  HmacMdCtx  Pointer to the HMAC_CTX context to be released.
+  @param[in]  HmacMdCtx  Pointer to the HMAC_CTX_WRAPPER context to be released.
 
 **/
 STATIC
@@ -40,10 +76,13 @@ HmacMdFree (
   IN  VOID  *HmacMdCtx
   )
 {
-  //
-  // Free OpenSSL HMAC_CTX Context
-  //
-  HMAC_CTX_free ((HMAC_CTX *)HmacMdCtx);
+  HMAC_CTX_WRAPPER  *Wrapper;
+
+  if (HmacMdCtx != NULL) {
+    Wrapper = (HMAC_CTX_WRAPPER *)HmacMdCtx;
+    EVP_MAC_CTX_free (Wrapper->Ctx);
+    FreePool (Wrapper);
+  }
 }
 
 /**
@@ -52,7 +91,7 @@ HmacMdFree (
 
   If HmacMdContext is NULL, then return FALSE.
 
-  @param[in]   Md                 Message Digest.
+  @param[in]   MdName             Digest algorithm name (e.g. "SHA256").
   @param[out]  HmacMdContext      Pointer to HMAC-MD context.
   @param[in]   Key                Pointer to the user-supplied key.
   @param[in]   KeySize            Key size in bytes.
@@ -64,12 +103,15 @@ HmacMdFree (
 STATIC
 BOOLEAN
 HmacMdSetKey (
-  IN   CONST EVP_MD  *Md,
-  OUT  VOID          *HmacMdContext,
-  IN   CONST UINT8   *Key,
-  IN   UINTN         KeySize
+  IN   CONST CHAR8  *MdName,
+  OUT  VOID         *HmacMdContext,
+  IN   CONST UINT8  *Key,
+  IN   UINTN        KeySize
   )
 {
+  HMAC_CTX_WRAPPER  *Wrapper;
+  OSSL_PARAM        Params[2];
+
   //
   // Check input parameters.
   //
@@ -77,7 +119,16 @@ HmacMdSetKey (
     return FALSE;
   }
 
-  if (HMAC_Init_ex ((HMAC_CTX *)HmacMdContext, Key, (UINT32)KeySize, Md, NULL) != 1) {
+  Wrapper = (HMAC_CTX_WRAPPER *)HmacMdContext;
+
+  Params[0] = OSSL_PARAM_construct_utf8_string (
+                OSSL_MAC_PARAM_DIGEST,
+                (char *)MdName,
+                0
+                );
+  Params[1] = OSSL_PARAM_construct_end ();
+
+  if (EVP_MAC_init (Wrapper->Ctx, Key, (size_t)KeySize, Params) != 1) {
     return FALSE;
   }
 
@@ -104,6 +155,10 @@ HmacMdDuplicate (
   OUT  VOID        *NewHmacMdContext
   )
 {
+  HMAC_CTX_WRAPPER  *SrcWrapper;
+  HMAC_CTX_WRAPPER  *DstWrapper;
+  EVP_MAC_CTX       *NewCtx;
+
   //
   // Check input parameters.
   //
@@ -111,9 +166,19 @@ HmacMdDuplicate (
     return FALSE;
   }
 
-  if (HMAC_CTX_copy ((HMAC_CTX *)NewHmacMdContext, (HMAC_CTX *)HmacMdContext) != 1) {
+  SrcWrapper = (HMAC_CTX_WRAPPER *)HmacMdContext;
+  DstWrapper = (HMAC_CTX_WRAPPER *)NewHmacMdContext;
+
+  NewCtx = EVP_MAC_CTX_dup (SrcWrapper->Ctx);
+  if (NewCtx == NULL) {
     return FALSE;
   }
+
+  //
+  // Replace the destination's inner context with the duplicated one.
+  //
+  EVP_MAC_CTX_free (DstWrapper->Ctx);
+  DstWrapper->Ctx = NewCtx;
 
   return TRUE;
 }
@@ -144,6 +209,8 @@ HmacMdUpdate (
   IN      UINTN       DataSize
   )
 {
+  HMAC_CTX_WRAPPER  *Wrapper;
+
   //
   // Check input parameters.
   //
@@ -158,10 +225,12 @@ HmacMdUpdate (
     return FALSE;
   }
 
+  Wrapper = (HMAC_CTX_WRAPPER *)HmacMdContext;
+
   //
   // OpenSSL HMAC-MD digest update
   //
-  if (HMAC_Update ((HMAC_CTX *)HmacMdContext, Data, DataSize) != 1) {
+  if (EVP_MAC_update (Wrapper->Ctx, Data, DataSize) != 1) {
     return FALSE;
   }
 
@@ -195,7 +264,9 @@ HmacMdFinal (
   OUT     UINT8  *HmacValue
   )
 {
-  UINT32  Length;
+  HMAC_CTX_WRAPPER  *Wrapper;
+  size_t            MacSize;
+  size_t            Length;
 
   //
   // Check input parameters.
@@ -204,14 +275,13 @@ HmacMdFinal (
     return FALSE;
   }
 
+  Wrapper = (HMAC_CTX_WRAPPER *)HmacMdContext;
+
   //
   // OpenSSL HMAC-MD digest finalization
   //
-  if (HMAC_Final ((HMAC_CTX *)HmacMdContext, HmacValue, &Length) != 1) {
-    return FALSE;
-  }
-
-  if (HMAC_CTX_reset ((HMAC_CTX *)HmacMdContext) != 1) {
+  MacSize = EVP_MAC_CTX_get_mac_size (Wrapper->Ctx);
+  if (EVP_MAC_final (Wrapper->Ctx, HmacValue, &Length, MacSize) != 1) {
     return FALSE;
   }
 
@@ -226,7 +296,7 @@ HmacMdFinal (
 
   If this interface is not supported, then return FALSE.
 
-  @param[in]   Md          Message Digest.
+  @param[in]   MdName      Digest algorithm name (e.g. "SHA256").
   @param[in]   Data        Pointer to the buffer containing the data to be digested.
   @param[in]   DataSize    Size of Data buffer in bytes.
   @param[in]   Key         Pointer to the user-supplied key.
@@ -242,53 +312,62 @@ HmacMdFinal (
 STATIC
 BOOLEAN
 HmacMdAll (
-  IN   CONST EVP_MD  *Md,
-  IN   CONST VOID    *Data,
-  IN   UINTN         DataSize,
-  IN   CONST UINT8   *Key,
-  IN   UINTN         KeySize,
-  OUT  UINT8         *HmacValue
+  IN   CONST CHAR8  *MdName,
+  IN   CONST VOID   *Data,
+  IN   UINTN        DataSize,
+  IN   CONST UINT8  *Key,
+  IN   UINTN        KeySize,
+  OUT  UINT8        *HmacValue
   )
 {
-  UINT32    Length;
-  HMAC_CTX  *Ctx;
-  BOOLEAN   RetVal;
+  EVP_MAC      *Mac;
+  EVP_MAC_CTX  *Ctx;
+  OSSL_PARAM   Params[2];
+  size_t       MacSize;
+  size_t       Length;
+  BOOLEAN      RetVal;
 
-  Ctx = HMAC_CTX_new ();
+  Mac = EVP_MAC_fetch (NULL, "HMAC", NULL);
+  if (Mac == NULL) {
+    return FALSE;
+  }
+
+  Ctx = EVP_MAC_CTX_new (Mac);
+  EVP_MAC_free (Mac);
   if (Ctx == NULL) {
     return FALSE;
   }
 
-  RetVal = (BOOLEAN)HMAC_CTX_reset (Ctx);
+  Params[0] = OSSL_PARAM_construct_utf8_string (
+                OSSL_MAC_PARAM_DIGEST,
+                (char *)MdName,
+                0
+                );
+  Params[1] = OSSL_PARAM_construct_end ();
+
+  RetVal = (BOOLEAN)(EVP_MAC_init (Ctx, Key, (size_t)KeySize, Params) == 1);
   if (!RetVal) {
     goto Done;
   }
 
-  RetVal = (BOOLEAN)HMAC_Init_ex (Ctx, Key, (UINT32)KeySize, Md, NULL);
+  RetVal = (BOOLEAN)(EVP_MAC_update (Ctx, Data, DataSize) == 1);
   if (!RetVal) {
     goto Done;
   }
 
-  RetVal = (BOOLEAN)HMAC_Update (Ctx, Data, DataSize);
-  if (!RetVal) {
-    goto Done;
-  }
-
-  RetVal = (BOOLEAN)HMAC_Final (Ctx, HmacValue, &Length);
-  if (!RetVal) {
-    goto Done;
-  }
+  MacSize = EVP_MAC_CTX_get_mac_size (Ctx);
+  RetVal  = (BOOLEAN)(EVP_MAC_final (Ctx, HmacValue, &Length, MacSize) == 1);
 
 Done:
-  HMAC_CTX_free (Ctx);
+  EVP_MAC_CTX_free (Ctx);
 
   return RetVal;
 }
 
 /**
-  Allocates and initializes one HMAC_CTX context for subsequent HMAC-SHA256 use.
+  Allocates and initializes one HMAC context for subsequent HMAC-SHA256 use.
 
-  @return  Pointer to the HMAC_CTX context that has been initialized.
+  @return  Pointer to the HMAC context that has been initialized.
            If the allocations fails, HmacSha256New() returns NULL.
 
 **/
@@ -302,9 +381,9 @@ HmacSha256New (
 }
 
 /**
-  Release the specified HMAC_CTX context.
+  Release the specified HMAC context.
 
-  @param[in]  HmacSha256Ctx  Pointer to the HMAC_CTX context to be released.
+  @param[in]  HmacSha256Ctx  Pointer to the HMAC context to be released.
 
 **/
 VOID
@@ -338,7 +417,7 @@ HmacSha256SetKey (
   IN   UINTN        KeySize
   )
 {
-  return HmacMdSetKey (EVP_sha256 (), HmacSha256Context, Key, KeySize);
+  return HmacMdSetKey ("SHA256", HmacSha256Context, Key, KeySize);
 }
 
 /**
@@ -453,13 +532,13 @@ HmacSha256All (
   OUT  UINT8        *HmacValue
   )
 {
-  return HmacMdAll (EVP_sha256 (), Data, DataSize, Key, KeySize, HmacValue);
+  return HmacMdAll ("SHA256", Data, DataSize, Key, KeySize, HmacValue);
 }
 
 /**
-  Allocates and initializes one HMAC_CTX context for subsequent HMAC-SHA384 use.
+  Allocates and initializes one HMAC context for subsequent HMAC-SHA384 use.
 
-  @return  Pointer to the HMAC_CTX context that has been initialized.
+  @return  Pointer to the HMAC context that has been initialized.
            If the allocations fails, HmacSha384New() returns NULL.
 
 **/
@@ -473,9 +552,9 @@ HmacSha384New (
 }
 
 /**
-  Release the specified HMAC_CTX context.
+  Release the specified HMAC context.
 
-  @param[in]  HmacSha384Ctx  Pointer to the HMAC_CTX context to be released.
+  @param[in]  HmacSha384Ctx  Pointer to the HMAC context to be released.
 
 **/
 VOID
@@ -511,7 +590,7 @@ HmacSha384SetKey (
   IN   UINTN        KeySize
   )
 {
-  return HmacMdSetKey (EVP_sha384 (), HmacSha384Context, Key, KeySize);
+  return HmacMdSetKey ("SHA384", HmacSha384Context, Key, KeySize);
 }
 
 /**
@@ -632,5 +711,5 @@ HmacSha384All (
   OUT  UINT8        *HmacValue
   )
 {
-  return HmacMdAll (EVP_sha384 (), Data, DataSize, Key, KeySize, HmacValue);
+  return HmacMdAll ("SHA384", Data, DataSize, Key, KeySize, HmacValue);
 }
