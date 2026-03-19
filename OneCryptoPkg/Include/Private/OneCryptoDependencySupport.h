@@ -122,6 +122,19 @@ typedef BOOLEAN (EFIAPI *GET_RANDOM_NUMBER_64)(
   );
 
 /**
+  Function pointer type for microsecond delay.
+
+  Stalls execution for at least the specified number of microseconds.
+
+  @param[in]  MicroSeconds  The minimum number of microseconds to delay.
+
+  @return     The actual number of microseconds delayed.
+**/
+typedef UINTN (EFIAPI *MICRO_SECOND_DELAY)(
+  IN UINTN  MicroSeconds
+  );
+
+/**
   Structure to hold function pointers for shared crypto dependencies.
 
   This structure contains all the function pointers that the shared crypto
@@ -143,6 +156,7 @@ typedef struct  _ONE_CRYPTO_DEPENDENCIES {
   GET_TIME                GetTime;              ///< System time retrieval function
   DEBUG_PRINT             DebugPrint;           ///< Debug message output function
   GET_RANDOM_NUMBER_64    GetRandomNumber64;    ///< 64-bit random number generation function
+  MICRO_SECOND_DELAY      MicroSecondDelay;     ///< Microsecond delay function
 } ONE_CRYPTO_DEPENDENCIES;
 
 ///////////////////////////////////////////////////////////////////////////////
