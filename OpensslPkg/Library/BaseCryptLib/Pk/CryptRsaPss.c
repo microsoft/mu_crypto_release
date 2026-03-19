@@ -15,6 +15,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "InternalCryptLib.h"
 
 #include <openssl/bn.h>
+#include <openssl/rsa.h>
 #include <openssl/objects.h>
 #include <openssl/evp.h>
 

@@ -32,12 +32,7 @@
   #
   # Build HOST_APPLICATION that tests BaseCryptLib (OpenSSL implementation)
   #
-  # Uses a local override INF that stubs out the RsaPss sign/verify test to
-  # prevent a segfault from killing the test process. The remaining known
-  # failures (RsaGetKey, RsaCertPkcs1Sign) are handled by the unit test
-  # framework assertion macros which log the failure and continue.
-  #
-  OpensslPkg/Test/HostTest/TestBaseCryptLibHost.inf
+  CryptoPkg/Test/UnitTest/Library/BaseCryptLib/TestBaseCryptLibHost.inf
 
 [BuildOptions]
   *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES

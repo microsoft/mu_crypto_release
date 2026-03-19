@@ -80,8 +80,7 @@
             "OpensslPkg/Library/OpensslLib/OpensslLibFull.inf",
             "OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf",
             "OpensslPkg/Library/OpensslLib/OpensslLibSm3.inf",
-            "OpensslPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf",
-            "OpensslPkg/Test/HostTest/TestBaseCryptLibHost.inf"
+            "OpensslPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf"
         ]
     },
     "GuidCheck": {
