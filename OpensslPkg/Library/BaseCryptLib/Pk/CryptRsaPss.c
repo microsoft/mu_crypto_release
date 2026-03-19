@@ -86,6 +86,7 @@ RsaPssVerify (
   CONST EVP_MD  *HashAlg;
 
   Result       = FALSE;
+  Pkey         = NULL;
   EvpVerifyCtx = NULL;
   KeyCtx       = NULL;
   HashAlg      = NULL;
