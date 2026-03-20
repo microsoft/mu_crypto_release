@@ -1,0 +1,45 @@
+name: OneCrypto Publish Variant
+
+on:
+  workflow_call:
+    inputs:
+      variant:
+        required: true
+        type: string
+      publish_name:
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Build Outputs (${{ inputs.variant }})
+        uses: actions/download-artifact@v4
+        with:
+          name: onecrypto-package-${{ inputs.variant }}
+          path: artifacts/${{ inputs.variant }}
+
+      - name: Extract Packages (${{ inputs.variant }})
+        shell: bash
+        run: |
+          mkdir -p publish/${{ inputs.variant }}
+          shopt -s nullglob
+          for zip_file in artifacts/${{ inputs.variant }}/*.zip; do
+            unzip -q "$zip_file" -d publish/${{ inputs.variant }}
+          done
+          cp -r artifacts/${{ inputs.variant }}/PDB publish/${{ inputs.variant }}/ 2>/dev/null || true
+          cp -r artifacts/${{ inputs.variant }}/Logs publish/${{ inputs.variant }}/ 2>/dev/null || true
+
+      - name: Publish Bundle (${{ inputs.variant }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.publish_name }}
+          path: publish/${{ inputs.variant }}/
+          overwrite: true
+
+      - name: Delete Intermediate Artifact (${{ inputs.variant }})
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: onecrypto-package-${{ inputs.variant }}

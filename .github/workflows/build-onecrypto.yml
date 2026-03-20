@@ -11,76 +11,43 @@ name: Build OneCryptoPkg
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - 'OneCryptoPkg/**'
-      - 'OpensslPkg/**'
-      - 'PlatformBuild.py'
-      - 'package_onecrypto.py'
-      - '.github/workflows/build-onecrypto.yml'
   push:
     branches:
       - main
     paths:
-
-env:
-  TOOL_CHAIN_TAG: CLANGPDB
+      - 'OneCryptoPkg/**'
+      - 'OpensslPkg/**'
+      - 'PlatformBuild.py'
+      - '.github/workflows/build-onecrypto.yml'
+      - '.github/workflows/onecrypto-build-variant.yml'
+      - '.github/workflows/onecrypto-publish-variant.yml'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+    strategy:
+      matrix:
+        variant: [accelerated, non-accelerated]
+        include:
+          - variant: accelerated
+            bld_flags: ''
+          - variant: non-accelerated
+            bld_flags: BLD_*_NON_ACCEL=TRUE
+    uses: ./.github/workflows/onecrypto-build-variant.yml
+    with:
+      variant: ${{ matrix.variant }}
+      bld_flags: ${{ matrix.bld_flags }}
+      tool_chain_tag: ${{ vars.TOOL_CHAIN_TAG || 'CLANGPDB' }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set Safe Directory
-        run: git config --global --add safe.directory '*'
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r pip-requirements.txt
-
-      - name: Setup
-        run: stuart_setup -c PlatformBuild.py
-
-      - name: CI Setup
-        run: stuart_ci_setup -c PlatformBuild.py
-
-      - name: Update
-        run: stuart_update -c PlatformBuild.py
-
-      - name: Build OneCryptoPkg DEBUG (${{ env.TOOL_CHAIN_TAG }})
-        run: |
-          python PlatformBuild.py -t DEBUG --skip-packaging TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
-
-      - name: Build OneCryptoPkg RELEASE (${{ env.TOOL_CHAIN_TAG }})
-        run: |
-          python PlatformBuild.py -t RELEASE --skip-packaging TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
-
-      - name: Package OneCrypto Drivers (DEBUG + RELEASE)
-        run: |
-          python OneCryptoPkg/Scripts/package_onecrypto.py --toolchain ${{ env.TOOL_CHAIN_TAG }} --target DEBUG,RELEASE
-
-      - name: Upload OneCrypto Driver Package (DEBUG + RELEASE)
-        uses: actions/upload-artifact@v4
-        with:
-          name: OneCrypto-Drivers
-          path: Build/OneCrypto_Drivers_*.zip
-
-      - name: Upload PDB Files
-        uses: actions/upload-artifact@v4
-        with:
-          name: OneCrypto-PDBs
-          path: Build/OneCryptoPkg/*/PDB/
-
-      - name: Upload Build Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: OneCrypto-${{ env.TOOL_CHAIN_TAG }}-logs
-          path: |
-            Build/*.txt
-            Build/**/*.txt
+  publish:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - variant: accelerated
+            publish_name: OneCrypto-Drivers-Accelerated
+          - variant: non-accelerated
+            publish_name: OneCrypto-Drivers-NonAccelerated
+    uses: ./.github/workflows/onecrypto-publish-variant.yml
+    with:
+      variant: ${{ matrix.variant }}
+      publish_name: ${{ matrix.publish_name }}
