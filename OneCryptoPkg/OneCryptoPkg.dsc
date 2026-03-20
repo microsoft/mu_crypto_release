@@ -15,6 +15,10 @@
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
 
+!ifndef NON_ACCEL
+  DEFINE NON_ACCEL       = FALSE
+!endif
+
 
 [PcdsPatchableInModule.X64]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
@@ -22,6 +26,16 @@
 [PcdsFeatureFlag.X64]
   # Enable NASM assembly source style for accelerated OpenSSL crypto
   gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStyleNasm|TRUE
+
+[PcdsFeatureFlag.AARCH64]
+  #
+  # Use the PE target assembly source files when building with the CLANGPDB
+  # toolchain.
+  # GCC and CLANGDWARF use the default PCD value of ELF target assembly source files.
+  #
+  !if "$(TOOL_CHAIN_TAG)" == "CLANGPDB"
+  gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStylePe|TRUE
+  !endif
 
 [PcdsFixedAtBuild.X64]
   # Ensure DEBUG prints are enabled (excluding VERBOSE: 0x8040004F & ~0x00400000 = 0x8000004F)
@@ -72,8 +86,12 @@
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
       TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
+    !if $(NON_ACCEL) == TRUE
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+    !else
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
-      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf # MU_CHANGE - AARCH64 memcpy
+    !endif
+      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
   }
 
     OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
@@ -130,7 +148,11 @@
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
       TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
+    !if $(NON_ACCEL) == TRUE
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+    !else
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
+    !endif
   }
 
   OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderDxe.inf {
@@ -234,8 +256,12 @@
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
       RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
       TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
+    !if $(NON_ACCEL) == TRUE
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
-      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf # MU_CHANGE - AARCH64 memcpy
+    !else
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
+    !endif
+      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
   }
 
   ## OneCryptoLoaderDxeByProtocol for AARCH64
