@@ -1,0 +1,70 @@
+name: OneCrypto Build Variant
+
+on:
+  workflow_call:
+    inputs:
+      variant:
+        required: true
+        type: string
+      bld_flags:
+        required: true
+        type: string
+      tool_chain_tag:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Safe Directory
+        run: git config --global --add safe.directory '*'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r pip-requirements.txt
+
+      - name: Setup
+        run: stuart_setup -c PlatformBuild.py
+
+      - name: CI Setup
+        run: stuart_ci_setup -c PlatformBuild.py
+
+      - name: Update
+        run: stuart_update -c PlatformBuild.py
+
+      - name: Build OneCryptoPkg DEBUG (${{ inputs.variant }})
+        run: |
+          python PlatformBuild.py -t DEBUG TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
+
+      - name: Build OneCryptoPkg RELEASE (${{ inputs.variant }})
+        run: |
+          python PlatformBuild.py -t RELEASE TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
+
+      - name: Stage Build Outputs (${{ inputs.variant }})
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p staging/Logs/DEBUG staging/Logs/RELEASE staging/PDB/DEBUG staging/PDB/RELEASE
+          shopt -s nullglob
+          cp Build/OneCrypto-Drivers*.zip staging/ 2>/dev/null || true
+          cp -r Build/OneCryptoPkg/DEBUG_*/PDB/* staging/PDB/DEBUG/ 2>/dev/null || true
+          cp -r Build/OneCryptoPkg/RELEASE_*/PDB/* staging/PDB/RELEASE/ 2>/dev/null || true
+          cp Build/*.txt staging/Logs/ 2>/dev/null || true
+          for target in DEBUG RELEASE; do
+            find Build -path "*/OneCryptoPkg/${target}_*" -name '*.txt' -exec cp {} "staging/Logs/${target}/" \; 2>/dev/null || true
+          done
+
+      - name: Upload Build Outputs (${{ inputs.variant }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onecrypto-package-${{ inputs.variant }}
+          path: staging/
