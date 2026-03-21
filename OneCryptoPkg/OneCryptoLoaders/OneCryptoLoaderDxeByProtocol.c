@@ -16,14 +16,16 @@
 
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/MmServicesTableLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
+#include <Library/DxeServicesLib.h>
+#include <Library/DebugLib.h>
 #include <Library/SafeIntLib.h>
 #include <Library/RngLib.h>
-#include <Library/HobLib.h>
 #include <Protocol/Rng.h>
-#include <Library/FvLib.h>
 
 #include <Protocol/OneCrypto.h>
 #include <Private/OneCryptoDependencySupport.h>
@@ -40,24 +42,23 @@ ONE_CRYPTO_DEPENDENCIES  *mOneCryptoDepends = NULL;
 VOID  *OneCryptoProtocol = NULL;
 
 //
-// Lazy RNG state tracking for MM environment
+// Lazy RNG state tracking
 //
-STATIC BOOLEAN           mMmRngInitAttempted   = FALSE;
-STATIC EFI_RNG_PROTOCOL  *mMmCachedRngProtocol = NULL;
+STATIC EFI_RNG_PROTOCOL  *mCachedRngProtocol = NULL;
 
 /**
- * @brief Lazy RNG implementation for MM environment with assertion on failure
+ * @brief Lazy RNG implementation that locates EFI_RNG_PROTOCOL on first use
  *
- * This function implements lazy initialization of the RNG protocol in MM environment.
- * Unlike the DXE version, this asserts if no RNG protocol is available since
- * MM environment should have controlled protocol access.
+ * This function implements lazy initialization of the RNG protocol to avoid
+ * boot-time hangs. It only attempts to locate the protocol when RNG is first
+ * needed, and caches the result for subsequent calls.
  *
  * @param[out] Rand Pointer to buffer to receive the 64-bit random number
- * @return TRUE if random number generated successfully, FALSE with assertion if protocol unavailable
+ * @return TRUE if random number generated successfully, FALSE otherwise
  */
 BOOLEAN
 EFIAPI
-LazyMmGetRandomNumber64 (
+LazyPlatformGetRandomNumber64 (
   OUT UINT64  *Rand
   )
 {
@@ -65,44 +66,32 @@ LazyMmGetRandomNumber64 (
   UINT8       *RandBytes;
 
   if (Rand == NULL) {
-    DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: Null Rand pointer\n"));
-    ASSERT (FALSE);
+    DEBUG ((DEBUG_ERROR, "LazyPlatformGetRandomNumber64: Null Rand pointer\n"));
     return FALSE;
   }
 
   //
   // Only attempt to locate the RNG protocol once
   //
-  if (!mMmRngInitAttempted) {
-    DEBUG ((DEBUG_INFO, "LazyMmGetRandomNumber64: First call, locating EFI_RNG_PROTOCOL in MM\n"));
+  if (mCachedRngProtocol == NULL) {
+    DEBUG ((DEBUG_INFO, "LazyPlatformGetRandomNumber64: locating EFI_RNG_PROTOCOL\n"));
 
-    Status = gMmst->MmLocateProtocol (
-                      &gEfiRngProtocolGuid,
-                      NULL,
-                      (VOID **)&mMmCachedRngProtocol
-                      );
+    Status = gBS->LocateProtocol (
+                    &gEfiRngProtocolGuid,
+                    NULL,
+                    (VOID **)&mCachedRngProtocol
+                    );
 
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: EFI_RNG_PROTOCOL not available in MM environment, Status=%r\n", Status));
-      DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: MM environment should provide RNG protocol for secure crypto operations\n"));
-      mMmCachedRngProtocol = NULL;
-      //
-      // Assert because MM should have controlled access to RNG
-      //
-      ASSERT_EFI_ERROR (Status);
-    } else {
-      DEBUG ((DEBUG_INFO, "LazyMmGetRandomNumber64: EFI_RNG_PROTOCOL located at %p\n", mMmCachedRngProtocol));
+      DEBUG ((DEBUG_WARN, "LazyPlatformGetRandomNumber64: EFI_RNG_PROTOCOL not available, Status=%r\n", Status));
     }
-
-    mMmRngInitAttempted = TRUE;
   }
 
   //
-  // If we don't have RNG protocol after attempting to locate it, assert
+  // If we don't have RNG protocol, fail gracefully
   //
-  if (mMmCachedRngProtocol == NULL) {
-    DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: No RNG protocol available in MM environment\n"));
-    ASSERT (mMmCachedRngProtocol != NULL);
+  if (mCachedRngProtocol == NULL) {
+    DEBUG ((DEBUG_VERBOSE, "LazyPlatformGetRandomNumber64: No RNG protocol available\n"));
     return FALSE;
   }
 
@@ -110,36 +99,14 @@ LazyMmGetRandomNumber64 (
   // Use the cached RNG protocol
   //
   RandBytes = (UINT8 *)Rand;
-  Status    = mMmCachedRngProtocol->GetRNG (mMmCachedRngProtocol, NULL, sizeof (UINT64), RandBytes);
+  Status    = mCachedRngProtocol->GetRNG (mCachedRngProtocol, NULL, sizeof (UINT64), RandBytes);
 
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "LazyMmGetRandomNumber64: GetRNG failed in MM environment, Status=%r\n", Status));
+    DEBUG ((DEBUG_ERROR, "LazyPlatformGetRandomNumber64: GetRNG failed, Status=%r\n", Status));
     return FALSE;
   }
 
-  DEBUG ((DEBUG_VERBOSE, "LazyMmGetRandomNumber64: Successfully generated random number in MM\n"));
   return TRUE;
-}
-
-/**
- * @brief Stub implementation of MicroSecondDelay for MM environment
- *
- * This doesn't appear to be needed since sleep is only used in
- * HTTP / QUIC / CMP - none of which are used by UEFI firmware.
- *
- * @param[in] MicroSeconds The number of microseconds to delay (ignored)
- * @return The input MicroSeconds value (no actual delay occurs)
- */
-UINTN
-EFIAPI
-StubMicroSecondDelay (
-  IN UINTN  MicroSeconds
-  )
-{
-  //
-  // Stub implementation - returns immediately.
-  //
-  return MicroSeconds;
 }
 
 /**
@@ -150,6 +117,8 @@ StubMicroSecondDelay (
  * required libraries and packages are installed and up to date.
  *
  * @param dependencies A list of dependencies to be installed.
+ *
+ * @return int Returns 0 on success, or a non-zero error code on failure.
  */
 VOID
 InstallSharedDependencies (
@@ -165,15 +134,18 @@ InstallSharedDependencies (
   OneCryptoDepends->AllocatePool = AllocatePool;
   OneCryptoDepends->FreePool     = FreePool;
   OneCryptoDepends->DebugPrint   = DebugPrint;
-  OneCryptoDepends->GetTime      = NULL;
+  OneCryptoDepends->GetTime      = gRT->GetTime;
+
   //
-  // Use lazy RNG initialization for MM environment - will assert if protocol unavailable
+  // Use lazy RNG initialization - will try to locate RNG protocol on first use
   //
-  OneCryptoDepends->GetRandomNumber64 = LazyMmGetRandomNumber64;
+  OneCryptoDepends->GetRandomNumber64 = LazyPlatformGetRandomNumber64;
   //
-  // Use stub for MicroSecondDelay - not needed in MM environment
+  // This doesn't appear to be needed since sleep is only used in
+  // HTTP / QUIC / CMP - none of which are used by UEFI firmware.
+  // gBS->Stall is only being provided to be consistent with upstream
   //
-  OneCryptoDepends->MicroSecondDelay = StubMicroSecondDelay;
+  OneCryptoDepends->MicroSecondDelay = gBS->Stall;
 }
 
 /**
@@ -191,9 +163,9 @@ InstallSharedDependencies (
  */
 EFI_STATUS
 EFIAPI
-MmEntry (
+DxeEntryPoint (
   IN EFI_HANDLE           ImageHandle,
-  IN EFI_MM_SYSTEM_TABLE  *MmSystemTable
+  IN EFI_SYSTEM_TABLE     *SystemTable
   )
 {
   EFI_STATUS                       Status;
@@ -204,29 +176,29 @@ MmEntry (
   //
   // Locate the private protocol that provides the constructor
   //
-  Status = MmSystemTable->MmLocateProtocol (
+  Status = SystemTable->BootServices->LocateProtocol (
                             &gOneCryptoPrivateProtocolGuid,
                             NULL,
                             (VOID **)&ConstructorProtocol
                             );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderMm: Failed to locate OneCrypto private protocol: %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Failed to locate OneCrypto private protocol: %r\n", Status));
     goto Exit;
   }
 
   if (ConstructorProtocol->Signature != ONE_CRYPTO_CONSTRUCTOR_PROTOCOL_SIGNATURE) {
-    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderMm: OneCrypto private protocol signature is invalid: %x\n", ConstructorProtocol->Signature));
+    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: OneCrypto private protocol signature is invalid: %x\n", ConstructorProtocol->Signature));
     Status = EFI_OUT_OF_RESOURCES;
     goto Exit;
   }
 
-  DEBUG ((DEBUG_INFO, "OneCryptoLoaderMm: OneCrypto private protocol found: %g\n", &gOneCryptoPrivateProtocolGuid));
+  DEBUG ((DEBUG_INFO, "OneCryptoLoaderDxe: OneCrypto private protocol found: %g\n", &gOneCryptoPrivateProtocolGuid));
 
   //
   // Ensure that the crypto entry function is not NULL
   //
   if (ConstructorProtocol->Entry == NULL) {
-    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderMm: Crypto entry function is NULL\n"));
+    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Crypto entry function is NULL\n"));
     Status = EFI_UNSUPPORTED;
     goto Exit;
   }
@@ -250,18 +222,18 @@ MmEntry (
   //
   Status = ConstructorProtocol->Entry (mOneCryptoDepends, NULL, &CryptoSize);
   if ((Status != EFI_BUFFER_TOO_SMALL) || (CryptoSize == 0)) {
-    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderMm:Failed to query crypto protocol size: %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Failed to query crypto protocol size: %r\n", Status));
     goto Exit;
   }
 
-  DEBUG ((DEBUG_INFO, "OneCryptoLoaderMm: OneCrypto Protocol size: %d bytes\n", CryptoSize));
+  DEBUG ((DEBUG_INFO, "OneCryptoLoaderDxe: OneCrypto Protocol size: %d bytes\n", CryptoSize));
 
   //
   // Allocate memory for the crypto protocol
   //
   OneCryptoProtocol = AllocatePool (CryptoSize);
   if (OneCryptoProtocol == NULL) {
-    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderMm: Failed to allocate memory for crypto protocol\n"));
+    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Failed to allocate memory for crypto protocol\n"));
     Status = EFI_OUT_OF_RESOURCES;
     goto Exit;
   }
@@ -271,7 +243,7 @@ MmEntry (
   //
   Status = ConstructorProtocol->Entry (mOneCryptoDepends, &OneCryptoProtocol, &CryptoSize);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderMm: Failed to call LibConstructor: %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Failed to call LibConstructor: %r\n", Status));
     FreePool (OneCryptoProtocol);
     OneCryptoProtocol = NULL;
     goto Exit;
@@ -280,7 +252,7 @@ MmEntry (
   DEBUG ((DEBUG_INFO, "OneCrypto Protocol CryptoEntry called successfully.\n"));
 
   DEBUG ((DEBUG_INFO, "Installing OneCrypto Protocol...\n"));
-  Status = MmSystemTable->MmInstallProtocolInterface (
+  Status = SystemTable->BootServices->InstallProtocolInterface (
                             &ProtocolHandle,
                             &gOneCryptoProtocolGuid,
                             EFI_NATIVE_INTERFACE,

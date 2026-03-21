@@ -2,7 +2,7 @@
 """
 UEFI Compression Utility
 
-Measures compressibility of EFI files using the UEFI TianoCompress algorithm.
+Measures compressibility of EFI files using the UEFI LzmaCompress algorithm.
 Cross-platform (Windows/Linux) and architecture-aware.
 
 Copyright (c) Microsoft Corporation.
@@ -20,15 +20,15 @@ from typing import Optional, Tuple
 logger = logging.getLogger(__name__)
 
 
-def get_tiano_compress_path(workspace_root: Optional[Path] = None) -> Optional[Path]:
+def get_lzma_compress_path(workspace_root: Optional[Path] = None) -> Optional[Path]:
     """
-    Find the TianoCompress executable for the current platform and architecture.
+    Find the LzmaCompress executable for the current platform and architecture.
 
     Args:
         workspace_root: Root of the workspace. If None, tries to find it from this script's location.
 
     Returns:
-        Path to TianoCompress executable, or None if not found.
+        Path to LzmaCompress executable, or None if not found.
     """
     if workspace_root is None:
         # Try to find workspace root from this script's location
@@ -49,7 +49,7 @@ def get_tiano_compress_path(workspace_root: Optional[Path] = None) -> Optional[P
         else:
             logger.warning(f"Unsupported Windows architecture: {machine}")
             return None
-        exe_name = "TianoCompress.exe"
+        exe_name = "LzmaCompress.exe"
     elif system == "Linux":
         if machine in ("x86_64", "amd64"):
             platform_folder = "Linux-x86"
@@ -58,24 +58,24 @@ def get_tiano_compress_path(workspace_root: Optional[Path] = None) -> Optional[P
         else:
             logger.warning(f"Unsupported Linux architecture: {machine}")
             return None
-        exe_name = "TianoCompress"
+        exe_name = "LzmaCompress"
     else:
         logger.warning(f"Unsupported operating system: {system}")
         return None
 
-    # Build path to TianoCompress
+    # Build path to LzmaCompress
     compress_path = workspace_root / "MU_BASECORE" / "BaseTools" / "Bin" / "Mu-Basetools_extdep" / platform_folder / exe_name
 
     if compress_path.exists():
         return compress_path
 
-    logger.warning(f"TianoCompress not found at: {compress_path}")
+    logger.warning(f"LzmaCompress not found at: {compress_path}")
     return None
 
 
 def get_compressed_size(file_path: Path, workspace_root: Optional[Path] = None) -> Optional[Tuple[int, int, float]]:
     """
-    Get the compressed size of a file using UEFI TianoCompress.
+    Get the compressed size of a file using UEFI LzmaCompress.
 
     Args:
         file_path: Path to the file to compress.
@@ -84,7 +84,7 @@ def get_compressed_size(file_path: Path, workspace_root: Optional[Path] = None) 
     Returns:
         Tuple of (original_size, compressed_size, ratio) or None if compression failed.
     """
-    compress_exe = get_tiano_compress_path(workspace_root)
+    compress_exe = get_lzma_compress_path(workspace_root)
     if compress_exe is None:
         return None
 
@@ -99,7 +99,7 @@ def get_compressed_size(file_path: Path, workspace_root: Optional[Path] = None) 
         tmp_path = Path(tmp.name)
 
     try:
-        # Run TianoCompress
+        # Run LzmaCompress
         result = subprocess.run(
             [str(compress_exe), "-e", "-o", str(tmp_path), str(file_path)],
             capture_output=True,
@@ -107,7 +107,7 @@ def get_compressed_size(file_path: Path, workspace_root: Optional[Path] = None) 
         )
 
         if result.returncode != 0:
-            logger.warning(f"TianoCompress failed for {file_path}: {result.stderr}")
+            logger.warning(f"LzmaCompress failed for {file_path}: {result.stderr}")
             return None
 
         compressed_size = tmp_path.stat().st_size
@@ -149,9 +149,9 @@ def analyze_efi_compression(efi_files: list, workspace_root: Optional[Path] = No
         "tool_available": False
     }
 
-    compress_exe = get_tiano_compress_path(workspace_root)
+    compress_exe = get_lzma_compress_path(workspace_root)
     if compress_exe is None:
-        logger.warning("TianoCompress not available - compression analysis skipped")
+        logger.warning("LzmaCompress not available - compression analysis skipped")
         return results
 
     results["tool_available"] = True
@@ -185,10 +185,10 @@ def analyze_efi_compression(efi_files: list, workspace_root: Optional[Path] = No
 def print_compression_report(results: dict):
     """Print a formatted compression report."""
     if not results["tool_available"]:
-        logger.warning("Compression analysis not available (TianoCompress not found)")
+        logger.warning("Compression analysis not available (LzmaCompress not found)")
         return
 
-    logger.info("\nUEFI Compression Analysis (TianoCompress):")
+    logger.info("\nUEFI Compression Analysis (LzmaCompress):")
     logger.info("-" * 70)
     logger.info(f"{'File':<40} {'Original':>12} {'Compressed':>12} {'Ratio':>8}")
     logger.info("-" * 70)

@@ -1,0 +1,60 @@
+# Build OneCryptoPkg workflow that produces driver zip packages for
+# X64 and AARCH64 in both DEBUG and RELEASE configurations.
+#
+##
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: Build OneCryptoPkg
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'OneCryptoPkg/**'
+      - 'OpensslPkg/**'
+      - 'PlatformBuild.py'
+      - '.github/workflows/build-onecrypto.yml'
+      - '.github/workflows/onecrypto-build-variant.yml'
+      - '.github/workflows/onecrypto-publish-variant.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'OneCryptoPkg/**'
+      - 'OpensslPkg/**'
+      - 'PlatformBuild.py'
+      - '.github/workflows/build-onecrypto.yml'
+      - '.github/workflows/onecrypto-build-variant.yml'
+      - '.github/workflows/onecrypto-publish-variant.yml'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        variant: [accelerated, non-accelerated]
+        include:
+          - variant: accelerated
+            bld_flags: ''
+          - variant: non-accelerated
+            bld_flags: BLD_*_NON_ACCEL=TRUE
+    uses: ./.github/workflows/onecrypto-build-variant.yml
+    with:
+      variant: ${{ matrix.variant }}
+      bld_flags: ${{ matrix.bld_flags }}
+      tool_chain_tag: ${{ vars.TOOL_CHAIN_TAG || 'CLANGPDB' }}
+
+  publish:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - variant: accelerated
+            publish_name: OneCrypto-Drivers-Accelerated
+          - variant: non-accelerated
+            publish_name: OneCrypto-Drivers-NonAccelerated
+    uses: ./.github/workflows/onecrypto-publish-variant.yml
+    with:
+      variant: ${{ matrix.variant }}
+      publish_name: ${{ matrix.publish_name }}

@@ -172,6 +172,32 @@ OneCryptoGetRandomNumber64 (
 }
 
 /**
+  Stalls the CPU for at least the given number of microseconds.
+
+  This function delays execution using the MicroSecondDelay function pointer
+  provided through OneCryptoCrtSetup.
+
+  @param[in]  MicroSeconds  The minimum number of microseconds to delay.
+
+  @return     The value of MicroSeconds input.
+**/
+UINTN
+EFIAPI
+OneCryptoMicroSecondDelay (
+  IN UINTN  MicroSeconds
+  )
+{
+  if ((mCryptoDependencies == NULL) || (mCryptoDependencies->MicroSecondDelay == NULL)) {
+    //
+    // If no delay function is provided, return immediately (stub behavior).
+    //
+    return 0;
+  }
+
+  return mCryptoDependencies->MicroSecondDelay (MicroSeconds);
+}
+
+/**
   Prints a debug message to the debug output device if the specified error level is enabled.
 
   @param  ErrorLevel  The error level of the debug message.

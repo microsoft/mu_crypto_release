@@ -1,5 +1,9 @@
 ## @file
-#  Loads OneCryptoBin driver and installs the OneCrypto protocol interface.
+#  Loads OneCrypto via pre-installed private protocol and installs the OneCrypto protocol interface.
+#
+#  This variant uses a pre-installed private protocol to obtain the crypto entry point,
+#  rather than loading from firmware volume. Useful when the crypto binary is pre-loaded
+#  by another driver.
 #
 #  Copyright (C) Microsoft Corporation. All rights reserved.
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -9,13 +13,13 @@
 [Defines]
   INF_VERSION                    = 0x00010005
   BASE_NAME                      = OneCryptoLoaderDxe
-  FILE_GUID                      = 4F25834D-11D0-4A8F-9860-72B303B9F242
+  FILE_GUID                      = 7A3E8B2C-5F91-4D6A-B823-1C4F9E0D5A72
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = DxeEntryPoint
 
 [Sources]
-  OneCryptoLoaderDxe.c
+  OneCryptoLoaderDxeByProtocol.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -28,25 +32,19 @@
   DebugLib
   BaseMemoryLib
   MemoryAllocationLib
-  DxeServicesLib
-  PeCoffGetEntryPointLib
-  PeCoffLib
-  PeCoffExtendedLib
-  CacheMaintenanceLib
   UefiBootServicesTableLib
-  SafeIntLib
-  RngLib
+  UefiRuntimeServicesTableLib
 
 [Protocols]
   gOneCryptoProtocolGuid              ## PRODUCES
+  gOneCryptoPrivateProtocolGuid       ## CONSUMES
   gEfiRngProtocolGuid                 ## CONSUMES
 
 [Depex]
-  TRUE
+  gOneCryptoPrivateProtocolGuid
 
-# Using TRUE DEPEX with lazy RNG initialization
-# RNG protocol will be located on first use rather than at driver load time
-# This prevents boot hangs when RNG protocol is not immediately available
+# This driver depends on the private protocol being installed first
+# by a separate driver that pre-loads the crypto binary
 
 [BuildOptions]
   GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=0x1000
