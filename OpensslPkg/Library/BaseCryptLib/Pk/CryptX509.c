@@ -1196,7 +1196,7 @@ X509GetSignatureAlgorithm (
 {
   BOOLEAN      Status;
   X509         *X509Cert;
-  int          Nid;
+  INT32        Nid;
   ASN1_OBJECT  *Asn1Obj;
 
   //
