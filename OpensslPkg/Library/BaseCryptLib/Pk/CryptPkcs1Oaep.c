@@ -14,6 +14,11 @@
 #include <openssl/x509.h>
 #include <Library/MemoryAllocationLib.h>
 
+// MU_CHANGE [BEGIN]
+#include "CryptRsaPkeyCtx.h"
+
+// MU_CHANGE [END]
+
 /**
   Retrieve a pointer to EVP message digest object.
 
@@ -374,7 +379,7 @@ RsaOaepEncrypt (
   OUT  UINTN        *EncryptedDataSize
   )
 {
-  BOOLEAN   Result;
+  // MU_CHANGE - BOOLEAN   Result;
   EVP_PKEY  *Pkey;
 
   //
@@ -386,31 +391,17 @@ RsaOaepEncrypt (
     return FALSE;
   }
 
-  *EncryptedData     = NULL;
-  *EncryptedDataSize = 0;
-  Result             = FALSE;
-  Pkey               = NULL;
-
-  Pkey = EVP_PKEY_new ();
+  //
+  // Build EVP_PKEY from the RSA_PKEY_CTX key components.  // MU_CHANGE
+  //
+  // MU_CHANGE [BEGIN]
+  Pkey = RsaBuildEvpPkey ((RSA_PKEY_CTX *)RsaContext);
   if (Pkey == NULL) {
-    goto _Exit;
+    return FALSE;
+    // MU_CHANGE [END]
   }
 
-  if (EVP_PKEY_set1_RSA (Pkey, (RSA *)RsaContext) == 0) {
-    goto _Exit;
-  }
-
-  Result = InternalPkcs1v2Encrypt (Pkey, InData, InDataSize, PrngSeed, PrngSeedSize, DigestLen, EncryptedData, EncryptedDataSize);
-
-_Exit:
-  //
-  // Release Resources
-  //
-  if (Pkey != NULL) {
-    EVP_PKEY_free (Pkey);
-  }
-
-  return Result;
+  return InternalPkcs1v2Encrypt (Pkey, InData, InDataSize, PrngSeed, PrngSeedSize, DigestLen, EncryptedData, EncryptedDataSize);  // MU_CHANGE
 }
 
 /**
@@ -675,7 +666,7 @@ RsaOaepDecrypt (
   OUT  UINTN   *OutDataSize
   )
 {
-  BOOLEAN   Result;
+  // MU_CHANGE - BOOLEAN   Result;
   EVP_PKEY  *Pkey;
 
   //
@@ -687,28 +678,13 @@ RsaOaepDecrypt (
     return FALSE;
   }
 
-  Result = FALSE;
-  Pkey   = NULL;
-
   //
-  // Create a context for the decryption operation.
+  // Build EVP_PKEY from the RSA_PKEY_CTX key components.  // MU_CHANGE
   //
-
-  Pkey = EVP_PKEY_new ();
+  Pkey = RsaBuildEvpPkey ((RSA_PKEY_CTX *)RsaContext);  // MU_CHANGE
   if (Pkey == NULL) {
-    goto _Exit;
+    return FALSE;  // MU_CHANGE
   }
 
-  if (EVP_PKEY_set1_RSA (Pkey, (RSA *)RsaContext) == 0) {
-    goto _Exit;
-  }
-
-  Result = InternalPkcs1v2Decrypt (Pkey, EncryptedData, EncryptedDataSize, DigestLen, OutData, OutDataSize);
-
-_Exit:
-  if (Pkey != NULL) {
-    EVP_PKEY_free (Pkey);
-  }
-
-  return Result;
+  return InternalPkcs1v2Decrypt (Pkey, EncryptedData, EncryptedDataSize, DigestLen, OutData, OutDataSize);  // MU_CHANGE
 }
