@@ -70,7 +70,8 @@ GetEvpMdFromHashSize (
 
   If RsaContext is NULL, then return FALSE.
   If BnSize is NULL, then return FALSE.
-  If BnSize is large enough but BigNumber is NULL, then return FALSE.
+  If BnSize is large enough but BigNumber is NULL, then return TRUE with BnSize set to
+  the required size.
 
   @param[in, out]  RsaContext  Pointer to RSA context being set.
   @param[in]       KeyTag      Tag of RSA key component being set.

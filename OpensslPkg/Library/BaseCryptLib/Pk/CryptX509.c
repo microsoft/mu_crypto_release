@@ -639,11 +639,7 @@ RsaGetPublicKeyFromX509 (
       *RsaContext = (VOID *)RsaPkeyCtx;
       Status      = TRUE;
     } else {
-      if (RsaPkeyCtx->Pkey != NULL) {
-        EVP_PKEY_free (RsaPkeyCtx->Pkey);
-      }
-
-      FreePool (RsaPkeyCtx);
+      RsaFree (RsaPkeyCtx);
     }
   }
 

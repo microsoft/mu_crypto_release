@@ -213,11 +213,11 @@ RsaExtractBigNums (
   // Extract public components (required).
   //
   if (EVP_PKEY_get_bn_param (Pkey, OSSL_PKEY_PARAM_RSA_N, &RsaPkeyCtx->N) != 1) {
-    return FALSE;
+    goto Fail;
   }
 
   if (EVP_PKEY_get_bn_param (Pkey, OSSL_PKEY_PARAM_RSA_E, &RsaPkeyCtx->E) != 1) {
-    return FALSE;
+    goto Fail;
   }
 
   //
@@ -231,6 +231,28 @@ RsaExtractBigNums (
   EVP_PKEY_get_bn_param (Pkey, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, &RsaPkeyCtx->QInv);
 
   return TRUE;
+
+Fail:
+  //
+  // Clean up any partially extracted BIGNUMs on failure.
+  //
+  BN_free (RsaPkeyCtx->N);
+  BN_free (RsaPkeyCtx->E);
+  BN_clear_free (RsaPkeyCtx->D);
+  BN_clear_free (RsaPkeyCtx->P);
+  BN_clear_free (RsaPkeyCtx->Q);
+  BN_clear_free (RsaPkeyCtx->Dp);
+  BN_clear_free (RsaPkeyCtx->Dq);
+  BN_clear_free (RsaPkeyCtx->QInv);
+  RsaPkeyCtx->N    = NULL;
+  RsaPkeyCtx->E    = NULL;
+  RsaPkeyCtx->D    = NULL;
+  RsaPkeyCtx->P    = NULL;
+  RsaPkeyCtx->Q    = NULL;
+  RsaPkeyCtx->Dp   = NULL;
+  RsaPkeyCtx->Dq   = NULL;
+  RsaPkeyCtx->QInv = NULL;
+  return FALSE;
 }
 
 /**
