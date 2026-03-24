@@ -216,11 +216,11 @@ RsaExtractBigNums (
   // Extract public components (required).
   //
   if (EVP_PKEY_get_bn_param (Pkey, OSSL_PKEY_PARAM_RSA_N, &RsaPkeyCtx->N) != 1) {
-    return FALSE;
+    goto Fail;  // MU_CHANGE
   }
 
   if (EVP_PKEY_get_bn_param (Pkey, OSSL_PKEY_PARAM_RSA_E, &RsaPkeyCtx->E) != 1) {
-    return FALSE;
+    goto Fail;  // MU_CHANGE
   }
 
   //
@@ -234,6 +234,30 @@ RsaExtractBigNums (
   EVP_PKEY_get_bn_param (Pkey, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, &RsaPkeyCtx->QInv);
 
   return TRUE;
+  // MU_CHANGE [BEGIN]
+
+Fail:
+  //
+  // Clean up any partially extracted BIGNUMs on failure.
+  //
+  BN_free (RsaPkeyCtx->N);
+  BN_free (RsaPkeyCtx->E);
+  BN_clear_free (RsaPkeyCtx->D);
+  BN_clear_free (RsaPkeyCtx->P);
+  BN_clear_free (RsaPkeyCtx->Q);
+  BN_clear_free (RsaPkeyCtx->Dp);
+  BN_clear_free (RsaPkeyCtx->Dq);
+  BN_clear_free (RsaPkeyCtx->QInv);
+  RsaPkeyCtx->N    = NULL;
+  RsaPkeyCtx->E    = NULL;
+  RsaPkeyCtx->D    = NULL;
+  RsaPkeyCtx->P    = NULL;
+  RsaPkeyCtx->Q    = NULL;
+  RsaPkeyCtx->Dp   = NULL;
+  RsaPkeyCtx->Dq   = NULL;
+  RsaPkeyCtx->QInv = NULL;
+  return FALSE;
+  // MU_CHANGE [END]
 }
 
 /**
@@ -266,6 +290,7 @@ GetEvpMdFromHashSize (
       return NULL;
   }
 }
+
 // MU_CHANGE [END]
 
 /**
@@ -396,12 +421,12 @@ RsaSetKey (
       // MU_CHANGE [BEGIN]
       BnTarget = &RsaPkeyCtx->N;
       break;
-      // MU_CHANGE [END]
+    // MU_CHANGE [END]
     case RsaKeyE:
       // MU_CHANGE [BEGIN]
       BnTarget = &RsaPkeyCtx->E;
       break;
-      // MU_CHANGE [END]
+    // MU_CHANGE [END]
     case RsaKeyD:
       BnTarget = &RsaPkeyCtx->D;  // MU_CHANGE
       break;
@@ -409,7 +434,7 @@ RsaSetKey (
       // MU_CHANGE [BEGIN]
       BnTarget = &RsaPkeyCtx->P;
       break;
-      // MU_CHANGE [END]
+    // MU_CHANGE [END]
     case RsaKeyQ:
       BnTarget = &RsaPkeyCtx->Q;  // MU_CHANGE
       break;
@@ -417,12 +442,12 @@ RsaSetKey (
       // MU_CHANGE [BEGIN]
       BnTarget = &RsaPkeyCtx->Dp;
       break;
-      // MU_CHANGE [END]
+    // MU_CHANGE [END]
     case RsaKeyDq:
       // MU_CHANGE [BEGIN]
       BnTarget = &RsaPkeyCtx->Dq;
       break;
-      // MU_CHANGE [END]
+    // MU_CHANGE [END]
     case RsaKeyQInv:
       // MU_CHANGE [BEGIN]
       BnTarget = &RsaPkeyCtx->QInv;
@@ -430,7 +455,8 @@ RsaSetKey (
     default:
       return FALSE;
   }
-      // MU_CHANGE [END]
+
+  // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
   //
@@ -442,18 +468,20 @@ RsaSetKey (
         BN_free (*BnTarget);
       } else {
         BN_clear_free (*BnTarget);
-  // MU_CHANGE [END]
+        // MU_CHANGE [END]
       }
 
       // MU_CHANGE [BEGIN]
       *BnTarget = NULL;
     }
-      // MU_CHANGE [END]
+
+    // MU_CHANGE [END]
 
     // MU_CHANGE [BEGIN]
     return TRUE;
   }
-    // MU_CHANGE [END]
+
+  // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
   //
@@ -462,7 +490,7 @@ RsaSetKey (
   NewBn = BN_bin2bn (BigNumber, (UINT32)BnSize, *BnTarget);
   if (NewBn == NULL) {
     return FALSE;
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
   }
 
   *BnTarget = NewBn;
@@ -505,6 +533,7 @@ RsaPkcs1Verify (
   EVP_PKEY_CTX  *PkeyCtx;
   CONST EVP_MD  *Md;
   BOOLEAN       Result;
+
   // MU_CHANGE [END]
 
   //
@@ -526,6 +555,7 @@ RsaPkcs1Verify (
   if (Md == NULL) {
     return FALSE;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
@@ -542,6 +572,7 @@ RsaPkcs1Verify (
   if (Pkey == NULL) {
     return FALSE;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
@@ -549,12 +580,14 @@ RsaPkcs1Verify (
   if (PkeyCtx == NULL) {
     goto _Exit;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
   if (EVP_PKEY_verify_init (PkeyCtx) != 1) {
     goto _Exit;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
@@ -573,7 +606,7 @@ RsaPkcs1Verify (
 _Exit:
   if (PkeyCtx != NULL) {
     EVP_PKEY_CTX_free (PkeyCtx);
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
   }
 
   return Result;  // MU_CHANGE

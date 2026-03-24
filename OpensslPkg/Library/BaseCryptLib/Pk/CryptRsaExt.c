@@ -61,6 +61,7 @@ GetEvpMdFromHashSize (
       return NULL;
   }
 }
+
 // MU_CHANGE [END]
 
 /**
@@ -76,7 +77,10 @@ GetEvpMdFromHashSize (
 
   If RsaContext is NULL, then return FALSE.
   If BnSize is NULL, then return FALSE.
-  If BnSize is large enough but BigNumber is NULL, then return FALSE.
+  // MU_CHANGE [BEGIN]
+  If BnSize is large enough but BigNumber is NULL, then return TRUE with BnSize set to
+  the required size.
+  // MU_CHANGE [END]
 
   @param[in, out]  RsaContext  Pointer to RSA context being set.
   @param[in]       KeyTag      Tag of RSA key component being set.
@@ -102,6 +106,7 @@ RsaGetKey (
   RSA_PKEY_CTX  *RsaPkeyCtx;
   BIGNUM        *BnKey;
   UINTN         Size;
+
   // MU_CHANGE [END]
 
   //
@@ -240,6 +245,7 @@ RsaGenerateKey (
   EVP_PKEY      *Pkey;
   BIGNUM        *KeyE;
   BOOLEAN       RetVal;
+
   // MU_CHANGE [END]
 
   //
@@ -263,7 +269,7 @@ RsaGenerateKey (
 
   KeyGenCtx = EVP_PKEY_CTX_new_from_name (NULL, "RSA", NULL);
   if (KeyGenCtx == NULL) {
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
     return FALSE;
   }
 
@@ -275,6 +281,7 @@ RsaGenerateKey (
   if (EVP_PKEY_CTX_set_rsa_keygen_bits (KeyGenCtx, (INT32)ModulusLength) != 1) {
     goto _Exit;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
@@ -284,25 +291,28 @@ RsaGenerateKey (
   if (PublicExponent != NULL) {
     KeyE = BN_new ();
     if (KeyE == NULL) {
-  // MU_CHANGE [END]
+      // MU_CHANGE [END]
       goto _Exit;
     }
-  // MU_CHANGE
+
+    // MU_CHANGE
     if (BN_bin2bn (PublicExponent, (UINT32)PublicExponentSize, KeyE) == NULL) {
       goto _Exit;
     }
-// MU_CHANGE [BEGIN]
+
+    // MU_CHANGE [BEGIN]
 
     if (EVP_PKEY_CTX_set1_rsa_keygen_pubexp (KeyGenCtx, KeyE) != 1) {
       goto _Exit;
     }
-// MU_CHANGE [END]
+
+    // MU_CHANGE [END]
   }
 
   // MU_CHANGE [BEGIN]
   if (EVP_PKEY_keygen (KeyGenCtx, &Pkey) != 1) {
     goto _Exit;
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
   }
 
   // MU_CHANGE [BEGIN]
@@ -365,6 +375,7 @@ RsaCheckKey (
   EVP_PKEY      *Pkey;
   EVP_PKEY_CTX  *PkeyCtx;
   INT32         Result;
+
   // MU_CHANGE [END]
 
   //
@@ -397,7 +408,7 @@ RsaCheckKey (
 
   if (Result != 1) {
     return FALSE;
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
   }
 
   return TRUE;
@@ -445,6 +456,7 @@ RsaPkcs1Sign (
   CONST EVP_MD  *Md;
   UINTN         RequiredSize;
   BOOLEAN       Result;
+
   // MU_CHANGE [END]
 
   //
@@ -460,7 +472,7 @@ RsaPkcs1Sign (
   //
   Md = GetEvpMdFromHashSize (HashSize);
   if (Md == NULL) {
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
     return FALSE;
   }
 
@@ -474,7 +486,7 @@ RsaPkcs1Sign (
   //
   Pkey = RsaBuildEvpPkey (RsaPkeyCtx);
   if (Pkey == NULL) {
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
     return FALSE;
   }
 
@@ -487,12 +499,14 @@ RsaPkcs1Sign (
     *SigSize = RequiredSize;
     return FALSE;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
   if (Signature == NULL) {
     return FALSE;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
@@ -500,18 +514,21 @@ RsaPkcs1Sign (
   if (PkeyCtx == NULL) {
     goto _Exit;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
   if (EVP_PKEY_sign_init (PkeyCtx) != 1) {
     goto _Exit;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
   if (EVP_PKEY_CTX_set_rsa_padding (PkeyCtx, RSA_PKCS1_PADDING) <= 0) {
     goto _Exit;
   }
+
   // MU_CHANGE [END]
 
   // MU_CHANGE [BEGIN]
@@ -527,7 +544,7 @@ RsaPkcs1Sign (
 _Exit:
   if (PkeyCtx != NULL) {
     EVP_PKEY_CTX_free (PkeyCtx);
-  // MU_CHANGE [END]
+    // MU_CHANGE [END]
   }
 
   return Result;  // MU_CHANGE
