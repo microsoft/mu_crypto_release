@@ -222,8 +222,7 @@
   ##   4. OneCryptoLoaderStandaloneMm - MM loader
   ##
   ## This is because the DXE loader cannot locate the StMM binary due to
-  ## secure world layout differences on AARCH64. The protocol-based approach
-  ## avoids PE/COFF export parsing which may not work on AARCH64.
+  ## secure world layout differences on AARCH64.
   #############################################################################
 
   ## OneCryptoBinDxe for AARCH64
