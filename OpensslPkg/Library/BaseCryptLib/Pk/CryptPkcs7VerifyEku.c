@@ -217,8 +217,8 @@ IsEkuInCertificate (
       goto Exit;
     }
 
-    if ((Asn1InCert->length == Asn1ToFind->length) &&
-        (CompareMem (Asn1InCert->data, Asn1ToFind->data, Asn1InCert->length) == 0))
+    if ((OBJ_length (Asn1InCert) == OBJ_length (Asn1ToFind)) &&
+        (CompareMem (OBJ_get0_data (Asn1InCert), OBJ_get0_data (Asn1ToFind), OBJ_length (Asn1InCert)) == 0))
     {
       //
       // Found Eku in certificate.
