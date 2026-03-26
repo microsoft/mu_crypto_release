@@ -140,14 +140,14 @@ IsEkuInCertificate (
   IN ASN1_OBJECT  *Asn1ToFind
   )
 {
-  EFI_STATUS          Status;
-  X509                *ClonedCert;
-  X509_EXTENSION      *Extension;
-  EXTENDED_KEY_USAGE  *Eku;
-  INT32               ExtensionIndex;
-  INTN                NumExtensions;
-  ASN1_OBJECT         *Asn1InCert;
-  INTN                Index;
+  EFI_STATUS            Status;
+  X509                  *ClonedCert;
+  CONST X509_EXTENSION  *Extension;
+  EXTENDED_KEY_USAGE    *Eku;
+  INT32                 ExtensionIndex;
+  INTN                  NumExtensions;
+  ASN1_OBJECT           *Asn1InCert;
+  INTN                  Index;
 
   Status         = EFI_NOT_FOUND;
   ClonedCert     = NULL;
