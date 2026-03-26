@@ -253,7 +253,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         result = create_package(
             architectures=self.arch,
             target=self.target,
-            toolchain=toolchain
+            toolchain=toolchain,
+            output_name=f"OneCrypto-Drivers-{self.target}"
         )
         if result is None:
             logging.error(f"Packaging failed for {self.target}")
