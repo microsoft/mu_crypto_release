@@ -573,8 +573,8 @@ ImageTimestampVerify (
 
   STACK_OF (X509_ATTRIBUTE)     *Sk;
   X509_ATTRIBUTE     *Xa;
-  ASN1_OBJECT        *XaObj;
-  ASN1_TYPE          *Asn1Type;
+  CONST ASN1_OBJECT  *XaObj;
+  CONST ASN1_TYPE    *Asn1Type;
   ASN1_OCTET_STRING  *EncDigest;
   UINT8              *TSToken;
   UINTN              TokenSize;
