@@ -162,7 +162,7 @@ def generate_files(openssldir, opensslgendir, asm, filelist):
             if 'IA32-MSFT' in asm:
                 filename = filename.replace('.S', '.nasm')
             elif 'X64-MSFT' in asm:
-                filename = filename.replace('.s', '.nasm')
+                filename = filename.replace('.S', '.nasm').replace('.s', '.nasm')
             dst = os.path.join(opensslgendir, asm, filename)
         else:
             dst = os.path.join(opensslgendir, filename)
@@ -225,6 +225,8 @@ def asm_filter_fn(filename):
         '/ec/',
         'ECP_NISTZ256_ASM',
         'X25519_ASM',
+        '/sm3/',
+        'OPENSSL_SM3_ASM',
     ]
     for item in exclude:
         if item in filename:
@@ -338,7 +340,7 @@ def update_MSFT_asm_format(asm, filelist):
             filelist[file_index] = filelist[file_index].replace('.S', '.nasm')
     elif 'X64-MSFT' in asm:
         for file_index in range(len(filelist)):
-            filelist[file_index] = filelist[file_index].replace('.s', '.nasm')
+            filelist[file_index] = filelist[file_index].replace('.S', '.nasm').replace('.s', '.nasm')
 
 def main():
     # prepare
