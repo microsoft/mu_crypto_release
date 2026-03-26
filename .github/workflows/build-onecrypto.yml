@@ -21,6 +21,8 @@ on:
       - '.github/workflows/build-onecrypto.yml'
       - '.github/workflows/onecrypto-build-variant.yml'
       - '.github/workflows/onecrypto-publish-variant.yml'
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -51,3 +53,5 @@ jobs:
     with:
       variant: ${{ matrix.variant }}
       publish_name: ${{ matrix.publish_name }}
+    permissions:
+      contents: write

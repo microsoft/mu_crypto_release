@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set Safe Directory
         run: git config --global --add safe.directory '*'
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload Build Outputs (${{ inputs.variant }})
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: onecrypto-package-${{ inputs.variant }}
           path: staging/

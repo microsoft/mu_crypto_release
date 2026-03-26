@@ -14,9 +14,16 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
+      - name: Checkout Code
+        if: github.event_name == 'release'
+        uses: actions/checkout@v6
+
       - name: Download Build Outputs (${{ inputs.variant }})
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: onecrypto-package-${{ inputs.variant }}
           path: artifacts/${{ inputs.variant }}
@@ -33,11 +40,29 @@ jobs:
           cp -r artifacts/${{ inputs.variant }}/Logs publish/${{ inputs.variant }}/ 2>/dev/null || true
 
       - name: Publish Bundle (${{ inputs.variant }})
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.publish_name }}
           path: publish/${{ inputs.variant }}/
           overwrite: true
+
+      - name: Package Release Zip (${{ inputs.variant }})
+        if: github.event_name == 'release'
+        env:
+          VERSION_TAG: ${{ github.event.release.tag_name }}
+          PUBLISH_NAME: ${{ inputs.publish_name }}
+        shell: bash
+        run: |
+          VARIANT_LABEL="${PUBLISH_NAME#OneCrypto-Drivers-}"
+          cd publish/${{ inputs.variant }}
+          zip -r "../../${VERSION_TAG}-${VARIANT_LABEL}.zip" .
+
+      - name: Upload Release Asset (${{ inputs.variant }})
+        if: github.event_name == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} ${{ github.event.release.tag_name }}-*.zip
 
       - name: Delete Intermediate Artifact (${{ inputs.variant }})
         uses: geekyeggo/delete-artifact@v5
