@@ -4,6 +4,8 @@
   This file implements following APIs which provide basic capabilities for RSA:
   1) RsaPssSign
 
+  Uses OpenSSL 3.x EVP_PKEY provider-based APIs instead of deprecated RSA APIs.
+
 Copyright (c) 2021, Intel Corporation. All rights reserved.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -15,6 +17,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/rsa.h>
 #include <openssl/objects.h>
 #include <openssl/evp.h>
+
+#include "CryptRsaPkeyCtx.h"
 
 /**
   Retrieve a pointer to EVP message digest object.
@@ -90,13 +94,13 @@ RsaPssSign (
 {
   BOOLEAN       Result;
   UINTN         RsaSigSize;
-  EVP_PKEY      *EvpRsaKey;
+  EVP_PKEY      *Pkey;
   EVP_MD_CTX    *EvpVerifyCtx;
   EVP_PKEY_CTX  *KeyCtx;
   CONST EVP_MD  *HashAlg;
 
   Result       = FALSE;
-  EvpRsaKey    = NULL;
+  Pkey         = NULL;
   EvpVerifyCtx = NULL;
   KeyCtx       = NULL;
   HashAlg      = NULL;
@@ -109,7 +113,15 @@ RsaPssSign (
     return FALSE;
   }
 
-  RsaSigSize = RSA_size (RsaContext);
+  //
+  // Build EVP_PKEY from the RSA_PKEY_CTX key components.
+  //
+  Pkey = RsaBuildEvpPkey ((RSA_PKEY_CTX *)RsaContext);
+  if (Pkey == NULL) {
+    return FALSE;
+  }
+
+  RsaSigSize = (UINTN)EVP_PKEY_get_size (Pkey);
   if (*SigSize < RsaSigSize) {
     *SigSize = RsaSigSize;
     return FALSE;
@@ -129,19 +141,12 @@ RsaPssSign (
     return FALSE;
   }
 
-  EvpRsaKey = EVP_PKEY_new ();
-  if (EvpRsaKey == NULL) {
-    goto _Exit;
-  }
-
-  EVP_PKEY_set1_RSA (EvpRsaKey, RsaContext);
-
-  EvpVerifyCtx = EVP_MD_CTX_create ();
+  EvpVerifyCtx = EVP_MD_CTX_new ();
   if (EvpVerifyCtx == NULL) {
     goto _Exit;
   }
 
-  Result = EVP_DigestSignInit (EvpVerifyCtx, &KeyCtx, HashAlg, NULL, EvpRsaKey) > 0;
+  Result = EVP_DigestSignInit (EvpVerifyCtx, &KeyCtx, HashAlg, NULL, Pkey) > 0;
   if (KeyCtx == NULL) {
     goto _Exit;
   }
@@ -167,12 +172,8 @@ RsaPssSign (
   }
 
 _Exit:
-  if (EvpRsaKey != NULL) {
-    EVP_PKEY_free (EvpRsaKey);
-  }
-
   if (EvpVerifyCtx != NULL) {
-    EVP_MD_CTX_destroy (EvpVerifyCtx);
+    EVP_MD_CTX_free (EvpVerifyCtx);
   }
 
   return Result;
