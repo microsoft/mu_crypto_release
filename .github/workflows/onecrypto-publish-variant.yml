@@ -48,21 +48,17 @@ jobs:
 
       - name: Package Release Zip (${{ inputs.variant }})
         if: github.event_name == 'release'
-        env:
-          VERSION_TAG: ${{ github.event.release.tag_name }}
-          PUBLISH_NAME: ${{ inputs.publish_name }}
         shell: bash
         run: |
-          VARIANT_LABEL="${PUBLISH_NAME#OneCrypto-Drivers-}"
           cd publish/${{ inputs.variant }}
-          zip -r "../../${VERSION_TAG}-${VARIANT_LABEL}.zip" .
+          zip -r "../../${{ inputs.publish_name }}.zip" .
 
       - name: Upload Release Asset (${{ inputs.variant }})
         if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ github.event.release.tag_name }} ${{ github.event.release.tag_name }}-*.zip
+          gh release upload ${{ github.event.release.tag_name }} ${{ inputs.publish_name }}.zip
 
       - name: Delete Intermediate Artifact (${{ inputs.variant }})
         uses: geekyeggo/delete-artifact@v5

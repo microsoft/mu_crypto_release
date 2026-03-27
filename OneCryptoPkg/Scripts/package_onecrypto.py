@@ -225,7 +225,7 @@ def create_package(output_name=None, version=None, architectures=None, target=No
 
     # Generate output filename
     if not output_name:
-        output_name = "OneCrypto-Drivers"
+        output_name = f"OneCrypto-{targets[0]}" if len(targets) == 1 else "OneCrypto"
 
     # Write output to Build directory
     output_zip = Path(BUILD_BASE) / f"{output_name}.zip"
