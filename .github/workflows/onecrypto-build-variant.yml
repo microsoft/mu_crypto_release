@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir -p staging/Logs/DEBUG staging/Logs/RELEASE staging/PDB/DEBUG staging/PDB/RELEASE
           shopt -s nullglob
-          cp Build/OneCrypto-Drivers*.zip staging/ 2>/dev/null || true
+          cp Build/OneCrypto-*.zip staging/ 2>/dev/null || true
           cp -r Build/OneCryptoPkg/DEBUG_*/PDB/* staging/PDB/DEBUG/ 2>/dev/null || true
           cp -r Build/OneCryptoPkg/RELEASE_*/PDB/* staging/PDB/RELEASE/ 2>/dev/null || true
           cp Build/*.txt staging/Logs/ 2>/dev/null || true

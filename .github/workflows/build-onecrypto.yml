@@ -14,13 +14,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'OneCryptoPkg/**'
-      - 'OpensslPkg/**'
-      - 'PlatformBuild.py'
-      - '.github/workflows/build-onecrypto.yml'
-      - '.github/workflows/onecrypto-build-variant.yml'
-      - '.github/workflows/onecrypto-publish-variant.yml'
   release:
     types: [published]
 
@@ -46,9 +39,9 @@ jobs:
       matrix:
         include:
           - variant: accelerated
-            publish_name: OneCrypto-Drivers-Accelerated
+            publish_name: OneCrypto-Accelerated
           - variant: non-accelerated
-            publish_name: OneCrypto-Drivers-NonAccelerated
+            publish_name: OneCrypto-NonAccelerated
     uses: ./.github/workflows/onecrypto-publish-variant.yml
     with:
       variant: ${{ matrix.variant }}
