@@ -132,7 +132,10 @@ RsaGetKey (
   }
 
   if (BnKey == NULL) {
-    return FALSE;
+    // MU_CHANGE [BEGIN]
+    *BnSize = 0;
+    return TRUE;
+    // MU_CHANGE [END]
   }
 
   *BnSize = Size;
