@@ -165,6 +165,7 @@ typedef struct  _ONE_CRYPTO_DEPENDENCIES {
 
 #define ONE_CRYPTO_CONSTRUCTOR_PROTOCOL_SIGNATURE  SIGNATURE_32('O', 'N', 'E', 'C')
 #define ONE_CRYPTO_CONSTRUCTOR_PROTOCOL_VERSION    1
+
 /**
   Defines a function pointer type for a constructor function.
 

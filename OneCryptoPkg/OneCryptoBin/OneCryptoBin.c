@@ -15,12 +15,12 @@
 #include "OneCryptoBin.h"
 
 #if defined (_MSC_EXTENSIONS)
-  #define COMMON_EXPORT_API  __declspec(dllexport)
-#elif defined(__clang__)
-  // Check clang before __GNUC__ since clang also defines __GNUC__
-  #define COMMON_EXPORT_API  __attribute__((used, visibility("default"), noinline, optnone))
+#define COMMON_EXPORT_API  __declspec(dllexport)
+#elif defined (__clang__)
+// Check clang before __GNUC__ since clang also defines __GNUC__
+#define COMMON_EXPORT_API  __attribute__((used, visibility("default"), noinline, optnone))
 #else
-  #define COMMON_EXPORT_API
+#define COMMON_EXPORT_API
 #endif
 
 ONE_CRYPTO_CONSTRUCTOR_PROTOCOL  *mProtocolInstance = NULL;
@@ -36,10 +36,9 @@ ONE_CRYPTO_CONSTRUCTOR_PROTOCOL  *mProtocolInstance = NULL;
 VOID
 EFIAPI
 CryptoInit (
-  IN ONE_CRYPTO_PROTOCOL *CryptoProtocol
+  IN ONE_CRYPTO_PROTOCOL  *CryptoProtocol
   )
 {
-
   if (CryptoProtocol == NULL) {
     return;
   }
@@ -47,8 +46,8 @@ CryptoInit (
   //
   // Set the Crypto Version
   //
-  CryptoProtocol->Major    = ONE_CRYPTO_VERSION_MAJOR;
-  CryptoProtocol->Minor    = ONE_CRYPTO_VERSION_MINOR;
+  CryptoProtocol->Major = ONE_CRYPTO_VERSION_MAJOR;
+  CryptoProtocol->Minor = ONE_CRYPTO_VERSION_MINOR;
 
   //
   // Begin filling out the crypto protocol
@@ -333,9 +332,8 @@ CryptoInit (
   // Info
   // ========================================================================================================
 
-  CryptoProtocol->GetCryptoProviderVersionString   = GetCryptoProviderVersionString;
+  CryptoProtocol->GetCryptoProviderVersionString = GetCryptoProviderVersionString;
 }
-
 
 /**
   OneCrypto Entry Point (No Setup)
@@ -373,7 +371,7 @@ NoSetupCryptoEntry (
   // Always return the size
   //
   if (CryptoSize != NULL) {
-    *CryptoSize = sizeof(ONE_CRYPTO_PROTOCOL);
+    *CryptoSize = sizeof (ONE_CRYPTO_PROTOCOL);
   }
 
   //
@@ -401,7 +399,7 @@ NoSetupCryptoEntry (
   //
   // Zero the buffer
   //
-  SetMem(*Crypto, sizeof(ONE_CRYPTO_PROTOCOL), 0);
+  SetMem (*Crypto, sizeof (ONE_CRYPTO_PROTOCOL), 0);
 
   //
   // Initialize the Crypto Protocol
