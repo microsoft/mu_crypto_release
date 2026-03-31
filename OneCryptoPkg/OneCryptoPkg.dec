@@ -9,7 +9,7 @@
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
   PACKAGE_NAME                   = OneCryptoPkg
-  PACKAGE_GUID                   = 36470E80-36F2-4BA0-8CC8-937C7D9FF888
+  PACKAGE_GUID                   = C3D0428A-32A5-4F66-AD87-217F87D5FD36
   PACKAGE_VERSION                = 1.0
 
 [Includes]
