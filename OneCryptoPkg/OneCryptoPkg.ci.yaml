@@ -1,0 +1,54 @@
+## @file
+# CI configuration for OneCryptoPkg
+#
+# Copyright (c) Microsoft Corporation
+# Copyright (c) 2020 - 2022, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+{
+    "PrEval": {
+        "DscPath": "OneCryptoPkg.dsc",
+    },
+    "LicenseCheck": {},
+    "CharEncodingCheck": {
+        "IgnoreFiles": []
+    },
+    "DependencyCheck": {
+        "AcceptableDependencies": [
+            "CryptoPkg/CryptoPkg.dec",
+            "MbedTlsPkg/MbedTlsPkg.dec",
+            "MdePkg/MdePkg.dec",
+            "MdeModulePkg/MdeModulePkg.dec",
+            "OneCryptoPkg/OneCryptoPkg.dec",
+            "OpensslPkg/OpensslPkg.dec",
+        ],
+        "AcceptableDependencies-MM_STANDALONE": [
+            "MmSupervisorPkg/MmSupervisorPkg.dec",
+            "StandaloneMmPkg/StandaloneMmPkg.dec",
+        ]
+    },
+    "DscCompleteCheck": {
+        "DscPath": ""  # Disable check, as this package DSC is compiled via platform build.
+    },
+    "GuidCheck": {
+        "IgnoreFoldersAndFiles": [
+            "**/Integration/**",  # Contains the binary DSC INFs only used for post-build binary integration
+            "**/onecrypto-bin_extdep/**",  # The same as above, but being used as the binary integration
+        ],
+        "IgnoreGuidValue": [
+            "76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC",  # This GUID must be common so that loaders can locate the right binary
+        ]
+
+    },
+    "LibraryClassCheck": {
+        "IgnoreHeaderFile": []
+    },
+    "MarkdownLintCheck": {
+
+    },
+    "SpellCheck": {
+        "ExtendWords": ["mbranch"]
+    },
+    "UncrustifyCheck": {
+
+    },
+}

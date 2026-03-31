@@ -67,11 +67,6 @@ class CommonPlatform():
                 "Branch": "release/202511"
             },
             {
-                "Path": "Silicon/Arm/MU_TIANO",
-                "Url": "https://github.com/microsoft/mu_silicon_arm_tiano.git",
-                "Branch": "release/202511"
-            },
-            {
                 "Path": "Features/MM_SUPV",
                 "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
                 "Branch": "main"
