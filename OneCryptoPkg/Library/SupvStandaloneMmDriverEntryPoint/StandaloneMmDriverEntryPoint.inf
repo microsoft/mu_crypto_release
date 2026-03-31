@@ -1,6 +1,8 @@
 ## @file
 # Module entry point library for Standalone MM driver.
 #
+# Override : 00000002 | MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf | 68b2e6059d2aa714742e85e107626275 | 2026-03-31T23-53-49 | b8eca826c4cdf9326edd2dcbc8c4d766599d2980
+#
 # Copyright (c) 2015, Intel Corporation. All rights reserved.<BR>
 # Copyright (c) 2016-2018, ARM Ltd. All rights reserved.<BR>
 # Copyright (c) 2018, Linaro, Limited. All rights reserved.<BR>
@@ -14,7 +16,7 @@
   INF_VERSION                    = 0x0001001B
   BASE_NAME                      = StandaloneMmDriverEntryPoint
   MODULE_UNI_FILE                = StandaloneMmDriverEntryPoint.uni
-  FILE_GUID                      = D4DEC59C-218C-4213-9557-4FC071B647F4
+  FILE_GUID                      = B9E0C965-4720-4B4D-81D0-DE4BF12B7361
   MODULE_TYPE                    = MM_STANDALONE
   VERSION_STRING                 = 1.0
   PI_SPECIFICATION_VERSION       = 0x00010032
