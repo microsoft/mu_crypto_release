@@ -40,6 +40,7 @@ jobs:
         package:
           - OpensslPkg
           - MbedTlsPkg
+          - OneCryptoPkg
         target:
           - DEBUG
           - RELEASE

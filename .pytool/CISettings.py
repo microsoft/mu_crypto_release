@@ -47,7 +47,7 @@ class Settings(
         """return iterable of edk2 packages supported by this build.
         These should be edk2 workspace relative paths"""
 
-        return ("CryptoPkg", "OpensslPkg", "MbedTlsPkg", "IntrinsicPkg")
+        return ("OneCryptoPkg", "OpensslPkg", "MbedTlsPkg")
 
     def GetArchitecturesSupported(self):
         """return iterable of edk2 architectures supported by this build"""
@@ -158,6 +158,16 @@ class Settings(
             {
                 "Path": "MU_BASECORE",
                 "Url": "https://github.com/microsoft/mu_basecore.git",
+                "Branch": "release/202511"
+            },
+            {
+                "Path": "Features/MM_SUPV",
+                "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
+                "Branch": "main"
+            },
+            {
+                "Path": "Common/MU",
+                "Url": "https://github.com/microsoft/mu_plus.git",
                 "Branch": "release/202511"
             }
         ]
