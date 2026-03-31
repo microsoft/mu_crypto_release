@@ -59,7 +59,7 @@ FreePool (
   IN VOID  *Buffer
   )
 {
-  OneCryptoFreePool(Buffer);
+  OneCryptoFreePool (Buffer);
 }
 
 //

@@ -99,7 +99,6 @@ OneCryptoAllocateZeroPool (
   return Buffer;
 }
 
-
 /**
   Frees a pool of memory.
 
@@ -214,13 +213,13 @@ OneCryptoDebugPrint (
   ...
   )
 {
-  VA_LIST                  Marker;
-  CHAR8                    Buffer[256];
+  VA_LIST  Marker;
+  CHAR8    Buffer[256];
 
   if ((mCryptoDependencies != NULL) && (mCryptoDependencies->DebugPrint != NULL)) {
     VA_START (Marker, Format);
     // Format the string first using AsciiVSPrint
-    AsciiVSPrint (Buffer, sizeof(Buffer), Format, Marker);
+    AsciiVSPrint (Buffer, sizeof (Buffer), Format, Marker);
     VA_END (Marker);
     // Now call DebugPrint with the formatted string (no more varargs)
     mCryptoDependencies->DebugPrint (ErrorLevel, "%a", Buffer);

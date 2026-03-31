@@ -158,8 +158,8 @@ InstallSharedDependencies (
 EFI_STATUS
 EFIAPI
 DxeEntryPoint (
-  IN EFI_HANDLE           ImageHandle,
-  IN EFI_SYSTEM_TABLE     *SystemTable
+  IN EFI_HANDLE        ImageHandle,
+  IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
   EFI_STATUS                       Status;
@@ -171,10 +171,10 @@ DxeEntryPoint (
   // Locate the private protocol that provides the constructor
   //
   Status = SystemTable->BootServices->LocateProtocol (
-                            &gOneCryptoPrivateProtocolGuid,
-                            NULL,
-                            (VOID **)&ConstructorProtocol
-                            );
+                                        &gOneCryptoPrivateProtocolGuid,
+                                        NULL,
+                                        (VOID **)&ConstructorProtocol
+                                        );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Failed to locate OneCrypto private protocol: %r\n", Status));
     goto Exit;
@@ -235,12 +235,13 @@ DxeEntryPoint (
     OneCryptoProtocol = NULL;
     goto Exit;
   }
+
   Status = SystemTable->BootServices->InstallProtocolInterface (
-                            &ProtocolHandle,
-                            &gOneCryptoProtocolGuid,
-                            EFI_NATIVE_INTERFACE,
-                            OneCryptoProtocol
-                            );
+                                        &ProtocolHandle,
+                                        &gOneCryptoProtocolGuid,
+                                        EFI_NATIVE_INTERFACE,
+                                        OneCryptoProtocol
+                                        );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to install protocol: %r\n", Status));
     goto Exit;

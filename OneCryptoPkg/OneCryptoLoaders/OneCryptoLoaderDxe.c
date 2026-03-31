@@ -353,8 +353,9 @@ DxeEntryPoint (
   // First, query the size needed for the crypto protocol
   //
   UINT32  CryptoSize = 0;
+
   Status = Entry (mOneCryptoDepends, NULL, &CryptoSize);
-  if (Status != EFI_BUFFER_TOO_SMALL || CryptoSize == 0) {
+  if ((Status != EFI_BUFFER_TOO_SMALL) || (CryptoSize == 0)) {
     DEBUG ((DEBUG_ERROR, "OneCryptoLoaderDxe: Failed to query crypto protocol size: %r\n", Status));
     goto Exit;
   }
