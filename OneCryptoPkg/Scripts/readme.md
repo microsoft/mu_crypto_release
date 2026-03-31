@@ -34,6 +34,7 @@ This serves files on `http://localhost:8000`.
 ### 4. Update Your Platform's ext_dep.json
 
 Copy the contents from `OneCrypto_ext_dep.json.template` and replace:
+
 - `<sha256 from package_onecrypto.py>` with the SHA256 hash from step 2
 
 Add this to your platform's ext_dep.json file (or update the existing OneCrypto entry).
