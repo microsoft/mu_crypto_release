@@ -16,7 +16,12 @@
   Include
 
 [LibraryClasses]
-  BaseCryptLib
+  ##  @libraryclasses  Provides CRT support functions for cryptographic operations through dependency injection.
+  OneCryptoCrtLib|Include/Library/OneCryptoCrtLib.h
+
+  ##  @libraryclass  Provides functionality to get export directories and exported functions from a PE image
+  #
+  PeCoffExtendedLib|Include/Library/PeCoffExtendedLib.h
 
 [Guids]
   gOneCryptoPkgTokenSpaceGuid = { 0x36470E80, 0x36F2, 0x4BA0, { 0x8C, 0xC8, 0x93, 0x7C, 0x7D, 0x9F, 0xF8, 0x88 } }
