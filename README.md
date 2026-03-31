@@ -2,7 +2,7 @@
 
 [![Continuous Integration](https://github.com/Microsoft/mu_crypto_release/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/continuous-integration.yml)
 [![Host-Based Unit Tests](https://github.com/microsoft/mu_crypto_release/actions/workflows/host-based-test-runner.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/host-based-test-runner.yml)
-[![OpenSSL](https://img.shields.io/badge/OpenSSL-3.5.1-blue)](https://github.com/openssl/openssl/releases/tag/openssl-3.5.1)
+[![OpenSSL](https://img.shields.io/badge/OpenSSL-3.5.5-blue)](https://github.com/openssl/openssl/releases/tag/openssl-3.5.5)
 [![Mbed TLS](https://img.shields.io/badge/Mbed_TLS-3.6.5-blue)](https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.5)
 
 This repository hosts the cryptographic library packages for [Project Mu](https://microsoft.github.io/mu/).
@@ -16,7 +16,6 @@ maintained separately.
 |----------------|-----------------------------------------------------------------------------|
 | **OpensslPkg** | BaseCryptLib, OpensslLib, TlsLib, and supporting headers backed by OpenSSL. |
 | **MbedTlsPkg** | BaseCryptLib, MbedTlsLib, and supporting headers backed by Mbed TLS.        |
-
 
 ## Setup
 
