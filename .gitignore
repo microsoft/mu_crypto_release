@@ -6,3 +6,4 @@ Features/MM_SUPV/
 Common/MU/
 __pycache__/
 *.pyc
+coverage_report/

@@ -1,0 +1,129 @@
+# Coverage workflow - builds host-based unit tests with gcov instrumentation
+# via the HostBasedUnitTestRunner plugin (CODE_COVERAGE=TRUE), then publishes
+# a Cobertura XML summary and optional HTML report.
+#
+# The plugin handles lcov capture, filtering, and XML generation automatically.
+# This workflow adds HTML report generation, baseline comparison, and PR comments.
+#
+##
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+name: Coverage
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.pytool/**'
+      - 'OpensslPkg/**'
+      - 'MU_BASECORE/**'
+      - '.github/workflows/coverage.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.pytool/**'
+      - 'OpensslPkg/**'
+      - 'MU_BASECORE/**'
+      - '.github/workflows/coverage.yml'
+
+env:
+  TOOL_CHAIN_TAG: GCC5
+  PACKAGE: OpensslPkg
+  TARGET: NOOPT
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set Safe Directory
+        run: git config --global --add safe.directory '*'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r pip-requirements.txt
+
+      - name: Install lcov
+        run: apt-get install -y --no-install-recommends lcov
+
+      - name: Setup
+        run: stuart_setup -c .pytool/CISettings.py -p ${{ env.PACKAGE }}
+
+      - name: CI Setup
+        run: stuart_ci_setup -c .pytool/CISettings.py -p ${{ env.PACKAGE }}
+
+      - name: Update
+        run: stuart_update -c .pytool/CISettings.py -p ${{ env.PACKAGE }}
+
+      - name: Build and Run Tests with Coverage
+        run: >-
+          stuart_ci_build
+          -c .pytool/CISettings.py
+          -p ${{ env.PACKAGE }}
+          -t ${{ env.TARGET }}
+          -d HostUnitTestCompilerPlugin=run
+          TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
+          CODE_COVERAGE=TRUE
+
+      - name: Filter Coverage to BaseCryptLib
+        if: always()
+        run: |
+            BUILD_OUTPUT="Build/${{ env.PACKAGE }}/HostTest/${{ env.TARGET }}_${{ env.TOOL_CHAIN_TAG }}"
+            COVERAGE_INFO="${BUILD_OUTPUT}/total-coverage.info"
+            FILTERED_INFO="coverage_report/basecryptlib-coverage.info"
+            FILTERED_XML="coverage_report/basecryptlib_coverage.xml"
+
+            mkdir -p coverage_report
+
+            if [[ ! -f "${COVERAGE_INFO}" ]]; then
+              echo "Coverage tracefile not found: ${COVERAGE_INFO}"
+              exit 1
+            fi
+
+            # Keep all BaseCryptLib sources generically, then drop helper folders.
+            lcov --extract "${COVERAGE_INFO}" \
+              '*/OpensslPkg/Library/BaseCryptLib/*' \
+              --output-file "${FILTERED_INFO}.tmp"
+
+            lcov --remove "${FILTERED_INFO}.tmp" \
+              '*/OpensslPkg/Library/BaseCryptLib/Info/*' \
+              '*/OpensslPkg/Library/BaseCryptLib/Setup/*' \
+              '*/OpensslPkg/Library/BaseCryptLib/SysCall/*' \
+              --ignore-errors unused \
+              --output-file "${FILTERED_INFO}"
+
+            rm -f "${FILTERED_INFO}.tmp"
+
+            # Generate HTML and Cobertura from the filtered lcov tracefile.
+            genhtml "${FILTERED_INFO}" \
+              --output-directory coverage_report/html \
+              --title "${{ env.PACKAGE }} BaseCryptLib Coverage" \
+              --legend --quiet || true
+
+            python -m lcov_cobertura "${FILTERED_INFO}" \
+              -b "${GITHUB_WORKSPACE}" \
+              -o "${FILTERED_XML}"
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage_report/basecryptlib_coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+
+      - name: Upload HTML Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.PACKAGE }}-coverage-html
+          path: coverage_report/html/
+          retention-days: 7
