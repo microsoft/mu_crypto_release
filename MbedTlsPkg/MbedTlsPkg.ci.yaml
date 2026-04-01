@@ -61,7 +61,11 @@
         ]
     },
     "GuidCheck": {
-        "IgnoreGuidName": [],
+        "IgnoreGuidName": [
+            "MbedTlsLib", # SeaPkg from mu_feature_mm_supv copied an MbedTlsLib implementation.
+            "MbedTlsLibFull", # SeaPkg from mu_feature_mm_supv copied an MbedTlsLibFull implementation.
+            "BaseCryptLib", # SeaPkg from mu_feature_mm_supv copied a BaseCryptLib implementation.
+        ],
         "IgnoreGuidValue": [],
         "IgnoreFoldersAndFiles": []
     },
