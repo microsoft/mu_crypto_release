@@ -156,17 +156,16 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                                choices=CommonPlatform.ArchSupported,
                                default=None,
                                help="target architecture(s) for the build, can be specified multiple times")
-
-        parserObj.add_argument("-t", "--target", dest="target", type=str,
-                               default=CommonPlatform.TargetsSupported[0],
+        parserObj.add_argument("-t", "--target", dest="target",
+                               action="append",
                                choices=CommonPlatform.TargetsSupported,
-                               help="the target to build (DEBUG or RELEASE)")
+                               help="the target(s) to build, can be specified multiple times")
         parserObj.add_argument("-sp", "--skip-packaging", dest="skip_packaging",
                                action="store_true", default=False,
                                help="skip OneCrypto packaging after build")
 
     def RetrieveCommandLineOptions(self, args):
-        self.target = args.target
+        self.target = list(set(args.target)) if args.target else list(CommonPlatform.TargetsSupported)
         self.arch = args.arch if args.arch else list(CommonPlatform.ArchSupported)
         self.skip_packaging = args.skip_packaging
 
@@ -189,7 +188,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
     def GetName(self):
         ''' Get the name of the repo, platform, or product being built '''
         ''' Used for naming the log file, among others '''
-        return "OneCryptoPkg_%s" % self.target
+        return "OneCryptoPkg"
 
     def GetLoggingLevel(self, loggerType):
         ''' Get the logging level for a given type
@@ -206,7 +205,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.env.SetValue("ACTIVE_PLATFORM", "OneCryptoPkg/OneCryptoPkg.dsc", "Platform Hardcoded")
         self.env.SetValue("OUTPUT_DIRECTORY", "Build/OneCryptoPkg", "Platform Hardcoded")
         self.env.SetValue("TARGET_ARCH", " ".join(self.arch), "CLI args")
-        self.env.SetValue("TARGET", self.target, "CLI args")
+        self.env.SetValue("TOOL_CHAIN_TAG", "CLANGPDB", "Platform Hardcoded")
 
         # Default turn on build reporting.
         self.env.SetValue("BUILDREPORTING", "TRUE", "Enabling build report")
@@ -217,6 +216,30 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         return 0
 
     def PlatformPreBuild(self):
+        return 0
+    
+    def Build(self):
+        BUILD_LOOP_REASON = "Platform Hardcoded Build Loop"
+        toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "CLANGPDB")
+
+        for target in self.target:
+            # Update TARGET to current target for this loop iteration
+            self.env.SetValue("TARGET", target, BUILD_LOOP_REASON, overridable=True)
+
+            # Update BUILD_OUTPUT_BASE to the new location based off TARGET_TOOLCHAIN combination
+            new_base = Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / ".." / f"{target}_{toolchain}"
+            self.env.GetEntry("BUILD_OUTPUT_BASE").AllowOverride()
+            self.env.SetValue("BUILD_OUTPUT_BASE", new_base, BUILD_LOOP_REASON)
+            
+            # Update BUILDREPORT_FILE to the new location based off TARGET_TOOLCHAIN combination
+            build_report = str(Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / f"BUILD_REPORT_{target}.txt")
+            self.env.GetEntry("BUILDREPORT_FILE").AllowOverride()
+            self.env.SetValue("BUILDREPORT_FILE", build_report, BUILD_LOOP_REASON)
+            
+            # Build the current TARGET
+            ret = super().Build()
+            if ret != 0:
+                return ret
         return 0
 
     def PlatformPostBuild(self):
