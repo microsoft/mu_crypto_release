@@ -156,17 +156,16 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                                choices=CommonPlatform.ArchSupported,
                                default=None,
                                help="target architecture(s) for the build, can be specified multiple times")
-
-        parserObj.add_argument("-t", "--target", dest="target", type=str,
-                               default=CommonPlatform.TargetsSupported[0],
+        parserObj.add_argument("-t", "--target", dest="target",
+                               action="append",
                                choices=CommonPlatform.TargetsSupported,
-                               help="the target to build (DEBUG or RELEASE)")
+                               help="the target(s) to build, can be specified multiple times")
         parserObj.add_argument("-sp", "--skip-packaging", dest="skip_packaging",
                                action="store_true", default=False,
                                help="skip OneCrypto packaging after build")
 
     def RetrieveCommandLineOptions(self, args):
-        self.target = args.target
+        self.target = list(set(args.target)) if args.target else list(CommonPlatform.TargetsSupported)
         self.arch = args.arch if args.arch else list(CommonPlatform.ArchSupported)
         self.skip_packaging = args.skip_packaging
 
@@ -189,7 +188,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
     def GetName(self):
         ''' Get the name of the repo, platform, or product being built '''
         ''' Used for naming the log file, among others '''
-        return "OneCryptoPkg_%s" % self.target
+        return "OneCryptoPkg"
 
     def GetLoggingLevel(self, loggerType):
         ''' Get the logging level for a given type
@@ -206,7 +205,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.env.SetValue("ACTIVE_PLATFORM", "OneCryptoPkg/OneCryptoPkg.dsc", "Platform Hardcoded")
         self.env.SetValue("OUTPUT_DIRECTORY", "Build/OneCryptoPkg", "Platform Hardcoded")
         self.env.SetValue("TARGET_ARCH", " ".join(self.arch), "CLI args")
-        self.env.SetValue("TARGET", self.target, "CLI args")
+        self.env.SetValue("TOOL_CHAIN_TAG", "CLANGPDB", "Platform Hardcoded")
 
         # Default turn on build reporting.
         self.env.SetValue("BUILDREPORTING", "TRUE", "Enabling build report")
@@ -218,6 +217,30 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 
     def PlatformPreBuild(self):
         return 0
+    
+    def Build(self):
+        BUILD_LOOP_REASON = "Platform Hardcoded Build Loop"
+        toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "CLANGPDB")
+
+        for target in self.target:
+            # Update TARGET to current target for this loop iteration
+            self.env.SetValue("TARGET", target, BUILD_LOOP_REASON, overridable=True)
+
+            # Update BUILD_OUTPUT_BASE to the new location based off TARGET_TOOLCHAIN combination
+            new_base = Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / ".." / f"{target}_{toolchain}"
+            self.env.GetEntry("BUILD_OUTPUT_BASE").AllowOverride()
+            self.env.SetValue("BUILD_OUTPUT_BASE", new_base, BUILD_LOOP_REASON)
+            
+            # Update BUILDREPORT_FILE to the new location based off TARGET_TOOLCHAIN combination
+            build_report = str(Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / f"BUILD_REPORT.TXT")
+            self.env.GetEntry("BUILDREPORT_FILE").AllowOverride()
+            self.env.SetValue("BUILDREPORT_FILE", build_report, BUILD_LOOP_REASON)
+            
+            # Build the current TARGET
+            ret = super().Build()
+            if ret != 0:
+                return ret
+        return 0
 
     def PlatformPostBuild(self):
         # Skip packaging if requested
@@ -226,70 +249,15 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             logging.critical("Skipping post-build packaging (--skip-packaging)")
             return 0
 
-        # Package the build artifacts after successful build
-        logging.critical("=" * 80)
-        logging.critical("Running post-build packaging...")
-
-        # Import the packaging script
-        import sys
-        script_dir = os.path.join(CommonPlatform.WorkspaceRoot, "OneCryptoPkg", "Scripts")
-        if script_dir not in sys.path:
-            sys.path.insert(0, script_dir)
-
-        from package_onecrypto import create_package
-        from uefi_compress import analyze_efi_compression
-
-        # Get the toolchain from environment
-        toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "CLANGPDB")
-        workspace_root = Path(CommonPlatform.WorkspaceRoot)
-
-        # Package all architectures that were built into a single package
-        logging.critical(f"Packaging OneCrypto for {', '.join(self.arch)} {self.target}...")
-        result = create_package(
-            architectures=self.arch,
-            target=self.target,
-            toolchain=toolchain,
-            output_name=f"OneCrypto-Drivers-{self.target}"
+        # Helper registered at OneCryptoPkg/Plugin/OneCryptoBundler
+        self.Helper.create_package(
+            workspace = self.ws,
+            output_zip = Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / ".." / "OneCrypto-Drivers.zip",
+            architectures = self.arch,
+            toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "CLANGPDB"),
+            targets = self.target
         )
-        if result is None:
-            logging.error(f"Packaging failed for {self.target}")
-        else:
-            # Display per-architecture details
-            for arch in result.get("architectures", []):
-                logging.critical("-" * 60)
-                logging.critical(f"[{self.target}/{arch}] OneCryptoBin EFI Sizes (size-critical components):")
 
-                # Collect OneCryptoBin EFI files for this architecture
-                onecrypto_bin_files = []
-                for file_info in result.get("file_details", []):
-                    if file_info.get("arch") == arch and file_info["folder"] == "OneCryptoBin" and file_info["name"].endswith(".efi"):
-                        size_kb = file_info["size"] / 1024
-                        logging.critical(f"  {file_info['name']}: {file_info['size']:,} bytes ({size_kb:.1f} KB)")
-                        onecrypto_bin_files.append(Path(file_info["path"]))
-
-                # UEFI Compression analysis for OneCryptoBin
-                if onecrypto_bin_files:
-                    compression_results = analyze_efi_compression(onecrypto_bin_files, workspace_root)
-                    if compression_results["tool_available"]:
-                        logging.critical(f"[{self.target}/{arch}] OneCryptoBin UEFI Compressed Sizes:")
-                        for file_info in compression_results["files"]:
-                            comp_kb = file_info["compressed_size"] / 1024
-                            ratio_pct = file_info["ratio"] * 100
-                            logging.critical(f"  {file_info['name']}: {file_info['compressed_size']:,} bytes ({comp_kb:.1f} KB) [{ratio_pct:.1f}%]")
-
-                logging.critical(f"[{self.target}/{arch}] OneCryptoLoaders EFI Sizes:")
-                for file_info in result.get("file_details", []):
-                    if file_info.get("arch") == arch and file_info["folder"] == "OneCryptoLoaders" and file_info["name"].endswith(".efi"):
-                        size_kb = file_info["size"] / 1024
-                        logging.critical(f"  {file_info['name']}: {file_info['size']:,} bytes ({size_kb:.1f} KB)")
-
-            logging.critical("-" * 60)
-            logging.critical(f"Total uncompressed: {result['total_uncompressed']:,} bytes ({result['total_uncompressed'] / 1024:.1f} KB)")
-            logging.critical(f"Compressed (zip): {result['compressed_size']:,} bytes ({result['compressed_size'] / 1024:.1f} KB)")
-            logging.critical(f"SHA256: {result['sha256']}")
-            logging.critical(f"Package created: {result['path']}")
-
-        logging.critical("=" * 80)
         return 0
 
 
