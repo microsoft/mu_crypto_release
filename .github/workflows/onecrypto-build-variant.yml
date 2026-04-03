@@ -40,27 +40,14 @@ jobs:
       - name: Update
         run: stuart_update -c PlatformBuild.py
 
-      - name: Build OneCryptoPkg DEBUG (${{ inputs.variant }})
+      - name: Build OneCryptoPkg (${{ inputs.variant }})
         run: |
-          python PlatformBuild.py -t DEBUG TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
+          python PlatformBuild.py TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
 
-      - name: Build OneCryptoPkg RELEASE (${{ inputs.variant }})
+      - name: unzip to staging
         run: |
-          python PlatformBuild.py -t RELEASE TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
-
-      - name: Stage Build Outputs (${{ inputs.variant }})
-        if: always()
-        shell: bash
-        run: |
-          mkdir -p staging/Logs/DEBUG staging/Logs/RELEASE staging/PDB/DEBUG staging/PDB/RELEASE
-          shopt -s nullglob
-          cp Build/OneCrypto-*.zip staging/ 2>/dev/null || true
-          cp -r Build/OneCryptoPkg/DEBUG_*/PDB/* staging/PDB/DEBUG/ 2>/dev/null || true
-          cp -r Build/OneCryptoPkg/RELEASE_*/PDB/* staging/PDB/RELEASE/ 2>/dev/null || true
-          cp Build/*.txt staging/Logs/ 2>/dev/null || true
-          for target in DEBUG RELEASE; do
-            find Build -path "*/OneCryptoPkg/${target}_*" -name '*.txt' -exec cp {} "staging/Logs/${target}/" \; 2>/dev/null || true
-          done
+          mkdir -p staging
+          unzip -o Build/OneCryptoPkg/OneCrypto-Drivers.zip -d staging
 
       - name: Upload Build Outputs (${{ inputs.variant }})
         if: always()
