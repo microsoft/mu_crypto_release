@@ -36,6 +36,7 @@
   OneCryptoPkg/OneCryptoPkg.dec
   OpensslPkg/OpensslPkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec
+  MmSupervisorPkg/MmSupervisorPkg.dec
 
 [Sources]
   OneCryptoBin.c
@@ -53,4 +54,4 @@
   gOneCryptoPrivateProtocolGuid ## Produces
 
 [Depex]
-  TRUE
+  gMmRing3HandlerReadyProtocol
