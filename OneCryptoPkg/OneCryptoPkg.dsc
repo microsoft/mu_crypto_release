@@ -80,7 +80,7 @@
       #############################################################################
       ## Crypto Provider
       #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
       RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
@@ -142,7 +142,7 @@
       #############################################################################
       ## Crypto Provider
       #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
       RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
@@ -249,7 +249,7 @@
       #############################################################################
       ## Crypto Provider
       #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
       RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
