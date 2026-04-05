@@ -20,6 +20,8 @@
 
 [LibraryClasses]
   BaseCryptLib|OpensslPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf
+  TlsLib|OpensslPkg/Library/TlsLib/UnitTestHostTlsLib.inf
+  IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   OpensslLib|OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   MmServicesTableLib|MdePkg/Library/MmServicesTableLib/MmServicesTableLib.inf
   SynchronizationLib|MdePkg/Library/BaseSynchronizationLib/BaseSynchronizationLib.inf
@@ -33,6 +35,11 @@
   # Build HOST_APPLICATION that tests BaseCryptLib (OpenSSL implementation)
   #
   CryptoPkg/Test/UnitTest/Library/BaseCryptLib/TestBaseCryptLibHost.inf
+
+  #
+  # TLS verification test — enumerates cipher suites and TLS capabilities
+  #
+  CryptoPkg/Test/UnitTest/Library/TlsLib/TestTlsLibHost.inf
 
 [BuildOptions]
   *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES
