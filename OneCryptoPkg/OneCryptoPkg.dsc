@@ -80,7 +80,7 @@
       #############################################################################
       ## Crypto Provider
       #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
       RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
@@ -142,7 +142,7 @@
       #############################################################################
       ## Crypto Provider
       #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
       RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
@@ -189,7 +189,7 @@
 
   OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderSupvMm.inf {
     <LibraryClasses>
-      BaseLib                      | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseLib                      | MmSupervisorPkg/Library/BaseLibSysCall/BaseLib.inf
       BaseMemoryLib                | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
       DebugLib                     | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
       PcdLib                       | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
@@ -204,6 +204,7 @@
       PeCoffExtendedLib            | OneCryptoPkg/Library/PeCoffExtendedLib/PeCoffExtendedLib.inf
       PeCoffGetEntryPointLib       | MdePkg/Library/BasePeCoffGetEntryPointLib/BasePeCoffGetEntryPointLib.inf
       CacheMaintenanceLib          | MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
+      SysCallLib                   | MmSupervisorPkg/Library/SysCallLib/SysCallLib.inf
       StandaloneMmDriverEntryPoint | MmSupervisorPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
       MmServicesTableLib           | MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
       MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
@@ -249,7 +250,7 @@
       #############################################################################
       ## Crypto Provider
       #############################################################################
-      FltUsedLib                     | MdePkg/Library/FltUsedLib/FltUsedLib.inf
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
       RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
       DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
       MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
