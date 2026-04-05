@@ -63,8 +63,8 @@ class CommonPlatform():
         return [
             {
                 "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "8178984858b17819e10468d8540525e443c1978e"
+                "Url": "https://github.com/flickdm/mu_basecore.git",
+                "Commit": "9b31cb0f161ff2e72c84649aa56479f2ea545b54"
             },
             {
                 "Path": "Features/MM_SUPV",
