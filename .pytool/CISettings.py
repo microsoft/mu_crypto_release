@@ -158,17 +158,20 @@ class Settings(
             {
                 "Path": "MU_BASECORE",
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Branch": "release/202511"
+                "Branch": "release/202511",
+                "Commit": "8178984858b17819e10468d8540525e443c1978e"
             },
             {
                 "Path": "Features/MM_SUPV",
                 "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
-                "Branch": "main"
+                "Branch": "main",
+                "Commit": "4f686975e6a3e76c2d64e097415abdb773b8e56b"
             },
             {
                 "Path": "Common/MU",
                 "Url": "https://github.com/microsoft/mu_plus.git",
-                "Branch": "release/202511"
+                "Branch": "release/202511",
+                "Commit": "31f2b85ddb606cf6e4b4019ec2db1349d97b162b"
             }
         ]
 
