@@ -63,9 +63,8 @@ class CommonPlatform():
         return [
             {
                 "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Branch": "release/202511",
-                "Commit": "8178984858b17819e10468d8540525e443c1978e"
+                "Url": "https://github.com/flickdm/mu_basecore.git",
+                "Branch": "feat/TlsLibUnitTest"
             },
             {
                 "Path": "Features/MM_SUPV",
