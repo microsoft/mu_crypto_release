@@ -34,8 +34,13 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  MmSupervisorPkg/MmSupervisorPkg.dec
 
 [LibraryClasses]
   BaseLib
   DebugLib
   StackCheckLib
+
+# Since MmServicesTableLib is not being used - we need to explicitly do this here
+[Depex]
+  gMmRing3HandlerReadyProtocol
