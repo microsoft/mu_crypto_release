@@ -40,6 +40,7 @@ jobs:
           cp -r artifacts/${{ inputs.variant }}/Logs publish/${{ inputs.variant }}/ 2>/dev/null || true
 
       - name: Publish Bundle (${{ inputs.variant }})
+        id: upload-bundle
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.publish_name }}
@@ -59,6 +60,49 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.event.release.tag_name }} ${{ inputs.publish_name }}.zip
+
+      - name: Generate ext_dep Override (${{ inputs.variant }})
+        shell: bash
+        env:
+          ARTIFACT_URL: ${{ steps.upload-bundle.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.upload-bundle.outputs.artifact-digest }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          ZIP_FILE="${{ inputs.publish_name }}.zip"
+          if [[ ! -f "$ZIP_FILE" ]]; then
+            cd publish/${{ inputs.variant }}
+            zip -r "../../${ZIP_FILE}" .
+            cd ../..
+          fi
+          SHA256=$(sha256sum "$ZIP_FILE" | awk '{print $1}')
+          mkdir -p override
+          cat > override/OneCrypto_ext_dep.yaml <<EOF
+          scope: global
+          type: web
+          id: onecrypto-bin
+          name: onecrypto-bin
+          source: ${ARTIFACT_URL}
+          version: "${RUN_ID}"
+          sha256: ${SHA256}
+          compression_type: zip
+          internal_path: /
+          flags:
+            - set_build_var
+          var_name: BLD_*_ONE_CRYPTO_PATH
+          override_id: onecrypto-bin
+          EOF
+          sed -i 's/^          //' override/OneCrypto_ext_dep.yaml
+          echo ""
+          echo "artifact-digest: ${ARTIFACT_DIGEST}"
+          echo ""
+          echo "Generated override YAML:"
+          cat override/OneCrypto_ext_dep.yaml
+
+      - name: Upload ext_dep Override (${{ inputs.variant }})
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.publish_name }}-ext-dep-override
+          path: override/OneCrypto_ext_dep.yaml
 
       - name: Delete Intermediate Artifact (${{ inputs.variant }})
         uses: geekyeggo/delete-artifact@v5
