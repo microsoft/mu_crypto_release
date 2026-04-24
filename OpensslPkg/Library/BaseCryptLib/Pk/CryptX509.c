@@ -12,6 +12,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <crypto/asn1.h>
 #include <openssl/asn1.h>
 #include <openssl/rsa.h>
+// MU_CHANGE [BEGIN]
+#include "Pk/CryptRsaPkeyCtx.h"
+#include "Pk/CryptEcPkeyCtx.h"
+#include <openssl/core_names.h>
+#include <openssl/objects.h>
+// MU_CHANGE [END]
 
 /* OID*/
 #define OID_EXT_KEY_USAGE      { 0x55, 0x1D, 0x25 }
@@ -281,10 +287,10 @@ X509GetSubjectName (
   IN OUT  UINTN        *SubjectSize
   )
 {
-  BOOLEAN    Status;
-  X509       *X509Cert;
-  X509_NAME  *X509Name;
-  UINTN      X509NameSize;
+  BOOLEAN          Status;
+  X509             *X509Cert;
+  CONST X509_NAME  *X509Name;
+  UINTN            X509NameSize;
 
   //
   // Check input parameters.
@@ -374,15 +380,15 @@ InternalX509GetNIDName (
   IN OUT  UINTN        *CommonNameSize
   )
 {
-  RETURN_STATUS    ReturnStatus;
-  BOOLEAN          Status;
-  X509             *X509Cert;
-  X509_NAME        *X509Name;
-  INT32            Index;
-  INTN             Length;
-  X509_NAME_ENTRY  *Entry;
-  ASN1_STRING      *EntryData;
-  UINT8            *UTF8Name;
+  RETURN_STATUS          ReturnStatus;
+  BOOLEAN                Status;
+  X509                   *X509Cert;
+  CONST X509_NAME        *X509Name;
+  INT32                  Index;
+  INTN                   Length;
+  CONST X509_NAME_ENTRY  *Entry;
+  CONST ASN1_STRING      *EntryData;
+  UINT8                  *UTF8Name;
 
   ReturnStatus = RETURN_INVALID_PARAMETER;
   UTF8Name     = NULL;
@@ -591,9 +597,13 @@ RsaGetPublicKeyFromX509 (
   OUT  VOID         **RsaContext
   )
 {
-  BOOLEAN   Status;
-  EVP_PKEY  *Pkey;
-  X509      *X509Cert;
+  // MU_CHANGE [BEGIN]
+  BOOLEAN       Status;
+  EVP_PKEY      *Pkey;
+  X509          *X509Cert;
+  RSA_PKEY_CTX  *RsaPkeyCtx;
+
+  // MU_CHANGE [END]
 
   //
   // Check input parameters.
@@ -627,8 +637,22 @@ RsaGetPublicKeyFromX509 (
   //
   // Duplicate RSA Context from the retrieved EVP_PKEY.
   //
-  if ((*RsaContext = RSAPublicKey_dup (EVP_PKEY_get0_RSA (Pkey))) != NULL) {
-    Status = TRUE;
+  // MU_CHANGE [BEGIN]
+  RsaPkeyCtx = AllocateZeroPool (sizeof (RSA_PKEY_CTX));
+  if (RsaPkeyCtx != NULL) {
+    RsaPkeyCtx->Pkey = EVP_PKEY_dup (Pkey);
+    if ((RsaPkeyCtx->Pkey != NULL) && RsaExtractBigNums (RsaPkeyCtx, RsaPkeyCtx->Pkey)) {
+      *RsaContext = (VOID *)RsaPkeyCtx;
+      Status      = TRUE;
+    } else {
+      if (RsaPkeyCtx->Pkey != NULL) {
+        EVP_PKEY_free (RsaPkeyCtx->Pkey);
+      }
+
+      FreePool (RsaPkeyCtx);
+    }
+
+    // MU_CHANGE [END]
   }
 
 _Exit:
@@ -891,9 +915,16 @@ EcGetPublicKeyFromX509 (
   OUT  VOID         **EcContext
   )
 {
-  BOOLEAN   Status;
-  EVP_PKEY  *Pkey;
-  X509      *X509Cert;
+  // MU_CHANGE [BEGIN]
+  BOOLEAN      Status;
+  EVP_PKEY     *Pkey;
+  X509         *X509Cert;
+  EC_PKEY_CTX  *EcPkeyCtx;
+  CHAR8        CurveNameBuf[64];
+  UINTN        CurveNameLen;
+  INT32        OpenSslNid;
+
+  // MU_CHANGE [END]
 
   //
   // Check input parameters.
@@ -927,8 +958,42 @@ EcGetPublicKeyFromX509 (
   //
   // Duplicate EC Context from the retrieved EVP_PKEY.
   //
-  if ((*EcContext = EC_KEY_dup (EVP_PKEY_get0_EC_KEY (Pkey))) != NULL) {
-    Status = TRUE;
+  // MU_CHANGE [BEGIN]
+  EcPkeyCtx    = AllocateZeroPool (sizeof (EC_PKEY_CTX));
+  CurveNameLen = sizeof (CurveNameBuf);
+  if ((EcPkeyCtx != NULL) &&
+      (EVP_PKEY_get_utf8_string_param (
+         Pkey,
+         OSSL_PKEY_PARAM_GROUP_NAME,
+         CurveNameBuf,
+         CurveNameLen,
+         &CurveNameLen
+         ) == 1))
+  {
+    OpenSslNid = OBJ_sn2nid (CurveNameBuf);
+    if (OpenSslNid == NID_undef) {
+      OpenSslNid = OBJ_ln2nid (CurveNameBuf);
+    }
+
+    if (OpenSslNid == NID_undef) {
+      //
+      // Unknown/unsupported curve name: treat as error.
+      //
+      FreePool (EcPkeyCtx);
+      EcPkeyCtx = NULL;
+    } else {
+      EcPkeyCtx->Nid  = OpenSslNid;
+      EcPkeyCtx->Pkey = EVP_PKEY_dup (Pkey);
+      if (EcPkeyCtx->Pkey != NULL) {
+        *EcContext = (VOID *)EcPkeyCtx;
+        Status     = TRUE;
+      } else {
+        FreePool (EcPkeyCtx);
+      }
+    }
+  } else if (EcPkeyCtx != NULL) {
+    FreePool (EcPkeyCtx);
+    // MU_CHANGE [END]
   }
 
 _Exit:
@@ -1111,10 +1176,10 @@ X509GetIssuerName (
   IN OUT  UINTN        *CertIssuerSize
   )
 {
-  BOOLEAN    Status;
-  X509       *X509Cert;
-  X509_NAME  *X509Name;
-  UINTN      X509NameSize;
+  BOOLEAN          Status;
+  X509             *X509Cert;
+  CONST X509_NAME  *X509Name;
+  UINTN            X509NameSize;
 
   //
   // Check input parameters.
@@ -1295,11 +1360,11 @@ X509GetExtensionData (
   X509     *X509Cert;
 
   CONST STACK_OF (X509_EXTENSION) *Extensions;
-  ASN1_OBJECT        *Asn1Obj;
-  ASN1_OCTET_STRING  *Asn1Oct;
-  X509_EXTENSION     *Ext;
-  UINTN              ObjLength;
-  UINTN              OctLength;
+  CONST ASN1_OBJECT        *Asn1Obj;
+  CONST ASN1_OCTET_STRING  *Asn1Oct;
+  CONST X509_EXTENSION     *Ext;
+  UINTN                    ObjLength;
+  UINTN                    OctLength;
 
   //
   // Check input parameters.
