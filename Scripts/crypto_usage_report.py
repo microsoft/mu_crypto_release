@@ -333,6 +333,26 @@ def discover_package_roots(modules: List[ModuleInfo]) -> List[str]:
     return sorted(roots, key=len, reverse=True)  # longer roots first
 
 
+def discover_package_roots_from_workspace(workspace: str) -> List[str]:
+    """Discover package roots by locating the known crypto headers."""
+    roots = set()
+    expected_headers = [header.replace("\\", "/") for header in CRYPTO_HEADERS]
+
+    for dirpath, _, filenames in os.walk(workspace):
+        for filename in filenames:
+            relative_path = os.path.relpath(
+                os.path.join(dirpath, filename), workspace
+            ).replace("\\", "/")
+            for header_rel in expected_headers:
+                if relative_path.endswith(header_rel):
+                    prefix = relative_path[:-len(header_rel)].rstrip("/")
+                    root = os.path.join(workspace, prefix) if prefix else workspace
+                    if os.path.isdir(root):
+                        roots.add(os.path.normpath(root))
+
+    return sorted(roots, key=len, reverse=True)
+
+
 def resolve_inf_path(relative_inf: str, package_roots: List[str]) -> Optional[str]:
     """Resolve an edk2-relative INF path to an absolute path."""
     for root in package_roots:
@@ -490,6 +510,19 @@ def classify_functions(functions: Set[str]) -> Dict[str, Set[str]]:
     for func in functions:
         families[classify_function(func)].add(func)
     return dict(families)
+
+
+def find_auto_discovered_families(
+    functions: Set[str],
+) -> Dict[str, Set[str]]:
+    """Return families derived from function names rather than manual rules."""
+    manual_families = {family_name for family_name, _ in CRYPTO_FAMILIES}
+    derived_families = defaultdict(set)
+    for func in functions:
+        family = classify_function(func)
+        if family not in manual_families:
+            derived_families[family].add(func)
+    return dict(sorted(derived_families.items()))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -728,6 +761,28 @@ def output_json(
     print(json.dumps(report, indent=2))
 
 
+def output_family_validation(known_functions: Set[str]):
+    """Report families discovered via automatic prefix derivation."""
+    auto_families = find_auto_discovered_families(known_functions)
+
+    print()
+    print("=" * 78)
+    print("  Auto-Discovered Crypto Families")
+    print("=" * 78)
+
+    if not auto_families:
+        print("  No auto-derived families discovered.")
+        print()
+        return
+
+    print("  These families are derived from header function prefixes and are")
+    print("  not explicitly listed in CRYPTO_FAMILIES:")
+    print()
+    for family_name, funcs in auto_families.items():
+        print(f"  {family_name:20s} {', '.join(sorted(funcs))}")
+    print()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
@@ -742,9 +797,13 @@ Example:
   python %(prog)s \\
       -r Build/QemuQ35PkgX64/DEBUG_GCC5/BUILD_REPORT.TXT \\
       -w /home/user/mu_tiano_platforms
+
+  python %(prog)s \\
+      -w /home/user/mu_tiano_platforms \\
+      --validate-families
         """,
     )
-    p.add_argument("-r", "--report", required=True,
+    p.add_argument("-r", "--report",
                    help="Path to BUILD_REPORT.TXT")
     p.add_argument("-w", "--workspace", required=True,
                    help="Workspace root directory")
@@ -757,34 +816,50 @@ Example:
                    help="Exclude modules whose name matches any PATTERN "
                         "(substring match, case-insensitive). "
                         "E.g. -e UnitTest TestApp")
+    p.add_argument("--validate-families", action="store_true",
+                   help="Report crypto families discovered from header prefixes "
+                        "that are not explicitly listed in CRYPTO_FAMILIES")
     return p.parse_args()
 
 
 def main():
     args = parse_args()
 
-    report_path = os.path.abspath(args.report)
     workspace = os.path.abspath(args.workspace)
 
-    if not os.path.isfile(report_path):
-        print(f"ERROR: Report not found: {report_path}", file=sys.stderr)
-        sys.exit(1)
     if not os.path.isdir(workspace):
         print(f"ERROR: Workspace not found: {workspace}", file=sys.stderr)
         sys.exit(1)
 
-    # Step 1: Parse the build report
-    print("Parsing build report...", file=sys.stderr)
-    header, modules = parse_build_report(report_path)
-    header["total_modules"] = len(modules)
-    print(f"  Found {len(modules)} modules", file=sys.stderr)
-
-    if not modules:
-        print("ERROR: No modules found in report", file=sys.stderr)
+    report_path = None
+    if args.report:
+        report_path = os.path.abspath(args.report)
+        if not os.path.isfile(report_path):
+            print(f"ERROR: Report not found: {report_path}", file=sys.stderr)
+            sys.exit(1)
+    elif not args.validate_families:
+        print("ERROR: --report is required unless --validate-families is used",
+              file=sys.stderr)
         sys.exit(1)
 
+    header = {}
+    modules = []
+
+    if report_path:
+        # Step 1: Parse the build report
+        print("Parsing build report...", file=sys.stderr)
+        header, modules = parse_build_report(report_path)
+        header["total_modules"] = len(modules)
+        print(f"  Found {len(modules)} modules", file=sys.stderr)
+
+        if not modules:
+            print("ERROR: No modules found in report", file=sys.stderr)
+            sys.exit(1)
+
     # Step 2: Discover package root directories
-    package_roots = discover_package_roots(modules)
+    package_roots = discover_package_roots(modules) if modules else []
+    if not package_roots:
+        package_roots = discover_package_roots_from_workspace(workspace)
     # Always include workspace root as a fallback
     if workspace not in package_roots:
         package_roots.append(workspace)
@@ -797,6 +872,10 @@ def main():
     if not known_functions:
         print("ERROR: No crypto functions found — check workspace path", file=sys.stderr)
         sys.exit(1)
+
+    if args.validate_families:
+        output_family_validation(known_functions)
+        return
 
     scanner = build_scanner_pattern(known_functions)
 
