@@ -50,6 +50,117 @@ stuart_ci_build -c .pytool/CISettings.py -p <Pkg> -t NOOPT -d HostUnitTestCompil
 > **Note:** MbedTlsPkg host-based tests are currently disabled due to known test
 > failures. See the TODO in `host-based-test-runner.yml` for details.
 
+<<<<<<< Updated upstream
+||||||| Stash base
+## OneCryptoPkg
+
+> For more details, see [OneCryptoPkg/Docs/README.md](OneCryptoPkg/Docs/README.md).
+
+OneCryptoPkg uses `PlatformBuild.py` (via `stuart_build`) instead of the CI
+settings file. By default, it builds **both** DEBUG and RELEASE targets for
+`X64` and `AARCH64`.
+
+### Setup
+
+```bash
+stuart_setup  -c PlatformBuild.py
+stuart_update -c PlatformBuild.py
+```
+
+### Build
+
+```bash
+# Build all targets and architectures
+stuart_build -c PlatformBuild.py TOOL_CHAIN_TAG=CLANGPDB
+
+# Build only X64 RELEASE
+stuart_build -c PlatformBuild.py -a X64 -t RELEASE TOOL_CHAIN_TAG=CLANGPDB
+
+# Build only AARCH64 DEBUG
+stuart_build -c PlatformBuild.py -a AARCH64 -t DEBUG TOOL_CHAIN_TAG=CLANGPDB
+```
+
+### Build Variants
+
+Two variants are available:
+
+- **Accelerated** (default) — uses NASM assembly optimizations in OpenSSL.
+- **Non-accelerated** — pure C, no assembly. Built with the `BLD_*_NON_ACCEL=TRUE` flag.
+
+```bash
+# Non-accelerated build
+stuart_build -c PlatformBuild.py BLD_*_NON_ACCEL=TRUE TOOL_CHAIN_TAG=CLANGPDB
+```
+
+### Packaging
+
+After a successful build the OneCryptoBundler plugin automatically produces
+`Build/OneCryptoPkg/OneCrypto-Drivers.zip`. To skip packaging, pass
+`--skip-packaging`:
+
+```bash
+stuart_build -c PlatformBuild.py --skip-packaging TOOL_CHAIN_TAG=CLANGPDB
+```
+
+=======
+## OneCryptoPkg
+
+> For more details, see [OneCryptoPkg/Docs/README.md](OneCryptoPkg/Docs/README.md).
+
+OneCryptoPkg uses `PlatformBuild.py` (via `stuart_build`) instead of the CI
+settings file. By default, it builds **both** DEBUG and RELEASE targets for
+`X64` and `AARCH64`.
+
+### Setup
+
+```bash
+
+# Clone GetDependencies() repos (MU_BASECORE, MM_SUPV, mu_plus)
+stuart_ci_setup -c PlatformBuild.py
+
+# Sync git submodules listed in .gitmodules (openssl, mbedtls)
+stuart_setup  -c PlatformBuild.py
+
+# Fetch ext_deps (NuGet, web, etc.)
+stuart_update -c PlatformBuild.py
+```
+
+### Build
+
+```bash
+# Build all targets and architectures
+stuart_build -c PlatformBuild.py TOOL_CHAIN_TAG=CLANGPDB
+
+# Build only X64 RELEASE
+stuart_build -c PlatformBuild.py -a X64 -t RELEASE TOOL_CHAIN_TAG=CLANGPDB
+
+# Build only AARCH64 DEBUG
+stuart_build -c PlatformBuild.py -a AARCH64 -t DEBUG TOOL_CHAIN_TAG=CLANGPDB
+```
+
+### Build Variants
+
+Two variants are available:
+
+- **Accelerated** (default) — uses NASM assembly optimizations in OpenSSL.
+- **Non-accelerated** — pure C, no assembly. Built with the `BLD_*_NON_ACCEL=TRUE` flag.
+
+```bash
+# Non-accelerated build
+stuart_build -c PlatformBuild.py BLD_*_NON_ACCEL=TRUE TOOL_CHAIN_TAG=CLANGPDB
+```
+
+### Packaging
+
+After a successful build the OneCryptoBundler plugin automatically produces
+`Build/OneCryptoPkg/OneCrypto-Drivers.zip`. To skip packaging, pass
+`--skip-packaging`:
+
+```bash
+stuart_build -c PlatformBuild.py --skip-packaging TOOL_CHAIN_TAG=CLANGPDB
+```
+
+>>>>>>> Stashed changes
 ## Contributing
 
 Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for
