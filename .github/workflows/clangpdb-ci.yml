@@ -72,7 +72,7 @@ jobs:
 
     needs: package-matrix
 
-    uses: microsoft/mu_devops/.github/workflows/PackageCi.yml@v18.0.5
+    uses: Flickdm/mu_devops/.github/workflows/PackageCi.yml@fix/windows-longpaths
 
     with:
       runner: windows-latest
@@ -88,7 +88,7 @@ jobs:
 
     needs: package-matrix
 
-    uses: microsoft/mu_devops/.github/workflows/PackageCi.yml@v18.0.5
+    uses: Flickdm/mu_devops/.github/workflows/PackageCi.yml@fix/windows-longpaths
 
     with:
       runner: ubuntu-latest
