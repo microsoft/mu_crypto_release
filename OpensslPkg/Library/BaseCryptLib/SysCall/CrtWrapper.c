@@ -651,3 +651,95 @@ printf (
 {
   return 0;
 }
+
+//
+// OpenSSL uses standard C format specifiers (%s for ASCII strings),
+// but EDK2 BasePrintLib uses %a for ASCII and %s for Unicode.
+// Translate %s -> %a and %S -> %s before calling AsciiVSPrint.
+//
+STATIC
+VOID
+TranslateFormatSpecifiers (
+  OUT CHAR8        *Dest,
+  IN  UINTN        DestSize,
+  IN  CONST CHAR8  *Src
+  )
+{
+  UINTN  Index;
+
+  Index = 0;
+  while ((*Src != '\0') && (Index < DestSize - 1)) {
+    if (*Src == '%') {
+      Dest[Index++] = *Src++;
+      if (Index >= DestSize - 1) {
+        break;
+      }
+
+      //
+      // Skip flags, width, precision, and length modifiers
+      //
+      while ((*Src == '-') || (*Src == '+') || (*Src == ' ') ||
+             (*Src == '#') || (*Src == '0') ||
+             ((*Src >= '1') && (*Src <= '9')) || (*Src == '.') ||
+             (*Src == 'l') || (*Src == 'h') || (*Src == 'z') ||
+             (*Src == 'j') || (*Src == 't') || (*Src == 'L') ||
+             (*Src == '*'))
+      {
+        Dest[Index++] = *Src++;
+        if (Index >= DestSize - 1) {
+          break;
+        }
+      }
+
+      if (Index >= DestSize - 1) {
+        break;
+      }
+
+      //
+      // Translate the conversion specifier:
+      //   C %s (ASCII)   -> EDK2 %a
+      //   C %S (wide)    -> EDK2 %s
+      //
+      if (*Src == 's') {
+        Dest[Index++] = 'a';
+        Src++;
+      } else {
+        Dest[Index++] = *Src++;
+      }
+    } else {
+      Dest[Index++] = *Src++;
+    }
+  }
+
+  Dest[Index] = '\0';
+}
+
+int
+vsnprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  va_list     args
+  )
+{
+  CHAR8  TranslatedFmt[512];
+
+  TranslateFormatSpecifiers (TranslatedFmt, sizeof (TranslatedFmt), fmt);
+  return (int)AsciiVSPrint (buf, (UINTN)size, TranslatedFmt, args);
+}
+
+int
+sprintf (
+  char        *buf,
+  const char  *fmt,
+  ...
+  )
+{
+  VA_LIST  Args;
+  int      Ret;
+
+  VA_START (Args, fmt);
+  Ret = vsnprintf (buf, MAX_STRING_SIZE, fmt, Args);
+  VA_END (Args);
+  return Ret;
+}
