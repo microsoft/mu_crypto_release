@@ -3,15 +3,17 @@
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
-import git
-import os
 import logging
+import os
+
+import git
+from edk2toolext import codeql as codeql_helpers
 from edk2toolext.environment import shell_environment
 from edk2toolext.invocables.edk2_ci_build import CiBuildSettingsManager
-from edk2toolext.invocables.edk2_update import UpdateSettingsManager
 from edk2toolext.invocables.edk2_ci_setup import CiSetupSettingsManager
-from edk2toolext.invocables.edk2_setup import SetupSettingsManager, RequiredSubmodule
 from edk2toolext.invocables.edk2_pr_eval import PrEvalSettingsManager
+from edk2toolext.invocables.edk2_setup import RequiredSubmodule, SetupSettingsManager
+from edk2toolext.invocables.edk2_update import UpdateSettingsManager
 from edk2toollib.utility_functions import GetHostInfo
 
 
@@ -34,10 +36,10 @@ class Settings(
     # ####################################################################################### #
 
     def AddCommandLineOptions(self, parserObj):
-        pass
+        codeql_helpers.add_command_line_option(parserObj)
 
     def RetrieveCommandLineOptions(self, args):
-        pass
+        self.codeql = codeql_helpers.is_codeql_enabled_on_command_line(args)
 
     # ####################################################################################### #
     #                        Default Support for this Ci Build                                #
@@ -120,7 +122,15 @@ class Settings(
         if is_linux and self.ActualToolChainTag.upper().startswith("GCC"):
             if "AARCH64" in self.ActualArchitectures:
                 scopes += ("gcc_aarch64_linux",)
-                
+
+        scopes += codeql_helpers.get_scopes(self.codeql)
+
+        if self.codeql:
+            shell_environment.GetBuildVars().SetValue(
+                "STUART_CODEQL_FILTER_FILES",
+                os.path.join(self.GetWorkspaceRoot(), "CodeQlFilters.yml"),
+                "Set in CISettings.py")
+
         return scopes
 
     def GetRequiredSubmodules(self):
