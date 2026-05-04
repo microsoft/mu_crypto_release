@@ -57,7 +57,8 @@
 [LibraryClasses.AARCH64]
   CompilerIntrinsicsLib|MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
-[Components]
+[Components.X64]
+
   ## OneCryptBin meant for StandaloneMm
   #
   # This binary provides the crypto for a StandaloneMm based platform.
@@ -91,10 +92,9 @@
     !else
       OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
     !endif
-      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
   }
 
-    OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
+  OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
     <LibraryClasses>
       BaseLib                      | MdePkg/Library/BaseLib/BaseLib.inf
       BaseMemoryLib                | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
@@ -117,8 +117,6 @@
       HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
       FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
   }
-
-[Components.X64]
 
   ## OneCryptBin meant for SupvMm
   #
@@ -213,6 +211,67 @@
   }
 
 [Components.AARCH64]
+
+  ## OneCryptBin meant for StandaloneMm
+  #
+  # This binary provides the crypto for a StandaloneMm based platform.
+  ##
+  OneCryptoPkg/OneCryptoBin/OneCryptoBinStandaloneMm.inf {
+    <LibraryClasses>
+      BaseLib                        | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib                  | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      PrintLib                       | MdePkg/Library/BasePrintLib/BasePrintLib.inf
+      PcdLib                         | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      RegisterFilterLib              | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      SafeIntLib                     | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
+      StackCheckLib                  | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      StackCheckFailureHookLib       | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
+      BaseCryptLib                   | OpensslPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      TlsLib                         | OpensslPkg/Library/TlsLib/TlsLib.inf
+      IntrinsicLib                   | CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
+      OneCryptoCrtLib                | OneCryptoPkg/Library/OneCryptoCrtLib/OneCryptoCrtLib.inf
+      StandaloneMmDriverEntryPoint   | OneCryptoPkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+      #############################################################################
+      ## Crypto Provider
+      #############################################################################
+      FltUsedLib                     | MsCorePkg/Library/FltUsedLib/FltUsedLib.inf
+      RealTimeClockLib               | OneCryptoPkg/Library/RealTimeClockLibOnOneCrypto/RealTimeClockLibOnOneCrypto.inf
+      DebugLib                       | OneCryptoPkg/Library/DebugLibOnOneCrypto/DebugLibOnOneCrypto.inf
+      MemoryAllocationLib            | OneCryptoPkg/Library/MemoryAllocationLibOnOneCrypto/MemoryAllocationLibOnOneCrypto.inf
+      RngLib                         | OneCryptoPkg/Library/RngLibOnOneCrypto/RngLibOnOneCrypto.inf
+      TimerLib                       | OneCryptoPkg/Library/TimerLibOnOneCrypto/TimerLibOnOneCrypto.inf
+    !if $(NON_ACCEL) == TRUE
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
+    !else
+      OpensslLib                     | OpensslPkg/Library/OpensslLib/OpensslLibFullAccel.inf
+    !endif
+      NULL                           | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+  }
+
+  OneCryptoPkg/OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf {
+    <LibraryClasses>
+      BaseLib                      | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib                | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      DebugLib                     | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+      PcdLib                       | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      RngLib                       | MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf # Drivers should use the protocol, GetRandomNumber64 will not work.
+      RegisterFilterLib            | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      PeCoffExtraActionLib         | MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
+      HobLib                       | MdePkg/Library/DxeHobLib/DxeHobLib.inf
+      StackCheckFailureHookLib     | MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
+      StackCheckLib                | MdePkg/Library/StackCheckLib/StackCheckLib.inf
+      SafeIntLib                   | MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
+      PeCoffLib                    | MdePkg/Library/BasePeCoffLib/BasePeCoffLib.inf
+      PeCoffExtendedLib            | OneCryptoPkg/Library/PeCoffExtendedLib/PeCoffExtendedLib.inf
+      PeCoffGetEntryPointLib       | MdePkg/Library/BasePeCoffGetEntryPointLib/BasePeCoffGetEntryPointLib.inf
+      CacheMaintenanceLib          | MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
+      StandaloneMmDriverEntryPoint | MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
+      MmServicesTableLib           | MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
+      MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
+      HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
+      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+  }
+
   #############################################################################
   ## AARCH64 OneCryptoBin START
   ##

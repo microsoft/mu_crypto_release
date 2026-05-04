@@ -1,0 +1,45 @@
+## @file
+# CodeQL Result Filters for Packages in mu_crypto_release
+#
+# Note: Paths begin with `**/` so filters apply regardless of where packages
+# are located in the directory hierarchy.
+#
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+{
+  "Filters": [
+    # =========================================================================
+    # MbedTlsPkg - Upstream mbedtls library findings (submodule code)
+    # =========================================================================
+    "-**/MbedTlsPkg/Library/MbedTlsLib/mbedtls/**:**",
+    # mbedtls configuration header (mirrors upstream, not project-controlled)
+    "-**/MbedTlsPkg/Library/MbedTlsLib/Include/mbedtls/mbedtls_config.h:**",
+
+    # =========================================================================
+    # OpensslPkg - Upstream OpenSSL library findings (submodule code)
+    # =========================================================================
+    "-**/OpensslPkg/Library/OpensslLib/openssl/**:**",
+    "-**/OpensslPkg/Library/OpensslLib/OpensslGen/**:**",
+    # Generated build info header
+    "-**/OpensslPkg/Library/OpensslLib/buildinf.h:**",
+
+    # =========================================================================
+    # Repo - False positives
+    # =========================================================================
+    "-**/OpensslPkg/Library/TlsLib/TlsConfig.c:cpp/unused-static-variable",
+
+    # =========================================================================
+    # MU_BASECORE - Dependency findings (pulled via GetDependencies)
+    # =========================================================================
+    "-**/MU_BASECORE/**:**",
+
+    # =========================================================================
+    # Features/MM_SUPV - Dependency findings (pulled via GetDependencies)
+    # =========================================================================
+    "-**/MmSupervisorPkg/**:**",
+
+
+  ]
+}
