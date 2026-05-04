@@ -26,6 +26,9 @@
             "StandaloneMmPkg/StandaloneMmPkg.dec",
         ]
     },
+    "CompilerPlugin": {
+        "DscPath": "OneCryptoPkg.dsc" # The compiler plugin will be run on all files compiled as part of this DSC
+    },
     "DscCompleteCheck": {
         "DscPath": ""  # Disable check, as this package DSC is compiled via platform build.
     },
