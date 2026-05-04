@@ -1246,6 +1246,14 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
         dsc_lines.append("!endif")
         dsc_lines.append("")
 
+    # Map TARGET to CRYPTO_TARGET so non-RELEASE targets (e.g. NOOPT) use DEBUG binaries
+    dsc_lines.append("!if $(TARGET) == RELEASE")
+    dsc_lines.append("  DEFINE CRYPTO_TARGET = RELEASE")
+    dsc_lines.append("!else")
+    dsc_lines.append("  DEFINE CRYPTO_TARGET = DEBUG")
+    dsc_lines.append("!endif")
+    dsc_lines.append("")
+
     # generate the components to include in the DSC
     for flavor in flavors:
         for phase in phases:
@@ -1265,7 +1273,7 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
                     f" !if $({upper_phase}_CRYPTO_ARCH) == {arch}")
                 dsc_lines.append(f"  [{comp_str}]")
                 dsc_lines.append(
-                    f"    $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_$(TARGET)_{arch}.inf ")
+                    f"    $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_$(CRYPTO_TARGET)_{arch}.inf ")
                 dsc_lines.append(" !endif")
             dsc_lines.append("")
             # Add the library as well
@@ -1321,10 +1329,16 @@ def generate_platform_files(edk2_crypto_ver: str = "1.0"):
             fdf_bb_lines.append(f"!if $({other_mm_phase_upper}_CRYPTO_SERVICES) != NONE")
             fdf_bb_lines.append(f"!error You included CryptoDriver.{upper_phase}.inc.fdf but {other_mm_phase_upper}_CRYPTO_SERVICES is not set to NONE. These are mutually exclusive.")
             fdf_bb_lines.append("!endif")
+        # Map TARGET to CRYPTO_TARGET so non-RELEASE targets (e.g. NOOPT) use DEBUG binaries
+        fdf_bb_lines.append("!if $(TARGET) == RELEASE")
+        fdf_bb_lines.append("  DEFINE CRYPTO_TARGET = RELEASE")
+        fdf_bb_lines.append("!else")
+        fdf_bb_lines.append("  DEFINE CRYPTO_TARGET = DEBUG")
+        fdf_bb_lines.append("!endif")
         for flavor in flavors:
             fdf_bb_lines.append(f"!if $({upper_phase}_CRYPTO_SERVICES) == {flavor}")
             for target in targets:
-                fdf_bb_lines.append(f" !if $(TARGET) == {target}")
+                fdf_bb_lines.append(f" !if $(CRYPTO_TARGET) == {target}")
                 fdf_bb_lines.append(
                     f"    INF  $(SHARED_CRYPTO_PATH)/Driver/Bin/{inf_start}_{flavor}_{phase}_{target}_$({upper_phase}_CRYPTO_ARCH).inf")
                 fdf_bb_lines.append("  !endif")
