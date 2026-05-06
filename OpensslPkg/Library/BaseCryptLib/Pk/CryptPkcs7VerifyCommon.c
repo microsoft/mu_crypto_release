@@ -21,6 +21,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs7.h>
+#include <openssl/cms.h>
+#include <openssl/err.h>
 
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT8  mOidValue[9] = { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02 };
 
@@ -845,22 +847,9 @@ Pkcs7Verify (
   Status = FALSE;
 
   //
-  // Retrieve PKCS#7 Data (DER encoding)
+  // Validate SignedData size.
   //
   if (SignedDataSize > INT_MAX) {
-    goto _Exit;
-  }
-
-  Temp  = SignedData;
-  Pkcs7 = d2i_PKCS7 (NULL, (const unsigned char **)&Temp, (int)SignedDataSize);
-  if (Pkcs7 == NULL) {
-    goto _Exit;
-  }
-
-  //
-  // Check if it's PKCS#7 Signed Data (for Authenticode Scenario)
-  //
-  if (!PKCS7_type_is_signed (Pkcs7)) {
     goto _Exit;
   }
 
@@ -886,15 +875,6 @@ Pkcs7Verify (
   }
 
   //
-  // For generic PKCS#7 handling, InData may be NULL if the content is present
-  // in PKCS#7 structure. So ignore NULL checking here.
-  //
-  DataBio = BIO_new_mem_buf (InData, (int)DataLength);
-  if (DataBio == NULL) {
-    goto _Exit;
-  }
-
-  //
   // Allow partial certificate chains, terminated by a non-self-signed but
   // still trusted intermediate certificate. Also disable time checks.
   //
@@ -911,9 +891,50 @@ Pkcs7Verify (
   X509_STORE_set_purpose (CertStore, X509_PURPOSE_ANY);
 
   //
-  // Verifies the PKCS#7 signedData structure
+  // Try PKCS#7 verification first.
   //
-  Status = (BOOLEAN)PKCS7_verify (Pkcs7, NULL, CertStore, DataBio, NULL, PKCS7_BINARY);
+  Temp  = SignedData;
+  Pkcs7 = d2i_PKCS7 (NULL, (const unsigned char **)&Temp, (int)SignedDataSize);
+  if ((Pkcs7 != NULL) && PKCS7_type_is_signed (Pkcs7)) {
+    DataBio = BIO_new_mem_buf (InData, (int)DataLength);
+    if (DataBio != NULL) {
+      Status = (BOOLEAN)PKCS7_verify (Pkcs7, NULL, CertStore, DataBio, NULL, PKCS7_BINARY);
+      BIO_free (DataBio);
+      DataBio = NULL;
+    }
+  }
+
+  //
+  // If PKCS#7 verification failed or was not attempted, try CMS verification.
+  // OpenSSL's CMS module supports ML-DSA and other post-quantum signature
+  // algorithms that the legacy PKCS#7 module does not.
+  //
+  if (!Status) {
+    CMS_ContentInfo  *Cms;
+    CONST UINT8      *CmsTemp;
+
+    ERR_clear_error ();
+
+    CmsTemp = SignedData;
+    Cms     = d2i_CMS_ContentInfo (NULL, (const unsigned char **)&CmsTemp, (long)SignedDataSize);
+    if (Cms != NULL) {
+      DataBio = BIO_new_mem_buf (InData, (int)DataLength);
+      if (DataBio != NULL) {
+        Status = (BOOLEAN)CMS_verify (
+                            Cms,
+                            NULL,
+                            CertStore,
+                            DataBio,
+                            NULL,
+                            CMS_BINARY
+                            );
+        BIO_free (DataBio);
+        DataBio = NULL;
+      }
+
+      CMS_ContentInfo_free (Cms);
+    }
+  }
 
 _Exit:
   //
