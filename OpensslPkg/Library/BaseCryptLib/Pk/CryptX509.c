@@ -287,10 +287,10 @@ X509GetSubjectName (
   IN OUT  UINTN        *SubjectSize
   )
 {
-  BOOLEAN    Status;
-  X509       *X509Cert;
-  X509_NAME  *X509Name;
-  UINTN      X509NameSize;
+  BOOLEAN          Status;
+  X509             *X509Cert;
+  CONST X509_NAME  *X509Name;
+  UINTN            X509NameSize;
 
   //
   // Check input parameters.
@@ -380,15 +380,15 @@ InternalX509GetNIDName (
   IN OUT  UINTN        *CommonNameSize
   )
 {
-  RETURN_STATUS    ReturnStatus;
-  BOOLEAN          Status;
-  X509             *X509Cert;
-  X509_NAME        *X509Name;
-  INT32            Index;
-  INTN             Length;
-  X509_NAME_ENTRY  *Entry;
-  ASN1_STRING      *EntryData;
-  UINT8            *UTF8Name;
+  RETURN_STATUS          ReturnStatus;
+  BOOLEAN                Status;
+  X509                   *X509Cert;
+  CONST X509_NAME        *X509Name;
+  INT32                  Index;
+  INTN                   Length;
+  CONST X509_NAME_ENTRY  *Entry;
+  CONST ASN1_STRING      *EntryData;
+  UINT8                  *UTF8Name;
 
   ReturnStatus = RETURN_INVALID_PARAMETER;
   UTF8Name     = NULL;
@@ -1192,10 +1192,10 @@ X509GetIssuerName (
   IN OUT  UINTN        *CertIssuerSize
   )
 {
-  BOOLEAN    Status;
-  X509       *X509Cert;
-  X509_NAME  *X509Name;
-  UINTN      X509NameSize;
+  BOOLEAN          Status;
+  X509             *X509Cert;
+  CONST X509_NAME  *X509Name;
+  UINTN            X509NameSize;
 
   //
   // Check input parameters.
@@ -1376,11 +1376,11 @@ X509GetExtensionData (
   X509     *X509Cert;
 
   CONST STACK_OF (X509_EXTENSION) *Extensions;
-  ASN1_OBJECT        *Asn1Obj;
-  ASN1_OCTET_STRING  *Asn1Oct;
-  X509_EXTENSION     *Ext;
-  UINTN              ObjLength;
-  UINTN              OctLength;
+  CONST ASN1_OBJECT        *Asn1Obj;
+  CONST ASN1_OCTET_STRING  *Asn1Oct;
+  CONST X509_EXTENSION     *Ext;
+  UINTN                    ObjLength;
+  UINTN                    OctLength;
 
   //
   // Check input parameters.

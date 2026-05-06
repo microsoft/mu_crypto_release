@@ -477,16 +477,16 @@ Pkcs7GetCertificatesList (
   X509  *CtxCert;
 
   STACK_OF (X509)   *Signers;
-  X509       *Signer;
-  X509       *Cert;
-  X509       *Issuer;
-  X509_NAME  *IssuerName;
-  UINT8      *CertBuf;
-  UINT8      *OldBuf;
-  UINTN      BufferSize;
-  UINTN      OldSize;
-  UINT8      *SingleCert;
-  UINTN      CertSize;
+  X509             *Signer;
+  X509             *Cert;
+  X509             *Issuer;
+  CONST X509_NAME  *IssuerName;
+  UINT8            *CertBuf;
+  UINT8            *OldBuf;
+  UINTN            BufferSize;
+  UINTN            OldSize;
+  UINT8            *SingleCert;
+  UINTN            CertSize;
 
   //
   // Initializations
