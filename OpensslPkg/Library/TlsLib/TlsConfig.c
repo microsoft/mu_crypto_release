@@ -152,6 +152,9 @@ TlsSetConnectionEnd (
   Set the ciphers list to be used by the TLS object.
 
   This function sets the ciphers for use by a specified TLS object.
+  TLS 1.2 and earlier ciphers are configured via SSL_set_cipher_list().
+  TLS 1.3 ciphers (IANA IDs 0x1300-0x13FF) are configured via
+  SSL_set_ciphersuites().
 
   @param[in]  Tls          Pointer to a TLS object.
   @param[in]  CipherId     Array of UINT16 cipher identifiers. Each UINT16
@@ -184,15 +187,87 @@ TlsSetCipherList (
   INT32             StackIdx;
   CHAR8             *CipherString;
   CHAR8             *CipherStringPosition;
+  BOOLEAN           Tls13Found;
 
   STACK_OF (SSL_CIPHER)      *OpensslCipherStack;
   CONST SSL_CIPHER  *OpensslCipher;
   CONST CHAR8       *OpensslCipherName;
   UINTN             OpensslCipherNameLength;
 
+  //
+  // TLS 1.3 cipher suite mapping table.
+  // TLS 1.3 ciphers use a separate API (SSL_set_ciphersuites) and are
+  // identified by IANA IDs in the 0x1300 range.
+  //
+  typedef struct {
+    UINT16         CipherId;
+    CONST CHAR8    *Name;
+  } TLS13_CIPHER_MAP;
+
+  STATIC CONST TLS13_CIPHER_MAP  Tls13CipherMap[] = {
+    { 0x1301, "TLS_AES_128_GCM_SHA256"       },
+    { 0x1302, "TLS_AES_256_GCM_SHA384"       },
+    { 0x1303, "TLS_CHACHA20_POLY1305_SHA256" },
+    { 0x1304, "TLS_AES_128_CCM_SHA256"       },
+    { 0x1305, "TLS_AES_128_CCM_8_SHA256"     },
+  };
+
+  //
+  // TLS 1.3 ciphersuites string (max ~180 bytes for all 5 suites + colons + NUL).
+  //
+  CHAR8  Tls13String[256];
+  UINTN  Tls13Offset;
+
   TlsConn = (TLS_CONNECTION *)Tls;
   if ((TlsConn == NULL) || (TlsConn->Ssl == NULL) || (CipherId == NULL)) {
     return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // First pass: extract TLS 1.3 cipher IDs and build the ciphersuites string.
+  //
+  Tls13Found  = FALSE;
+  Tls13Offset = 0;
+  for (Index = 0; Index < CipherNum; Index++) {
+    UINTN  MapIndex;
+
+    if ((CipherId[Index] & 0xFF00) != 0x1300) {
+      continue;
+    }
+
+    for (MapIndex = 0; MapIndex < ARRAY_SIZE (Tls13CipherMap); MapIndex++) {
+      if (CipherId[Index] == Tls13CipherMap[MapIndex].CipherId) {
+        UINTN  NameLen;
+
+        NameLen = AsciiStrLen (Tls13CipherMap[MapIndex].Name);
+        if (Tls13Offset + NameLen + 2 > sizeof (Tls13String)) {
+          break;
+        }
+
+        if (Tls13Found) {
+          Tls13String[Tls13Offset++] = ':';
+        }
+
+        CopyMem (&Tls13String[Tls13Offset], Tls13CipherMap[MapIndex].Name, NameLen);
+        Tls13Offset += NameLen;
+        Tls13Found   = TRUE;
+        break;
+      }
+    }
+  }
+
+  if (Tls13Found) {
+    Tls13String[Tls13Offset] = '\0';
+    DEBUG ((
+      DEBUG_VERBOSE,
+      "%a:%a: TLS 1.3 CipherSuites={%a}\n",
+      gEfiCallerBaseName,
+      __func__,
+      Tls13String
+      ));
+    if (SSL_set_ciphersuites (TlsConn->Ssl, Tls13String) != 1) {
+      return EFI_UNSUPPORTED;
+    }
   }
 
   //
@@ -222,6 +297,13 @@ TlsSetCipherList (
   MappedCipherCount = 0;
   CipherStringSize  = 0;
   for (Index = 0; OpensslCipherStack != NULL && Index < CipherNum; Index++) {
+    //
+    // Skip TLS 1.3 cipher IDs — they were already handled above.
+    //
+    if ((CipherId[Index] & 0xFF00) == 0x1300) {
+      continue;
+    }
+
     //
     // Look up the IANA-to-OpenSSL mapping.
     //
@@ -281,7 +363,16 @@ TlsSetCipherList (
   // Verify that at least one IANA cipher ID could be mapped; account for the
   // terminating NUL character in CipherStringSize; allocate CipherString.
   //
+  //
+  // If no TLS 1.2 ciphers were mapped but TLS 1.3 ciphers were set,
+  // that is a valid configuration — return success.
+  //
   if (MappedCipherCount == 0) {
+    if (Tls13Found) {
+      Status = EFI_SUCCESS;
+      goto FreeMappedCipher;
+    }
+
     DEBUG ((
       DEBUG_ERROR,
       "%a:%a: no CipherId could be mapped\n",
@@ -1125,17 +1216,20 @@ TlsSetSignatureAlgoList (
 }
 
 /**
-  Set the EC curve to be used for TLS flows
+  Set the supported group (EC curve or PQC hybrid) for TLS flows.
 
-  This function sets the EC curve to be used for TLS flows.
+  This function configures the TLS supported group for key exchange.
+  It accepts IANA TLS Supported Group identifiers and maps them to
+  OpenSSL group names, supporting both traditional EC curves and
+  PQC hybrid key exchange groups.
 
   @param[in]  Tls                Pointer to a TLS object.
-  @param[in]  Data               An EC named curve as defined in section 5.1.1 of RFC 4492.
+  @param[in]  Data               An IANA TLS Supported Group identifier as UINT32.
   @param[in]  DataSize           Size of Data, it should be sizeof (UINT32)
 
-  @retval  EFI_SUCCESS           The EC curve was set successfully.
+  @retval  EFI_SUCCESS           The supported group was set successfully.
   @retval  EFI_INVALID_PARAMETER The parameters are invalid.
-  @retval  EFI_UNSUPPORTED       The requested TLS EC curve is not supported
+  @retval  EFI_UNSUPPORTED       The requested group is not supported.
 
 **/
 EFI_STATUS
@@ -1147,9 +1241,7 @@ TlsSetEcCurve (
   )
 {
   TLS_CONNECTION  *TlsConn;
-  EC_KEY          *EcKey;
-  INT32           Nid;
-  INT32           Ret;
+  CONST CHAR8     *GroupName;
 
   TlsConn = (TLS_CONNECTION *)Tls;
 
@@ -1159,36 +1251,37 @@ TlsSetEcCurve (
 
   switch (*((UINT32 *)Data)) {
     case TlsEcNamedCurveSecp256r1:
-      return EFI_UNSUPPORTED;
+      GroupName = "P-256";
+      break;
     case TlsEcNamedCurveSecp384r1:
-      Nid = NID_secp384r1;
+      GroupName = "P-384";
       break;
     case TlsEcNamedCurveSecp521r1:
-      Nid = NID_secp521r1;
+      GroupName = "P-521";
       break;
     case TlsEcNamedCurveX25519:
-      Nid = NID_X25519;
+      GroupName = "X25519";
       break;
     case TlsEcNamedCurveX448:
-      Nid = NID_X448;
+      GroupName = "X448";
+      break;
+    //
+    // PQC Hybrid Key Exchange Groups (IANA TLS Supported Groups Registry)
+    //
+    case 0x11EB:
+      GroupName = "SecP256r1MLKEM768";
+      break;
+    case 0x11EC:
+      GroupName = "X25519MLKEM768";
+      break;
+    case 0x11ED:
+      GroupName = "SecP384r1MLKEM1024";
       break;
     default:
       return EFI_UNSUPPORTED;
   }
 
-  if (SSL_set1_curves (TlsConn->Ssl, &Nid, 1) != 1) {
-    return EFI_UNSUPPORTED;
-  }
-
-  EcKey = EC_KEY_new_by_curve_name (Nid);
-  if (EcKey == NULL) {
-    return EFI_UNSUPPORTED;
-  }
-
-  Ret = SSL_set_tmp_ecdh (TlsConn->Ssl, EcKey);
-  EC_KEY_free (EcKey);
-
-  if (Ret != 1) {
+  if (SSL_set1_groups_list (TlsConn->Ssl, GroupName) != 1) {
     return EFI_UNSUPPORTED;
   }
 
