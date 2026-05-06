@@ -164,6 +164,24 @@
   $(OPENSSL_PATH)/crypto/bn/bn_word.c
   $(OPENSSL_PATH)/crypto/bn/bn_x931p.c
   $(OPENSSL_PATH)/crypto/buffer/buffer.c
+  $(OPENSSL_PATH)/crypto/cms/cms_asn1.c
+  $(OPENSSL_PATH)/crypto/cms/cms_att.c
+  $(OPENSSL_PATH)/crypto/cms/cms_cd.c
+  $(OPENSSL_PATH)/crypto/cms/cms_dd.c
+  $(OPENSSL_PATH)/crypto/cms/cms_dh.c
+  $(OPENSSL_PATH)/crypto/cms/cms_ec.c
+  $(OPENSSL_PATH)/crypto/cms/cms_enc.c
+  $(OPENSSL_PATH)/crypto/cms/cms_env.c
+  $(OPENSSL_PATH)/crypto/cms/cms_ess.c
+  $(OPENSSL_PATH)/crypto/cms/cms_io.c
+  $(OPENSSL_PATH)/crypto/cms/cms_kari.c
+  $(OPENSSL_PATH)/crypto/cms/cms_kem.c
+  $(OPENSSL_PATH)/crypto/cms/cms_kemri.c
+  $(OPENSSL_PATH)/crypto/cms/cms_lib.c
+  $(OPENSSL_PATH)/crypto/cms/cms_pwri.c
+  $(OPENSSL_PATH)/crypto/cms/cms_rsa.c
+  $(OPENSSL_PATH)/crypto/cms/cms_sd.c
+  $(OPENSSL_PATH)/crypto/cms/cms_smime.c
   $(OPENSSL_PATH)/crypto/comp/c_brotli.c
   $(OPENSSL_PATH)/crypto/comp/c_zlib.c
   $(OPENSSL_PATH)/crypto/comp/c_zstd.c
@@ -666,6 +684,7 @@
   $(OPENSSL_GEN_PATH)/crypto/bio/bio_err.c
   $(OPENSSL_GEN_PATH)/crypto/bn/bn_err.c
   $(OPENSSL_GEN_PATH)/crypto/buffer/buf_err.c
+  $(OPENSSL_GEN_PATH)/crypto/cms/cms_err.c
   $(OPENSSL_GEN_PATH)/crypto/comp/comp_err.c
   $(OPENSSL_GEN_PATH)/crypto/conf/conf_err.c
   $(OPENSSL_GEN_PATH)/crypto/dh/dh_err.c
