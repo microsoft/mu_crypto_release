@@ -72,6 +72,24 @@ jobs:
       - name: Run Host-Based Tests for ${{ matrix.package }} ${{ matrix.target }} (${{ env.TOOL_CHAIN_TAG }})
         run: stuart_ci_build -c .pytool/CISettings.py -p ${{ matrix.package }} -t ${{ matrix.target }} -d HostUnitTestCompilerPlugin=run TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
 
+      - name: TLS Algorithm Support Summary
+        if: always() && matrix.package == 'OpensslPkg'
+        run: |
+          if [ ! -f Build/CI_BUILDLOG.txt ]; then
+            exit 0
+          fi
+          REPORT=$(sed -n 's/^INFO - //p' Build/CI_BUILDLOG.txt | grep -E '^\[TLS |^\[DFCI |^\[PQC |^  TLS_|^  DHE|^  ECDHE|^  P-|^  X2|^  X4|^  Sec[A-Z]|^  Total|^  GCM|^  EC curves|^  PQC groups|^  All |^  \(PQC|^  TLS 1\.[0-9]|^  Security Level|^  TLS 1\.3 context|^  TLS 1\.3 ciphers' || true)
+          if [ -z "$REPORT" ]; then
+            exit 0
+          fi
+          {
+            echo "## TLS Algorithm Support Report"
+            echo ""
+            echo '```'
+            echo "$REPORT"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload Test logs
         if: always()
         uses: actions/upload-artifact@v4
