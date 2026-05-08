@@ -41,6 +41,7 @@ jobs:
         run: stuart_update -c PlatformBuild.py
 
       - name: Build OneCryptoPkg (${{ inputs.variant }})
+        shell: bash
         env:
           RAW_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
         run: |
