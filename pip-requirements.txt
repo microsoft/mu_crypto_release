@@ -19,3 +19,4 @@ lcov-cobertura==2.1.1
 pygount==3.1.1
 toml==0.10.2
 regex==2026.2.19
+uswid==0.6.0

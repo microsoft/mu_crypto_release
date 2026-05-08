@@ -163,11 +163,14 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         parserObj.add_argument("-sp", "--skip-packaging", dest="skip_packaging",
                                action="store_true", default=False,
                                help="skip OneCrypto packaging after build")
+        parserObj.add_argument("--version", dest="version", default="0.0.0", type=str,
+                               help="The version of OneCryptoPkg to use for the SBOM. Default is 0.0.0")
 
     def RetrieveCommandLineOptions(self, args):
         self.target = list(set(args.target)) if args.target else list(CommonPlatform.TargetsSupported)
         self.arch = args.arch if args.arch else list(CommonPlatform.ArchSupported)
         self.skip_packaging = args.skip_packaging
+        self.version = args.version
 
     def GetWorkspaceRoot(self):
         ''' get WorkspacePath '''
@@ -243,6 +246,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         return 0
 
     def PlatformPostBuild(self):
+        self.CreateSboms()
+
         # Skip packaging if requested
         if self.skip_packaging:
             logging.critical("=" * 80)
@@ -259,6 +264,45 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         )
 
         return 0
+
+    def CreateSboms(self):
+        """Generates an SBOM for each of the OneCryptoBin drivers that were built.
+        
+        The SBOM is generated and both inserted directly into the driver binary (in the.sbom section) and also written
+        out to a separate SPDX XML file in the build output directory.
+        """
+        toolchain = self.env.GetValue("TOOL_CHAIN_TAG", "CLANGPDB")
+
+        for arch in self.arch:
+            for target in self.target:
+
+                # Helper registered at OneCryptoPkg/Plugin/OneCryptoBundler
+                layout = self.Helper.get_package_layout(
+                    self.ws,
+                    arch,
+                    target,
+                    toolchain,
+                )
+
+                for file, after in layout["OneCryptoBin"]:
+                    if file.endswith(".efi"):
+                        logging.info(f"Creating SBOM for {file}")
+                        efi_name = Path(after).name # after is what the file will be renamed to.
+                        guid = "A7D8A8E6-2B1C-4D5F-9E3A-1C8F6B2D4E5A" if "Dxe" in efi_name else "76ABA88D-9D16-49A2-AA3A-DB6112FAC5CC"
+
+                        # Helper registered at OneCryptoPkg/Plugin/SbomInserter
+                        self.Helper.create_sbom(
+                            Path(self.ws),
+                            Path(file),
+                            {
+                                "ARCHITECTURE": arch,
+                                "TARGET": target,
+                                "GUID": guid,
+                                "EFI_NAME": efi_name,
+                                "VERSION": self.version,
+                                "TOOL_CHAIN_TAG": toolchain
+                            }
+                        )
 
 
 if __name__ == "__main__":

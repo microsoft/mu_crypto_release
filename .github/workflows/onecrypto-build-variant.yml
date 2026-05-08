@@ -41,8 +41,23 @@ jobs:
         run: stuart_update -c PlatformBuild.py
 
       - name: Build OneCryptoPkg (${{ inputs.variant }})
+        env:
+          RAW_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
         run: |
-          python PlatformBuild.py TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
+          # If a release tag is available, strip a leading 'v'/'V' and reduce
+          # to a bare X.Y.Z semver core. Otherwise omit --version entirely.
+          VERSION_ARG=""
+          if [[ -n "$RAW_VERSION" ]]; then
+            CLEAN_VERSION=$(echo "$RAW_VERSION" | sed -E 's/^[vV]//' | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || true)
+            echo "Raw version:   $RAW_VERSION"
+            echo "Clean version: ${CLEAN_VERSION:-<none>}"
+            if [[ -n "$CLEAN_VERSION" ]]; then
+              VERSION_ARG="--version $CLEAN_VERSION"
+            fi
+          else
+            echo "No release tag available; building without --version."
+          fi
+          python PlatformBuild.py $VERSION_ARG TOOL_CHAIN_TAG=${{ inputs.tool_chain_tag }} ${{ inputs.bld_flags }}
 
       - name: unzip to staging
         run: |
