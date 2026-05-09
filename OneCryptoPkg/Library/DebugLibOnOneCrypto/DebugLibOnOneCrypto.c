@@ -42,10 +42,13 @@ DebugPrint (
   )
 {
   VA_LIST  Marker;
+  CHAR8    Buffer[256];
 
   VA_START (Marker, Format);
-  OneCryptoDebugPrint (ErrorLevel, Format, Marker);
+  AsciiVSPrint (Buffer, sizeof (Buffer), Format, Marker);
   VA_END (Marker);
+
+  OneCryptoDebugPrint (ErrorLevel, "%a", Buffer);
 }
 
 /**
