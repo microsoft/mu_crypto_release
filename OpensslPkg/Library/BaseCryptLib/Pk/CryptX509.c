@@ -105,18 +105,25 @@ X509ConstructCertificateStackV (
   UINT8  *Cert;
   UINTN  CertSize;
   X509   *X509Cert;
+  UINTN  CertIndex; // MU_CHANGE
 
   STACK_OF (X509)  *CertStack;
   BOOLEAN  Status;
+  BOOLEAN  NewlyAllocated; // MU_CHANGE
 
   //
   // Check input parameters.
   //
   if (X509Stack == NULL) {
+    DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV X509Stack is NULL\n", gEfiCallerBaseName)); // MU_CHANGE
     return FALSE;
   }
 
   Status = FALSE;
+  // MU_CHANGE [BEGIN]
+  CertIndex      = 0;
+  NewlyAllocated = FALSE;
+  // MU_CHANGE [END]
 
   //
   // Initialize X509 stack object.
@@ -125,8 +132,11 @@ X509ConstructCertificateStackV (
   if (CertStack == NULL) {
     CertStack = sk_X509_new_null ();
     if (CertStack == NULL) {
+      DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV failed to allocate X509 stack\n", gEfiCallerBaseName)); // MU_CHANGE
       return Status;
     }
+
+    NewlyAllocated = TRUE; // MU_CHANGE
   }
 
   while (TRUE) {
@@ -135,6 +145,7 @@ X509ConstructCertificateStackV (
     //
     Cert = VA_ARG (Args, UINT8 *);
     if (Cert == NULL) {
+      DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV reached end of list after %Lu certs\n", gEfiCallerBaseName, (UINT64)CertIndex)); // MU_CHANGE
       break;
     }
 
@@ -164,10 +175,19 @@ X509ConstructCertificateStackV (
     // Insert the new X509 object into X509 stack object.
     //
     sk_X509_push (CertStack, X509Cert);
+    CertIndex++; // MU_CHANGE
   }
 
   if (!Status) {
-    sk_X509_pop_free (CertStack, X509_free);
+    // MU_CHANGE [BEGIN]
+    if (NewlyAllocated) {
+      DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV failed, freeing newly allocated stack\n", gEfiCallerBaseName));
+      sk_X509_pop_free (CertStack, X509_free);
+    } else {
+      DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV failed, preserving pre-existing stack\n", gEfiCallerBaseName));
+    }
+
+    // MU_CHANGE [END]
   } else {
     *X509Stack = (UINT8 *)CertStack;
   }
