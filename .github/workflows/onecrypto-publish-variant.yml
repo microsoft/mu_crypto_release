@@ -32,12 +32,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p publish/${{ inputs.variant }}
-          shopt -s nullglob
-          for zip_file in artifacts/${{ inputs.variant }}/*.zip; do
-            unzip -q "$zip_file" -d publish/${{ inputs.variant }}
-          done
-          cp -r artifacts/${{ inputs.variant }}/PDB publish/${{ inputs.variant }}/ 2>/dev/null || true
-          cp -r artifacts/${{ inputs.variant }}/Logs publish/${{ inputs.variant }}/ 2>/dev/null || true
+          cp -r artifacts/${{ inputs.variant }}/* publish/${{ inputs.variant }}/
 
       - name: Publish Bundle (${{ inputs.variant }})
         uses: actions/upload-artifact@v7
