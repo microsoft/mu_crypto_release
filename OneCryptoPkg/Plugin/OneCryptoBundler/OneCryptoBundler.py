@@ -15,6 +15,7 @@ class OneCryptoBundler(IUefiHelperPlugin):
         fp = os.path.abspath(__file__)
         obj.Register("create_package", self.create_package, fp)
         obj.Register("get_onecrypto_version", get_onecrypto_version, fp)
+        obj.Register("get_package_layout", get_file_layout, fp)
 
 
     @staticmethod
@@ -201,6 +202,8 @@ def get_file_layout(workspace, arch, target, toolchain):
             ],
             "BuildInfo": [
                 (f"{build_output}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
+                (f"{package_build_dir}/OneCryptoBin/OneCryptoBinDxe/OUTPUT/OneCryptoBinDxe.spdx.xml", "OneCryptoBinDxe.spdx.xml"),
+                (f"{package_build_dir}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.spdx.xml", "OneCryptoBinStandaloneMm.spdx.xml"),
             ],
         }
     else:  # X64 (default)
@@ -226,6 +229,8 @@ def get_file_layout(workspace, arch, target, toolchain):
             ],
             "BuildInfo": [
                 (f"{build_output}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
+                (f"{package_build_dir}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.spdx.xml", "OneCryptoBinStandaloneMm.spdx.xml"),
+                (f"{package_build_dir}/OneCryptoBin/OneCryptoBinSupvMm/OUTPUT/OneCryptoBinSupvMm.spdx.xml", "OneCryptoBinSupvMm.spdx.xml"),
             ],
         }
 

@@ -1,0 +1,5 @@
+{
+  "scope": "global",
+  "name": "SBOM PECOFF section Inserter",
+  "module": "SbomInserter"
+}
