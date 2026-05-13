@@ -50,7 +50,9 @@ class OneCryptoBundler(IUefiHelperPlugin):
                 for arch in architectures:
                     zip_bundle(workspace, target, arch, toolchain, zipf)
             add_log_files(workspace, zipf)
-            log_bundle_info(workspace, output_zip, targets, architectures, toolchain, zipf)
+
+        # Log after the zip is closed so the SHA256 covers the finalized file
+        log_bundle_info(workspace, output_zip, targets, architectures, toolchain)
 
 
 def zip_bundle(workspace, target, arch, toolchain, output_zip):
@@ -99,7 +101,7 @@ def add_log_files(workspace, zipf):
 
 
 
-def log_bundle_info(workspace, output_zip, targets, architectures, toolchain, zipf):
+def log_bundle_info(workspace, output_zip, targets, architectures, toolchain):
     """
     Log a packaging summary including EFI sizes, compression ratios, and SHA256.
 
@@ -109,7 +111,6 @@ def log_bundle_info(workspace, output_zip, targets, architectures, toolchain, zi
         targets: List of build targets (DEBUG, RELEASE)
         architectures: List of architectures (X64, AARCH64)
         toolchain: Toolchain used (e.g., VS2022, GCC5)
-        zipf: Open ZipFile object to read entry metadata from
     """
     logging.critical("=" * 80)
     logging.critical("OneCrypto Packaging Summary:")
