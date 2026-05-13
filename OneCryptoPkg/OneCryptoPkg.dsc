@@ -27,6 +27,9 @@
   # Enable NASM assembly source style for accelerated OpenSSL crypto
   gEfiCryptoPkgTokenSpaceGuid.PcdOpensslLibAssemblySourceStyleNasm|TRUE
 
+[PcdsPatchableInModule.AARCH64]
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+
 [PcdsFeatureFlag.AARCH64]
   #
   # Use the PE target assembly source files when building with the CLANGPDB
@@ -38,6 +41,23 @@
   !endif
 
 [PcdsFixedAtBuild.X64]
+  # Ensure DEBUG prints are enabled (excluding VERBOSE: 0x8040004F & ~0x00400000 = 0x8000004F)
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
+  gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0x8000004F
+
+  # OneCryptoPkg Debug Configuration
+  # DEBUG builds: Enable Debug Print (BIT1) and Debug Code (BIT2) = 0x06
+  # RELEASE builds: Disable all debug features = 0x00
+  # Note: Debug Clear Memory (BIT3) is intentionally disabled for all builds
+!if $(TARGET) == DEBUG
+  gOneCryptoPkgTokenSpaceGuid.PcdDebugPropertyMask|0x06
+  gOneCryptoPkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0xFFFFFFFF
+!else
+  gOneCryptoPkgTokenSpaceGuid.PcdDebugPropertyMask|0x00
+  gOneCryptoPkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0x80000000
+!endif
+
+[PcdsFixedAtBuild.AARCH64]
   # Ensure DEBUG prints are enabled (excluding VERBOSE: 0x8040004F & ~0x00400000 = 0x8000004F)
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
   gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0x8000004F
@@ -345,7 +365,10 @@
       UefiDriverEntryPoint        | MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
       UefiBootServicesTableLib    | MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
       MemoryAllocationLib         | MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
-      DebugLib                    | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+      DebugLib                    | AdvLoggerPkg/Library/BaseDebugLibAdvancedLogger/BaseDebugLibAdvancedLogger.inf
+      DebugPrintErrorLevelLib     | MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
+      AdvancedLoggerLib           | AdvLoggerPkg/Library/AdvancedLoggerLib/Dxe/AdvancedLoggerLib.inf
+      AssertLib                   | AdvLoggerPkg/Library/AssertLib/AssertLib.inf
   }
 
   #############################################################################
