@@ -51,13 +51,13 @@ class SbomInserter(IUefiHelperPlugin):
         """
         container = SbomInserter.build_sbom(ws, sbom_data)
         
-        b = uswid.uSwidFormatCoswid().save(container)
+        b = uswid.uSwidFormatSpdx().save(container)
         
         compressed = lzma.compress(b)
 
         sbom_table_entry = SbomInserter.build_sbom_table_entry(
             payload=compressed,
-            fmt=SBOM_FORMAT_COSWID,
+            fmt=SBOM_FORMAT_SPDX,
             compression=SBOM_COMPRESSION_LZMA,
         )
 
@@ -65,9 +65,8 @@ class SbomInserter(IUefiHelperPlugin):
 
         # Also emit an SPDX XML sidecar next to the EFI for tooling that
         # consumes SPDX directly.
-        spdx_bytes = uswid.uSwidFormatSpdx().save(container)
         spdx_path = Path(efi_file).with_suffix(".spdx.xml")
-        spdx_path.write_bytes(spdx_bytes)
+        spdx_path.write_bytes(b)
     
     @staticmethod
     def build_sbom(ws: Path, sbom_data: dict) -> uswid.uSwidContainer:
