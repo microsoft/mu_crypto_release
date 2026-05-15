@@ -19,6 +19,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 #include <openssl/pkcs7.h>
+#include <openssl/cms.h>
 
 //
 // OID ASN.1 Value for SPC_INDIRECT_DATA_OBJID
@@ -64,14 +65,20 @@ AuthenticodeVerify (
   IN  UINTN        HashSize
   )
 {
-  BOOLEAN      Status;
-  PKCS7        *Pkcs7;
-  CONST UINT8  *Temp;
-  CONST UINT8  *OrigAuthData;
-  UINT8        *SpcIndirectDataContent;
-  UINT8        Asn1Byte;
-  UINTN        ContentSize;
-  CONST UINT8  *SpcIndirectDataOid;
+  BOOLEAN          Status;
+  PKCS7            *Pkcs7;
+  CONST UINT8      *Temp;
+  UINT8            *SpcIndirectDataContent;
+  UINT8            Asn1Byte;
+  UINTN            ContentSize;
+  CONST UINT8      *SpcIndirectDataOid;
+  X509             *Cert;
+  X509_STORE       *CertStore;
+  BIO              *DataBio;
+  CMS_ContentInfo  *Cms;
+  ASN1_TYPE        *OrigContent;
+  UINT8            *DetachedDer;
+  INT32            DetachedDerLen;
 
   //
   // Check input parameters.
@@ -84,9 +91,15 @@ AuthenticodeVerify (
     return FALSE;
   }
 
-  Status       = FALSE;
-  Pkcs7        = NULL;
-  OrigAuthData = AuthData;
+  Status         = FALSE;
+  Pkcs7          = NULL;
+  Cert           = NULL;
+  CertStore      = NULL;
+  DataBio        = NULL;
+  Cms            = NULL;
+  OrigContent    = NULL;
+  DetachedDer    = NULL;
+  DetachedDerLen = 0;
 
   //
   // Retrieve & Parse PKCS#7 Data (DER encoding) from Authenticode Signature
@@ -179,14 +192,101 @@ AuthenticodeVerify (
   }
 
   //
-  // Verifies the PKCS#7 Signed Data in PE/COFF Authenticode Signature
+  // Verifies the PKCS#7 Signed Data in PE/COFF Authenticode Signature.
   //
-  Status = (BOOLEAN)Pkcs7Verify (OrigAuthData, DataSize, TrustedCert, CertSize, SpcIndirectDataContent, ContentSize);
+  // Authenticode uses PKCS#7 v1.5 format where eContent is encoded as a raw
+  // SEQUENCE (SpcIndirectDataContent). CMS (RFC 5652) requires eContent to be
+  // an OCTET STRING, so d2i_CMS_ContentInfo cannot parse Authenticode directly.
+  //
+  // Workaround: Convert the PKCS#7 to a detached signature by temporarily
+  // removing the eContent, re-encode to DER, then parse as CMS. The content
+  // is provided separately via BIO to CMS_verify. This enables CMS_verify to
+  // handle both traditional (RSA/ECDSA) and post-quantum (ML-DSA) algorithms.
+  //
+
+  //
+  // Read DER-encoded root certificate and construct X509 Certificate
+  //
+  Temp = TrustedCert;
+  Cert = d2i_X509 (NULL, &Temp, (long)CertSize);
+  if (Cert == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // Setup X509 Store for trusted certificate
+  //
+  CertStore = X509_STORE_new ();
+  if (CertStore == NULL) {
+    goto _Exit;
+  }
+
+  if (!(X509_STORE_add_cert (CertStore, Cert))) {
+    goto _Exit;
+  }
+
+  //
+  // Allow partial certificate chains, terminated by a non-self-signed but
+  // still trusted intermediate certificate. Also disable time checks.
+  //
+  X509_STORE_set_flags (
+    CertStore,
+    X509_V_FLAG_PARTIAL_CHAIN | X509_V_FLAG_NO_CHECK_TIME
+    );
+
+  X509_STORE_set_purpose (CertStore, X509_PURPOSE_ANY);
+
+  //
+  // Temporarily remove the eContent from the PKCS#7 SignedData to create a
+  // detached signature. This avoids the SEQUENCE vs OCTET STRING encoding
+  // incompatibility when parsing as CMS.
+  //
+  OrigContent                      = Pkcs7->d.sign->contents->d.other;
+  Pkcs7->d.sign->contents->d.other = NULL;
+
+  DetachedDerLen = i2d_PKCS7 (Pkcs7, &DetachedDer);
+
+  //
+  // Restore the original content for proper PKCS7 cleanup.
+  //
+  Pkcs7->d.sign->contents->d.other = OrigContent;
+
+  if ((DetachedDerLen <= 0) || (DetachedDer == NULL)) {
+    goto _Exit;
+  }
+
+  //
+  // Parse the detached DER as CMS ContentInfo. Without eContent present,
+  // d2i_CMS_ContentInfo can parse the structure regardless of content type.
+  //
+  Temp = DetachedDer;
+  Cms  = d2i_CMS_ContentInfo (NULL, (const unsigned char **)&Temp, (long)DetachedDerLen);
+  if (Cms == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // Create BIO from the SpcIndirectDataContent for detached verification.
+  //
+  DataBio = BIO_new_mem_buf (SpcIndirectDataContent, (int)ContentSize);
+  if (DataBio == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // Verify the CMS signed data structure.
+  //
+  Status = (BOOLEAN)CMS_verify (Cms, NULL, CertStore, DataBio, NULL, CMS_BINARY);
 
 _Exit:
   //
   // Release Resources
   //
+  BIO_free (DataBio);
+  X509_free (Cert);
+  X509_STORE_free (CertStore);
+  CMS_ContentInfo_free (Cms);
+  OPENSSL_free (DetachedDer);
   PKCS7_free (Pkcs7);
 
   return Status;
