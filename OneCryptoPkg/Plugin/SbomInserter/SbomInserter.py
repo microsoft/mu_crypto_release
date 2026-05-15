@@ -115,7 +115,7 @@ class SbomInserter(IUefiHelperPlugin):
             compiler (uswid.uSwidLink): A uSwidLink object representing the compiler used for the build.
         """
         # This UUID is only used to associate components together.
-        TAG_ID = "e2aeed23-3824-45ad-9043-a5237e1131c2"
+        TAG_ID = "e2aeed23-3824-45ad-9043-a5237e1131c2".lower()
         
         architecture = lookup["ARCHITECTURE"]
         target = lookup["TARGET"]
@@ -127,7 +127,6 @@ class SbomInserter(IUefiHelperPlugin):
             name = "The OpenSSL Project",
             regid = "openssl.org",
             roles = [
-                uswid.uSwidEntityRole.TAG_CREATOR, 
                 uswid.uSwidEntityRole.DISTRIBUTOR, 
                 uswid.uSwidEntityRole.MAINTAINER, 
                 uswid.uSwidEntityRole.SOFTWARE_CREATOR
@@ -146,7 +145,7 @@ class SbomInserter(IUefiHelperPlugin):
         
         component = uswid.uSwidComponent(
             tag_id=TAG_ID,
-            tag_version=None,
+            tag_version=1,
             software_name="OpenSSL",
             software_version=openssl_version
         )
@@ -155,6 +154,7 @@ class SbomInserter(IUefiHelperPlugin):
         component.add_link(openssl_license)
         component.add_link(compiler)
         component.colloquial_version = colloquial_version
+        component.product = "OpenSSL"
         component.type = uswid.uSwidComponentType.LIBRARY
         component.cpe = f"cpe:2.3:a:openssl:openssl:{openssl_version}:*:*:*:*:*:*:*"
         component.version_scheme = uswid.uSwidVersionScheme.SEMVER
@@ -204,7 +204,7 @@ class SbomInserter(IUefiHelperPlugin):
         """
         architecture = lookup["ARCHITECTURE"]
         target = lookup["TARGET"]
-        tag_id = lookup["GUID"]
+        tag_id = lookup["GUID"].lower()
         software_name = lookup["EFI_NAME"]
         software_version = lookup["VERSION"]
         colloquial_version = SbomInserter.get_commit_sha(ws)
@@ -244,7 +244,7 @@ class SbomInserter(IUefiHelperPlugin):
         
         component = uswid.uSwidComponent(
             tag_id,
-            tag_version=None,
+            tag_version=1,
             software_name=software_name,
             software_version=software_version,
         )
