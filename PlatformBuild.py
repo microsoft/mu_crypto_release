@@ -62,9 +62,11 @@ class CommonPlatform():
         ''' Return Git Repository Dependencies '''
         return [
             {
+                # TEMPORARY: pinned to flickdm fork branch until PQC unit
+                # test changes are merged upstream into mu_basecore.
                 "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "922377cb580e03c45628ddb4e0a0871ccf2f6f2d"
+                "Url": "https://github.com/flickdm/mu_basecore.git",
+                "Branch": "update/Pqc-BaseCryptLibUnitTests"
             },
             {
                 "Path": "Features/MM_SUPV",
