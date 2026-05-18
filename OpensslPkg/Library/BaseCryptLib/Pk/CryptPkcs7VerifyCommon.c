@@ -21,6 +21,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs7.h>
+#include <openssl/cms.h>
 
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT8  mOidValue[9] = { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02 };
 
@@ -477,16 +478,16 @@ Pkcs7GetCertificatesList (
   X509  *CtxCert;
 
   STACK_OF (X509)   *Signers;
-  X509       *Signer;
-  X509       *Cert;
-  X509       *Issuer;
-  X509_NAME  *IssuerName;
-  UINT8      *CertBuf;
-  UINT8      *OldBuf;
-  UINTN      BufferSize;
-  UINTN      OldSize;
-  UINT8      *SingleCert;
-  UINTN      CertSize;
+  X509             *Signer;
+  X509             *Cert;
+  X509             *Issuer;
+  CONST X509_NAME  *IssuerName;
+  UINT8            *CertBuf;
+  UINT8            *OldBuf;
+  UINTN            BufferSize;
+  UINTN            OldSize;
+  UINT8            *SingleCert;
+  UINTN            CertSize;
 
   //
   // Initializations
@@ -752,27 +753,33 @@ _Error:
 }
 
 /**
-  Verifies the validity of a PKCS#7 signed data as described in "PKCS #7:
-  Cryptographic Message Syntax Standard". The input signed data could be wrapped
-  in a ContentInfo structure.
+  Verifies the validity of a PKCS#7/CMS signed data structure.
+
+  This function verifies signed data using OpenSSL's CMS (Cryptographic
+  Message Syntax, RFC 5652) implementation, which is the successor to
+  PKCS#7 and is backward-compatible at the ASN.1 level. CMS_verify
+  provides crypto-agile signature verification supporting RSA, ECDSA,
+  Ed25519, ML-DSA, and future algorithms through the EVP provider
+  framework. The input signed data may be wrapped in a ContentInfo
+  structure.
 
   If P7Data, TrustedCert or InData is NULL, then return FALSE.
   If P7Length, CertLength or DataLength overflow, then return FALSE.
 
   Caution: This function may receive untrusted input.
   UEFI Authenticated Variable is external input, so this function will do basic
-  check for PKCS#7 data structure.
+  check for data structure.
 
-  @param[in]  P7Data       Pointer to the PKCS#7 message to verify.
-  @param[in]  P7Length     Length of the PKCS#7 message in bytes.
+  @param[in]  P7Data       Pointer to the PKCS#7/CMS message to verify.
+  @param[in]  P7Length     Length of the PKCS#7/CMS message in bytes.
   @param[in]  TrustedCert  Pointer to a trusted/root certificate encoded in DER, which
                            is used for certificate chain verification.
   @param[in]  CertLength   Length of the trusted certificate in bytes.
   @param[in]  InData       Pointer to the content to be verified.
   @param[in]  DataLength   Length of InData in bytes.
 
-  @retval  TRUE  The specified PKCS#7 signed data is valid.
-  @retval  FALSE Invalid PKCS#7 signed data.
+  @retval  TRUE  The specified PKCS#7/CMS signed data is valid.
+  @retval  FALSE Invalid PKCS#7/CMS signed data.
 
 **/
 BOOLEAN
@@ -786,15 +793,15 @@ Pkcs7Verify (
   IN  UINTN        DataLength
   )
 {
-  PKCS7        *Pkcs7;
-  BIO          *DataBio;
-  BOOLEAN      Status;
-  X509         *Cert;
-  X509_STORE   *CertStore;
-  UINT8        *SignedData;
-  CONST UINT8  *Temp;
-  UINTN        SignedDataSize;
-  BOOLEAN      Wrapped;
+  CMS_ContentInfo  *Cms;
+  BIO              *DataBio;
+  BOOLEAN          Status;
+  X509             *Cert;
+  X509_STORE       *CertStore;
+  UINT8            *SignedData;
+  CONST UINT8      *Temp;
+  UINTN            SignedDataSize;
+  BOOLEAN          Wrapped;
 
   //
   // Check input parameters.
@@ -805,7 +812,7 @@ Pkcs7Verify (
     return FALSE;
   }
 
-  Pkcs7     = NULL;
+  Cms       = NULL;
   DataBio   = NULL;
   Cert      = NULL;
   CertStore = NULL;
@@ -845,22 +852,9 @@ Pkcs7Verify (
   Status = FALSE;
 
   //
-  // Retrieve PKCS#7 Data (DER encoding)
+  // Validate SignedData size.
   //
   if (SignedDataSize > INT_MAX) {
-    goto _Exit;
-  }
-
-  Temp  = SignedData;
-  Pkcs7 = d2i_PKCS7 (NULL, (const unsigned char **)&Temp, (int)SignedDataSize);
-  if (Pkcs7 == NULL) {
-    goto _Exit;
-  }
-
-  //
-  // Check if it's PKCS#7 Signed Data (for Authenticode Scenario)
-  //
-  if (!PKCS7_type_is_signed (Pkcs7)) {
     goto _Exit;
   }
 
@@ -886,15 +880,6 @@ Pkcs7Verify (
   }
 
   //
-  // For generic PKCS#7 handling, InData may be NULL if the content is present
-  // in PKCS#7 structure. So ignore NULL checking here.
-  //
-  DataBio = BIO_new_mem_buf (InData, (int)DataLength);
-  if (DataBio == NULL) {
-    goto _Exit;
-  }
-
-  //
   // Allow partial certificate chains, terminated by a non-self-signed but
   // still trusted intermediate certificate. Also disable time checks.
   //
@@ -904,16 +889,42 @@ Pkcs7Verify (
     );
 
   //
-  // OpenSSL PKCS7 Verification by default checks for SMIME (email signing) and
-  // doesn't support the extended key usage for Authenticode Code Signing.
   // Bypass the certificate purpose checking by enabling any purposes setting.
   //
   X509_STORE_set_purpose (CertStore, X509_PURPOSE_ANY);
 
   //
-  // Verifies the PKCS#7 signedData structure
+  // Parse the signed data as CMS ContentInfo. CMS is the successor to PKCS#7
+  // and is backward-compatible at the ASN.1 level. Using CMS_verify provides
+  // crypto-agile signature verification supporting RSA, ECDSA, Ed25519,
+  // ML-DSA, and future algorithms through the OpenSSL EVP provider framework.
   //
-  Status = (BOOLEAN)PKCS7_verify (Pkcs7, NULL, CertStore, DataBio, NULL, PKCS7_BINARY);
+  Temp = SignedData;
+  Cms  = d2i_CMS_ContentInfo (NULL, (const unsigned char **)&Temp, (long)SignedDataSize);
+  if (Cms == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // For generic PKCS#7 handling, InData may be NULL if the content is present
+  // in PKCS#7 structure. So ignore NULL checking here.
+  //
+  DataBio = BIO_new_mem_buf (InData, (int)DataLength);
+  if (DataBio == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // Verify the CMS signed data structure.
+  //
+  Status = (BOOLEAN)CMS_verify (
+                      Cms,
+                      NULL,
+                      CertStore,
+                      DataBio,
+                      NULL,
+                      CMS_BINARY
+                      );
 
 _Exit:
   //
@@ -922,7 +933,7 @@ _Exit:
   BIO_free (DataBio);
   X509_free (Cert);
   X509_STORE_free (CertStore);
-  PKCS7_free (Pkcs7);
+  CMS_ContentInfo_free (Cms);
 
   if (!Wrapped) {
     OPENSSL_free (SignedData);
