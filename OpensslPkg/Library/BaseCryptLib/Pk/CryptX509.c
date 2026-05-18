@@ -145,12 +145,17 @@ X509ConstructCertificateStackV (
     //
     Cert = VA_ARG (Args, UINT8 *);
     if (Cert == NULL) {
-      DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV reached end of list after %Lu certs\n", gEfiCallerBaseName, (UINT64)CertIndex)); // MU_CHANGE
+      // MU_CHANGE [BEGIN] - Reaching the NULL terminator is a success path,
+      // even when no certificates were supplied (empty list).
+      DEBUG ((DEBUG_VERBOSE, "[%a] X509ConstructCertificateStackV reached end of list after %Lu certs\n", gEfiCallerBaseName, (UINT64)CertIndex));
+      Status = TRUE;
+      // MU_CHANGE [END]
       break;
     }
 
     CertSize = VA_ARG (Args, UINTN);
     if (CertSize == 0) {
+      Status = FALSE; // MU_CHANGE - A zero-size certificate is invalid input.
       break;
     }
 
