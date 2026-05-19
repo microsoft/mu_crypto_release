@@ -819,31 +819,17 @@ Pkcs7Verify (
   CertStore = NULL;
 
   //
-  // Register & Initialize necessary digest algorithms for PKCS#7 Handling
+  // No manual digest registration is required in OpenSSL 3.x+.  Under the
+  // EVP provider framework, EVP_get_digestbyname()/EVP_get_digestbynid()
+  // (which is what CMS_verify uses internally to resolve a signer's digest
+  // OID to an EVP_MD) invokes OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_-
+  // DIGESTS, NULL) on first use.  That in turn lazily populates the legacy
+  // OBJ_NAME table via openssl_add_all_digests_int() with the full SHA-1 /
+  // SHA-2 family that the default provider exposes.  The legacy alias for
+  // "1.3.14.3.2.29" (sha1WithRSAEncryption / id-sha1-with-rsa-signature)
+  // is likewise resolved through the provider's algorithm tables, so no
+  // EVP_add_digest_alias() registration is required either.
   //
-  if (EVP_add_digest (EVP_md5 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha1 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha256 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha384 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha512 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest_alias (SN_sha1WithRSAEncryption, SN_sha1WithRSA) == 0) {
-    return FALSE;
-  }
 
   Status = WrapPkcs7Data (P7Data, P7Length, &Wrapped, &SignedData, &SignedDataSize);
   if (!Status) {
