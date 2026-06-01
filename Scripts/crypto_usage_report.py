@@ -48,6 +48,7 @@ CRYPTO_PROVIDER_MARKERS = [
     "BaseCryptLibOnProtocolPpi",
     "BaseCryptLibNull",
     "BaseCryptLibMbedTls",
+    "CryptoDriverBin",
     "TlsLibNull",
     "HmacSha1Lib/HmacSha1Lib",  # implementation, not consumer
     "BaseHashApiLib",
@@ -120,6 +121,14 @@ RE_FUNC_DECL = re.compile(r"^([A-Z][a-zA-Z0-9]+)\s*\(", re.MULTILINE)
 # license headers: "Copyright (c) Microsoft").
 HEADER_FALSE_POSITIVES = {"Copyright", "SPDX"}
 
+
+def normalize_inf_path(path: str) -> str:
+    """Normalize INF paths reconstructed from wrapped report lines."""
+    p = path.replace("\\", "/")
+    p = re.sub(r"\s*/\s*", "/", p)
+    p = re.sub(r"\s+", " ", p).strip()
+    return p
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Data Classes
 # ─────────────────────────────────────────────────────────────────────────────
@@ -153,6 +162,17 @@ class ModuleCryptoUsage:
     all_functions: Set[str] = field(default_factory=set)
     families: Dict[str, Set[str]] = field(default_factory=dict)
     total_sources_scanned: int = 0
+
+
+@dataclass
+class ProviderInfo:
+    """Crypto provider provenance found in build report module metadata."""
+    phase: str
+    module_name: str
+    module_inf: str
+    source: str
+    lib_class: str = ""
+    lib_inf: str = ""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -238,7 +258,7 @@ def _parse_one_module(lines: list, start: int) -> Tuple[Optional[ModuleInfo], in
                 while ".inf" not in value.lower() and i + 1 < len(lines):
                     i += 1
                     value += "/" + lines[i].strip()
-                mod.inf_path = os.path.normpath(value.replace("\\", "/"))
+                mod.inf_path = os.path.normpath(normalize_inf_path(value))
             elif key == "file guid":
                 mod.guid = value
             elif key == "driver type":
@@ -293,7 +313,7 @@ def _parse_library_subsection(lines: list, start: int) -> Tuple[Dict[str, str], 
             entry += " " + lines[i].strip()
 
         if "{" in entry and "}" in entry:
-            inf_path = entry.partition("{")[0].strip()
+            inf_path = normalize_inf_path(entry.partition("{")[0].strip())
             class_info = entry.partition("{")[2].partition("}")[0]
             lib_class = class_info.partition(":")[0].strip()
 
@@ -469,9 +489,72 @@ def scan_file_for_crypto(filepath: str, pattern: re.Pattern) -> Set[str]:
 
 def is_crypto_provider(inf_path: str) -> bool:
     """Check if an INF is a crypto provider implementation (not a consumer)."""
-    normalized = inf_path.replace("\\", "/")
-    parts = normalized.split("/")
-    return any(marker in parts for marker in CRYPTO_PROVIDER_MARKERS)
+    normalized = inf_path.replace("\\", "/").lower()
+    return any(marker.lower() in normalized for marker in CRYPTO_PROVIDER_MARKERS)
+
+
+def infer_phase_from_inf_path(inf_path: str) -> str:
+    """Infer module phase from INF path when driver type is unavailable."""
+    p = inf_path.replace("\\", "/").lower()
+    if "/pei" in p or "peicryptlib" in p:
+        return "PEI"
+    if "/standalonemm" in p or "mm_standalone" in p:
+        return "StandaloneMM"
+    if "/smm" in p:
+        return "SMM"
+    if "/runtime" in p:
+        return "Runtime"
+    if "/dxe" in p:
+        return "DXE"
+    if "testapp" in p or "/application" in p:
+        return "Application"
+    return "Unknown"
+
+
+def collect_provider_provenance(modules: List[ModuleInfo]) -> Dict[str, List[ProviderInfo]]:
+    """Collect provider provenance by phase from module and library metadata."""
+    by_phase: Dict[str, List[ProviderInfo]] = defaultdict(list)
+    seen = set()
+
+    for mod in modules:
+        phase = mod.phase if mod.phase and mod.phase != "Unknown" else infer_phase_from_inf_path(mod.inf_path)
+
+        if is_crypto_provider(mod.inf_path):
+            key = (phase, mod.name, mod.inf_path, "module", "", "")
+            if key not in seen:
+                seen.add(key)
+                by_phase[phase].append(ProviderInfo(
+                    phase=phase,
+                    module_name=mod.name,
+                    module_inf=mod.inf_path,
+                    source="module",
+                ))
+
+        for lib_class, lib_inf in mod.libraries.items():
+            base_class = lib_class.lower().rstrip("0123456789")
+            if base_class not in CRYPTO_LIBRARY_CLASSES:
+                continue
+            if not is_crypto_provider(lib_inf):
+                continue
+
+            key = (phase, mod.name, mod.inf_path, "library", lib_class, lib_inf)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            by_phase[phase].append(ProviderInfo(
+                phase=phase,
+                module_name=mod.name,
+                module_inf=mod.inf_path,
+                source="library",
+                lib_class=lib_class,
+                lib_inf=lib_inf,
+            ))
+
+    for phase in by_phase:
+        by_phase[phase].sort(key=lambda p: (p.module_name.lower(), p.module_inf.lower(), p.source, p.lib_class.lower(), p.lib_inf.lower()))
+
+    return dict(by_phase)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -614,6 +697,7 @@ def output_table(
     results: List[ModuleCryptoUsage],
     known_functions: Set[str],
     package_roots: List[str],
+    providers_by_phase: Dict[str, List[ProviderInfo]],
     verbose: bool,
 ):
     """Print a human-readable table report to stdout."""
@@ -628,21 +712,48 @@ def output_table(
     print(f"  Known functions:   {len(known_functions)}")
     print("=" * 78)
 
-    # Group results by boot phase
+    phase_order = ["PEI", "DXE", "Runtime", "SMM", "StandaloneMM",
+                   "Application", "Unknown"]
+
+    print()
+    print("=" * 78)
+    print("  Provider Provenance")
+    print("=" * 78)
+    for phase in phase_order:
+        providers = providers_by_phase.get(phase, [])
+        print()
+        n = len(providers)
+        print(f"--- {phase} Providers ({n}) ---")
+        if not providers:
+            print("  (none)")
+            continue
+
+        for p in providers:
+            print(f"  {p.module_name} ({p.module_inf})")
+            if p.source == "module":
+                print("    Source: module is a crypto provider implementation")
+            else:
+                short = shorten_path(p.lib_inf, package_roots)
+                print(f"    Source: linked provider via {p.lib_class} -> {short}")
+
+    # Group consumer call results by boot phase
     by_phase = defaultdict(list)
     for usage in results:
         by_phase[usage.module.phase].append(usage)
 
-    phase_order = ["PEI", "DXE", "Runtime", "SMM", "StandaloneMM",
-                   "Application", "Unknown"]
+    print()
+    print("=" * 78)
+    print("  Consumer API Calls")
+    print("=" * 78)
 
     for phase in phase_order:
-        if phase not in by_phase:
-            continue
-        phase_list = by_phase[phase]
+        phase_list = by_phase.get(phase, [])
         print()
         n = len(phase_list)
         print(f"--- {phase} Phase ({n} module{'s' if n != 1 else ''}) ---")
+        if not phase_list:
+            print("  (none)")
+            continue
 
         for usage in sorted(phase_list, key=lambda u: u.module.name):
             mod = usage.module
@@ -688,6 +799,8 @@ def output_table(
     print("=" * 78)
     print("  Summary")
     print("=" * 78)
+    provider_count = sum(len(v) for v in providers_by_phase.values())
+    print(f"  Provider entries:    {provider_count}")
     print(f"  Families in use:     {', '.join(used_display)}")
     if unused:
         print(f"  Families NOT used:   {', '.join(unused)}")
@@ -707,6 +820,7 @@ def output_json(
     results: List[ModuleCryptoUsage],
     known_functions: Set[str],
     package_roots: List[str],
+    providers_by_phase: Dict[str, List[ProviderInfo]],
 ):
     """Print a JSON report to stdout."""
     used = set()
@@ -723,11 +837,26 @@ def output_json(
         "summary": {
             "total_modules": header.get("total_modules", 0),
             "crypto_consumers": len(results),
+            "provider_entries": sum(len(v) for v in providers_by_phase.values()),
             "unique_functions": len(all_funcs),
             "total_known_functions": len(known_functions),
             "families_used": sorted(used - {"Misc"}),
             "families_unused": sorted(unused),
             "all_functions_used": sorted(all_funcs),
+        },
+        "providers": {
+            phase: [
+                {
+                    "module": p.module_name,
+                    "module_inf": p.module_inf,
+                    "source": p.source,
+                    "library_class": p.lib_class,
+                    "provider_inf": shorten_path(p.lib_inf, package_roots) if p.lib_inf else "",
+                    "provider_inf_full_path": p.lib_inf,
+                }
+                for p in infos
+            ]
+            for phase, infos in sorted(providers_by_phase.items())
         },
         "modules": {},
     }
@@ -880,6 +1009,7 @@ def main():
     scanner = build_scanner_pattern(known_functions)
 
     # Step 4: Identify and analyze crypto consumers
+    providers_by_phase = collect_provider_provenance(modules)
     exclude_patterns = [p.lower() for p in args.exclude]
     consumers = [m for m in modules if is_crypto_consumer(m)]
     if exclude_patterns:
@@ -908,9 +1038,11 @@ def main():
 
     # Step 5: Output
     if args.format == "json":
-        output_json(header, results, known_functions, package_roots)
+        output_json(header, results, known_functions, package_roots,
+                    providers_by_phase)
     else:
         output_table(header, results, known_functions, package_roots,
+                     providers_by_phase,
                      args.verbose)
 
 
