@@ -35,9 +35,9 @@ ACPI publish) so a downstream owner has an unambiguous integration target.
   GUIDs, returning opaque per-op capability payloads.
 - A new function pointer on `ONE_CRYPTO_PROTOCOL` plus a major-version bump.
 - A `BaseCryptLibOnOneCrypto` forwarder for the new API.
-- Per-op capability handlers co-located with their verify code; each handler
-  intersects a local OID candidate list with the linked provider at call
-  time. No central capability table inside `OneCryptoBin`.
+- Per-op capability handlers co-located with their verify code. Each handler
+  enumerates the linked provider at call time and filters through a small
+  predicate exposed by the verify pipeline. No const OID lists anywhere.
 - HostTest coverage for the API contract and per-op handler behavior.
 
 **Out of scope (documented as reference design only):**
@@ -57,8 +57,8 @@ it up without ambiguity.
 ```mermaid
 flowchart TB
   subgraph BIN["OneCryptoBin (MM-resident, mu_crypto_release)"]
-    OPS["Verify pipelines<br/>(Pkcs7Verify, Authenticode, ...)<br/>each owns its candidate OID list"]
-    HANDLERS["Per-op capability handlers<br/>intersect candidates with provider at call time"]
+    OPS["Verify pipelines<br/>(Pkcs7Verify, Authenticode, ...)<br/>each exposes its verify-policy predicate"]
+    HANDLERS["Per-op capability handlers<br/>enumerate provider + filter through predicate"]
     GETCAP["GetCryptoOpCapability()<br/>added to ONE_CRYPTO_PROTOCOL<br/>dispatches by Op-ID GUID"]
     OPS --- HANDLERS
     HANDLERS --- GETCAP
@@ -101,7 +101,7 @@ flowchart TB
 
 | Layer | Owner | Lives in |
 |---|---|---|
-| Op-ID GUIDs + per-op handlers + candidate OID lists | Crypto binary (each handler co-located with its verify pipeline) | `mu_crypto_release` (this design) |
+| Op-ID GUIDs + per-op handlers + verify-policy predicates | Crypto binary (each predicate co-located with its verify pipeline) | `mu_crypto_release` (this design) |
 | `GetCryptoOpCapability` dispatch on protocol | Crypto binary | `mu_crypto_release` (this design) |
 | `BaseCryptLibOnOneCrypto` forwarder | Library wrapper | `mu_crypto_release` (this design) |
 | ECIT collector driver + registration protocol | Reference design only | MU_BASECORE (SecurityPkg or MdeModulePkg) |
@@ -151,9 +151,10 @@ extern EFI_GUID gCryptoOpAuthenticodeVerifyGuid;
   algorithm OIDs (e.g. "1.2.840.113549.1.1.11,1.2.840.10045.4.3.2") with
   a trailing NUL. The OIDs are an UNORDERED SET: callers must not infer
   preference from position. Each OID returned is, at the moment of the
-  call, both (a) accepted by the verify pipeline for this operation and
-  (b) resolvable by the linked crypto provider. If no candidate satisfies
-  both, the payload is an empty string (one NUL byte).
+  call, both (a) reported by the linked crypto provider as a signature
+  algorithm it can verify, and (b) accepted by the verify pipeline for
+  this operation. If no OID satisfies both, the payload is an empty
+  string (one NUL byte).
 
   @param[in]      OpIdGuid    GUID identifying the crypto operation.
   @param[out]     Buffer      NULL to probe required size, else receives payload.
@@ -177,8 +178,8 @@ GetCryptoOpCapability (
 
 Payload semantics for all v1 ops: **unordered set** of OID strings,
 CSV-encoded ASCII, NUL-terminated. Empty payload (one NUL byte) means
-"no OID in this op's candidate list is both accepted by the verify path
-and resolvable by the linked provider in this build."
+"no signature OID the linked provider can verify is accepted by this
+op's verify-policy predicate in this build."
 
 | Op-ID GUID | Payload format | Backs which ECIT feature(s) (from the UEFI ECIT patch) |
 |---|---|---|
@@ -218,15 +219,11 @@ ONE_CRYPTO_GET_OP_CAPABILITY GetCryptoOpCapability;
 rejects mismatched majors with `EFI_INCOMPATIBLE_VERSION`. This is a
 breaking change by design: consumers must rebuild against the new protocol.
 
-### 4.4 Implementation: per-op handlers, no central table
+### 4.4 Implementation: per-op handlers, no const tables
 
-There is no central static capability table inside `OneCryptoBin`. Instead,
-each verify pipeline owns:
-
-1. A small, local `STATIC CONST CHAR8 *` array of *candidate* OIDs — the
-   OIDs the verify pipeline is willing to consider for this operation.
-2. A per-op capability handler that, at call time, asks the linked provider
-   which candidates can actually be resolved, and emits CSV of the survivors.
+There is no const list of OIDs anywhere in this design. Each per-op
+handler answers by **enumerating the linked provider** and **filtering**
+through a small predicate exposed by the verify pipeline that owns the op.
 
 The top-level `GetCryptoOpCapability` is a thin dispatcher: it looks up the
 handler for `OpIdGuid` and delegates.
@@ -264,26 +261,67 @@ GetCryptoOpCapability (
 }
 ```
 
-Example per-op handler, co-located with the PKCS#7 verify pipeline
-(`OpensslPkg/Library/BaseCryptLib/Pk/CryptPkcs7VerifyCommon.c` or a sibling
-file in the same directory):
+#### 4.4.1 Provider enumeration helper (OpenSSL)
+
+A single internal helper enumerates every signature OID the linked OpenSSL
+build can actually verify, by walking the cross-product of provider-supplied
+digests and public-key types:
+
+```c
+// Internal helper, OpenSSL-side. Calls the supplied predicate for every
+// signature algorithm the linked provider can verify; predicate decides
+// whether to include it in the emitted CSV.
+//
+// The enumeration uses OpenSSL's own provider-aware iterators
+// (EVP_MD_do_all_provided + EVP_PKEY type discovery + OBJ_find_sigid_by_algs)
+// so the answer reflects exactly what THIS build of OpenSSL ships.
+VOID
+EnumerateProviderSignatureOids (
+  IN  BOOLEAN (*Accept) (INT32 SigNid, VOID *Ctx),
+  IN  VOID    *Ctx,
+  OUT CHAR8   *Buffer       OPTIONAL,
+  IN OUT UINTN *BufferSize
+  );
+```
+
+Mechanical recipe inside the helper (illustrative):
+
+```c
+// For every (digest_nid, pk_nid) pair the provider supports:
+//   if (OBJ_find_sigid_by_algs (&sigid, digest_nid, pk_nid) == 1) {
+//     if (Accept (sigid, Ctx)) {
+//       emit OBJ_nid2obj (sigid) as dotted-OID into CSV;
+//     }
+//   }
+// Honours Buffer == NULL (sizing probe) and EFI_BUFFER_TOO_SMALL on
+// *BufferSize. Empty survivor set => emit single NUL byte.
+```
+
+The MbedTLS variant uses the equivalent MbedTLS introspection
+(`mbedtls_md_list`, `mbedtls_pk_info_from_type`, plus `mbedtls_oid_get_*`)
+but presents the same `EnumerateProviderSignatureOids` shape.
+
+#### 4.4.2 Per-op handlers
+
+Each handler reuses `EnumerateProviderSignatureOids` and supplies its own
+acceptance predicate. The predicate lives next to the verify pipeline that
+owns the op, so the answer reported is, by construction, the set the
+verify code will actually accept.
+
+**PKCS#7 verify** (`CryptPkcs7VerifyCommon.c` or sibling):
 
 ```c
 //
-// Candidate OIDs the PKCS#7 verify pipeline is willing to consider.
-// MUST be a superset of (or equal to) the OIDs the verify code actually
-// accepts; runtime intersection with the provider trims the answer to
-// what is real for this build.
+// CryptPkcs7VerifyCommon.c hands PKCS#7 blobs straight to OpenSSL's
+// PKCS7_verify(), so the verify policy IS the provider's policy. No
+// additional filtering needed; predicate accepts everything the provider
+// already vouches for.
 //
-STATIC CONST CHAR8 *CONST mPkcs7VerifyCandidates[] = {
-  "1.2.840.113549.1.1.11", // sha256WithRSAEncryption
-  "1.2.840.113549.1.1.12", // sha384WithRSAEncryption
-  "1.2.840.113549.1.1.13", // sha512WithRSAEncryption
-  "1.2.840.10045.4.3.2",   // ecdsa-with-SHA256
-  "1.2.840.10045.4.3.3",   // ecdsa-with-SHA384
-  // PQC OIDs added here as verify support lands; runtime check filters
-  // them out automatically on builds without a PQC-capable provider.
-};
+STATIC BOOLEAN EFIAPI
+Pkcs7AcceptAll (INT32 SigNid, VOID *Ctx)
+{
+  return TRUE;
+}
 
 EFI_STATUS EFIAPI
 Pkcs7VerifyOpCapability (
@@ -291,21 +329,54 @@ Pkcs7VerifyOpCapability (
   IN OUT UINTN *BufferSize
   )
 {
-  // 1. For each candidate, ask the provider whether it resolves
-  //    (OBJ_txt2nid + EVP_get_signaturebynid for OpenSSL;
-  //     mbedtls_oid_get_* / mbedtls_pk_info_from_type for MbedTLS).
-  // 2. Build a CSV of survivors in a local buffer.
-  // 3. Honour sizing-probe (Buffer == NULL) and EFI_BUFFER_TOO_SMALL
-  //    contracts on *BufferSize.
-  // 4. Empty survivor set => emit a single NUL byte.
+  EnumerateProviderSignatureOids (Pkcs7AcceptAll, NULL, Buffer, BufferSize);
+  return EFI_SUCCESS; // (status-mapping elided)
 }
 ```
+
+**Authenticode verify** (`CryptAuthenticode.c`):
+
+```c
+//
+// CryptAuthenticode.c exposes its existing acceptance policy as a
+// predicate. The predicate body lives in CryptAuthenticode.c next to the
+// verify-time code that enforces the same rules; it is NOT a separate
+// allowlist. If CryptAuthenticode.c later tightens or loosens what it
+// accepts, the predicate moves in lockstep because they are the same
+// piece of policy.
+//
+BOOLEAN EFIAPI IsAuthenticodeSigNidAccepted (INT32 SigNid); // in CryptAuthenticode.c
+
+STATIC BOOLEAN EFIAPI
+AuthenticodeAccept (INT32 SigNid, VOID *Ctx)
+{
+  return IsAuthenticodeSigNidAccepted (SigNid);
+}
+
+EFI_STATUS EFIAPI
+AuthenticodeOpCapability (
+  OUT    CHAR8 *Buffer       OPTIONAL,
+  IN OUT UINTN *BufferSize
+  )
+{
+  EnumerateProviderSignatureOids (AuthenticodeAccept, NULL, Buffer, BufferSize);
+  return EFI_SUCCESS; // (status-mapping elided)
+}
+```
+
+The Authenticode predicate's body is the *same* logic the verify-time
+Authenticode code uses to decide whether to accept a signature; in v1
+that may collapse to "accept what OpenSSL accepts" or it may exclude
+specific digests (e.g., MD5/SHA1) depending on what `CryptAuthenticode.c`
+currently enforces. Either way, no new const list is introduced.
+
+#### 4.4.3 Dispatch table
 
 The dispatch table lives next to `GetCryptoOpCapability` and references
 each per-op handler by extern declaration:
 
 ```c
-extern EFI_STATUS EFIAPI Pkcs7VerifyOpCapability (CHAR8 *, UINTN *);
+extern EFI_STATUS EFIAPI Pkcs7VerifyOpCapability  (CHAR8 *, UINTN *);
 extern EFI_STATUS EFIAPI AuthenticodeOpCapability (CHAR8 *, UINTN *);
 
 STATIC CONST CRYPTO_OP_DISPATCH mDispatch[] = {
@@ -314,22 +385,24 @@ STATIC CONST CRYPTO_OP_DISPATCH mDispatch[] = {
 };
 ```
 
-Adding a new op = one new file (or one addition to an existing verify file)
-plus one row in `mDispatch[]`. Removing an OID from a verify pipeline =
-delete it from that pipeline's candidate array; the next
-`GetCryptoOpCapability` call reflects the removal.
+Adding a new op = one new handler + one row in `mDispatch[]`. Tightening
+or loosening a verify pipeline's policy = edit the corresponding predicate
+in that pipeline's source file; the next `GetCryptoOpCapability` call
+reflects the change.
 
-### 4.5 Honesty by construction (no drift check)
+### 4.5 Honesty by construction (no drift check, no const lists)
 
 There is no boot-time "drift check" and no constructor-installed gate. The
-honesty mechanism is the runtime intersection in §4.4: each per-op handler
-asks the linked provider at call time which candidates resolve, and only
-those OIDs make it into the payload.
+honesty mechanism is the runtime enumeration + per-op predicate filter in
+§4.4. The capability set comes from the linked provider every call; the
+verify pipeline's predicate trims it to what verify will actually accept.
 
-This design choice avoids three problems the previous draft created:
+This design choice avoids the problems the previous drafts created:
 
 - A static central table can advertise OIDs the linked provider doesn't
   actually have (e.g., a build without PQC support).
+- A per-op candidate list duplicates verify policy in a second place and
+  silently drifts when verify code is updated.
 - A constructor-time `ASSERT` is a brittle gate: it can brick boot in
   response to a provider/version change that the *external compliance*
   layer should evaluate, not the binary.
@@ -342,12 +415,6 @@ profiles, OEM policy) is the job of `CryptoConformanceApp` (§5.6), a UEFI
 shell app that calls `GetCryptoOpCapability` and reports PASS/FAIL against
 a chosen profile. That separation lets the firmware report capability
 honestly while profile expectations can evolve independently of the binary.
-
-A HostTest in this repo still validates candidate-list *well-formedness* —
-every declared OID parses (`OBJ_txt2nid` for OpenSSL; equivalent for
-MbedTLS), and per-op candidate arrays have no duplicates — but it does NOT
-fail when a candidate fails to resolve in a given provider build. Non-
-resolution is expected and is exactly what runtime intersection is for.
 
 ### 4.6 `BaseCryptLibOnOneCrypto` forwarder
 
@@ -556,18 +623,20 @@ set by the profile's preference order.
 | Test | Location | Purpose |
 |---|---|---|
 | `GetCryptoOpCapability` dispatch — sizing probe, exact-fit, too-small, unknown GUID, NULL params | `OpensslPkg/HostTest/CryptoOpCapabilityHostTest/` | API contract |
-| Per-op handler well-formedness — every candidate OID parses (`OBJ_txt2nid` ≠ `NID_undef`), no duplicates per op | Same | Catches malformed candidate lists at CI time |
-| Per-op handler against real provider — call returns CSV that is a subset of the candidate list and contains only OIDs the provider resolves | Same | Validates the runtime intersection |
-| Empty-payload behavior — handler with all candidates filtered out returns single NUL byte | Same | Honesty edge case |
+| `EnumerateProviderSignatureOids` against the real linked provider — returns at least the OIDs the verify code uses in existing positive-path tests | Same | Sanity-check the enumeration walks digest × pk pairs correctly |
+| Per-op handler: PKCS#7 — returns the same set as `EnumerateProviderSignatureOids` with an accept-all predicate | Same | Confirms no accidental filtering |
+| Per-op handler: Authenticode — returns a subset of the PKCS#7 result, and the difference matches the Authenticode predicate (e.g., MD5/SHA1 excluded if `IsAuthenticodeSigNidAccepted` excludes them) | Same | Confirms the verify-policy predicate is honoured |
+| Empty-payload behavior — forcing a predicate that rejects everything returns single NUL byte | Same | Honesty edge case |
 | `BaseCryptLibOnOneCrypto` forwarder — returns `EFI_INCOMPATIBLE_VERSION` on major mismatch; forwards correctly on match | `OneCryptoPkg/Test/BaseCryptLibOnOneCryptoTest/` | ABI/version gating |
 | Mirror tests for `MbedTlsPkg/Library/BaseCryptLib` | `MbedTlsPkg/HostTest/` | Provider parity |
 
 Explicitly **not** required:
 
-- A pass/fail "policy ↔ provider drift" gate. Non-resolution of a
-  candidate is normal and is exactly what the runtime intersection in §4.4
-  exists to handle.
+- A pass/fail "policy ↔ provider drift" gate. There is no separately
+  declared OID list to drift from — the provider IS the list, the predicate
+  IS the policy, and both are read on every call.
 - A constructor-time consistency check. The runtime answer is authoritative.
+- A candidate-list well-formedness test. No candidate list exists.
 
 ### 6.2 Tests intentionally *not* in this repo
 
@@ -581,9 +650,8 @@ Explicitly **not** required:
 ### 7.1 Build flag / opt-out
 
 No new PCD. The new function pointer is always present on the new protocol
-major. Per-op candidate arrays plus the dispatch table cost a few dozen
-bytes of `.rdata` per op. A consumer that doesn't care simply never calls
-the function.
+major. The dispatch table costs a few dozen bytes of `.rdata`; no const
+OID arrays. A consumer that doesn't care simply never calls the function.
 
 ### 7.2 Protocol versioning rules
 
@@ -626,18 +694,20 @@ drift risk is low.
 - **GUID values.** Concrete GUIDs for `gCryptoOpPkcs7VerifyGuid` and
   `gCryptoOpAuthenticodeVerifyGuid` to be generated during implementation.
   They are stable forever once assigned.
-- **Authenticode vs PKCS#7 candidate lists.** The exact OIDs each pipeline
-  is willing to consider differ (the ECIT patch explicitly anticipates
-  this); finalize each candidate array against the current
-  `CryptAuthenticode.c` and `CryptPkcs7VerifyCommon.c` policy when
-  implementing the per-op handlers.
-- **MbedTLS parity.** The MbedTLS variant of `BaseCryptLib` ships a different
-  surface; confirm per-op handlers for both ops are feasible against
-  MbedTLS's narrower verify support (the runtime-intersection model means
-  the *candidate list* can be identical across providers and MbedTLS will
-  simply contribute a smaller payload at runtime).
-- **Provider-resolution helper.** Decide whether the per-op handler calls
-  the provider directly (`OBJ_txt2nid` + `EVP_get_*bynid`) or via a thin
-  internal helper exposed for both ops. A helper deduplicates code; direct
-  calls keep each handler self-contained. Lean: helper, in the same file
-  as the dispatcher.
+- **Authenticode predicate body.** `IsAuthenticodeSigNidAccepted` must
+  reflect exactly what `CryptAuthenticode.c` accepts at verify time. The
+  predicate body is a refactor of the existing verify-time decision (not
+  a new allowlist). Confirm during implementation whether the existing
+  code already has a clean decision point to reuse, or whether a small
+  internal split is required to expose it.
+- **MbedTLS parity.** The MbedTLS variant of `BaseCryptLib` ships a
+  different surface; confirm `EnumerateProviderSignatureOids` can be
+  implemented over `mbedtls_md_list` / `mbedtls_pk_info_from_type` /
+  `mbedtls_oid_get_*` and yields the same CSV semantics. The MbedTLS
+  Authenticode predicate likewise mirrors the MbedTLS verify code.
+- **Enumeration cost.** Provider enumeration runs on every
+  `GetCryptoOpCapability` call. Decide during implementation whether to
+  cache the per-handler CSV on first call (one-shot, idempotent, no
+  invalidation needed because the provider is static for the lifetime
+  of the binary) or recompute each time. Lean: cache, behind a single
+  static guard per handler.
