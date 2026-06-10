@@ -333,7 +333,42 @@ CryptoInit (
   // ========================================================================================================
 
   CryptoProtocol->GetCryptoProviderVersionString = GetCryptoProviderVersionString;
-  CryptoProtocol->GetCryptoOpCapability          = GetCryptoOpCapability; // MU_CHANGE
+
+  // Append-only protocol 1.1 services; rebuild providers and consumers together.
+
+  // ========================================================================================================
+  // v1.1 Info
+  // ========================================================================================================
+
+  CryptoProtocol->GetCryptoOpCapability = GetCryptoOpCapability;
+
+  // ========================================================================================================
+  // v1.1 PKCS
+  // ========================================================================================================
+
+  CryptoProtocol->GetTrustAnchorX509FromAuthData = GetTrustAnchorX509FromAuthData;
+  CryptoProtocol->FreeTrustAnchorX509Cache       = FreeTrustAnchorX509Cache;
+  CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
+  CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
+
+  // ========================================================================================================
+  // v1.1 Hash
+  // ========================================================================================================
+
+  CryptoProtocol->HashAllByGuid = HashAllByGuid;
+
+  // ========================================================================================================
+  // v1.1 CMS
+  // ========================================================================================================
+
+  CryptoProtocol->CmsVerify           = CmsVerify;
+  CryptoProtocol->CmsGetSignerInfoNum = CmsGetSignerInfoNum;
+
+  // ========================================================================================================
+  // v1.1 X509
+  // ========================================================================================================
+
+  CryptoProtocol->X509IsPublicKeySupported = X509IsPublicKeySupported;
 }
 
 /**
