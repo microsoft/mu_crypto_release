@@ -338,7 +338,9 @@ CryptoInit (
   // v1.1 functions
   // ========================================================================================================
 
-  CryptoProtocol->GetAuthenticodeHash = GetAuthenticodeHash;
+  CryptoProtocol->GetAuthenticodeHash            = GetAuthenticodeHash;
+  CryptoProtocol->GetTrustAnchorX509FromAuthData = GetTrustAnchorX509FromAuthData;
+  CryptoProtocol->FreeTrustAnchorX509Cache       = FreeTrustAnchorX509Cache;
 }
 
 /**
