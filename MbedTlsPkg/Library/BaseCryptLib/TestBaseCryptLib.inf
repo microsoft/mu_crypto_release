@@ -43,6 +43,7 @@
   Pk/CryptDhNull.c
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
+  Pk/CryptTrustAnchor.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
