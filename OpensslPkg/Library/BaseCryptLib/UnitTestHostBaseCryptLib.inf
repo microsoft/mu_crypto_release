@@ -45,6 +45,7 @@
   Pk/CryptDh.c
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
@@ -72,6 +73,13 @@
   DebugLib
   OpensslLib
   PrintLib
+
+[Guids]
+  ## SOMETIMES_CONSUMES ## GUID # Image hash type used by GetAuthenticodeHash
+  gEfiCertSha1Guid    # MU_CHANGE
+  gEfiCertSha256Guid  # MU_CHANGE
+  gEfiCertSha384Guid  # MU_CHANGE
+  gEfiCertSha512Guid  # MU_CHANGE
 
 #
 # Remove these [BuildOptions] after this library is cleaned up

@@ -49,6 +49,7 @@
   Pk/CryptDhNull.c
   Pk/CryptX509Null.c
   Pk/CryptAuthenticodeNull.c
+  Pk/CryptAuthenticodeHashNull.c # MU_CHANGE
   Pk/CryptTsNull.c
   Pem/CryptPemNull.c
   Rand/CryptRandNull.c
