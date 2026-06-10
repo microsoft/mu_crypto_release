@@ -55,6 +55,7 @@
   Pk/CryptX509Null.c
   Pk/CryptAuthenticodeNull.c
   Pk/CryptAuthenticodeHashNull.c # MU_CHANGE
+  Pk/CryptTrustAnchorNull.c # MU_CHANGE
   Pk/CryptTsNull.c
   Pk/CryptRsaPss.c
   Pk/CryptRsaPssSignNull.c
