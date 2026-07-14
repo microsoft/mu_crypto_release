@@ -1,0 +1,24 @@
+## @file
+#  OneCrypto image provider in StandaloneMM for QAV fetch path.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoImageProviderStandaloneMm
+  FILE_GUID                      = 60A67696-D50D-488E-B436-82D0D3A11E8F
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = MmEntry
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries]
+  PE32|OneCryptoImageProviderStandaloneMm.efi
+  SMM_DEPEX|OneCryptoImageProviderStandaloneMm.depex
