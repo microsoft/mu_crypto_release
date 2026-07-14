@@ -2,7 +2,7 @@
 
   This file contains the GUID for the phase agnostic shared one crypto binary
 
-  Copyright (C) Microsoft Corporation
+  Copyright (c) Microsoft Corporation.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -17,6 +17,19 @@
 #define ONE_CRYPTO_BINARY_GUID \
   { \
     0x76ABA88D, 0x9D16, 0x49A2, { 0xAA, 0x3A, 0xDB, 0x61, 0x12, 0xFA, 0xC5, 0xCC } \
+  }
+
+//
+// FILE_GUID of the dedicated, LZMA-compressed OneCrypto container FV that a
+// platform may place in the boot firmware volume alongside the StandaloneMM
+// payload FV. The image provider matches this to locate the compressed
+// OneCrypto payload deterministically and serve it to DXE.
+//
+// No fallback to an arbitrary compressed FV is supported.
+//
+#define ONE_CRYPTO_CONTAINER_FV_GUID \
+  { \
+    0x1DC82EA3, 0xD1E9, 0x4C10, { 0xA7, 0x88, 0x33, 0x5D, 0x16, 0x6E, 0x23, 0xA1 } \
   }
 
 #endif // ONE_CRYPTO_FILE_GUID_H_
