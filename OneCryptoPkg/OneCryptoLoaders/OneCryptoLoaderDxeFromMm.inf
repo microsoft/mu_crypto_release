@@ -1,0 +1,55 @@
+## @file
+#  Loads OneCrypto from StandaloneMM image provider and installs OneCrypto protocol.
+#
+#  Copyright (c) Microsoft Corporation.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderDxeFromMm
+  FILE_GUID                      = 9CAAC6D7-7A89-4A1D-AB95-08CD20B8E44A
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DxeEntryPoint
+
+[Sources]
+  OneCryptoLoaderDxeFromMm.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  OneCryptoPkg/OneCryptoPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  BaseLib
+  DebugLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DxeServicesLib
+  FvLib
+  ExtractGuidedSectionLib
+  PeCoffGetEntryPointLib
+  PeCoffLib
+  PeCoffExtraActionLib
+  PeCoffExtendedLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  SafeIntLib
+  RngLib
+
+[Protocols]
+  gOneCryptoProtocolGuid              ## PRODUCES
+  gEfiRngProtocolGuid                 ## CONSUMES
+  gEfiMmCommunication2ProtocolGuid    ## CONSUMES
+
+[Guids]
+  gOneCryptoImageProviderGuid         ## CONSUMES
+
+[Depex]
+  gEfiMmCommunication2ProtocolGuid
+
+[BuildOptions]
+  GCC:*_CLANGPDB_*_DLINK_FLAGS = /ALIGN:4096
