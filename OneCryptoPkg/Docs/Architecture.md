@@ -5,9 +5,16 @@ OneCryptoPkg uses a **Bin + Loader** pattern to provide crypto services. A
 OpenSSL) and a **Loader** module discovers the Bin, injects runtime
 dependencies, and installs the public `gOneCryptoProtocolGuid` for consumers.
 
-Today only X64 supports the phase agnostic crypto implementation.
-See [Why the Difference?](#why-the-difference) for details on AARCH64.
-However this is something we want to support in the long term for AARCH64.
+X64 supports a single stored MM binary consumed by DXE.
+
+AARCH64 supports two mechanisms:
+
+- single-copy (preferred mechanism)
+  - MM-provider based shared copy
+- dual-copy
+  - each phase carries its own binary
+
+See [Why the Difference?](#why-the-difference) for details.
 
 ## X64
 
@@ -52,45 +59,153 @@ Both StandaloneMm and SupvMm follow the same two-driver pattern:
 
 ## AARCH64
 
-AARCH64 produces **4 drivers**: 2 from `OneCryptoBin` and 2 from
-`OneCryptoLoaders`.
+AARCH64 supports two modes:
 
-| Environment     | Bin                        | Loader                            |
-|-----------------|----------------------------|-----------------------------------|
-| DXE             | `OneCryptoBinDxe`          | `OneCryptoLoaderDxeByProtocol`    |
-| StandaloneMm    | `OneCryptoBinStandaloneMm` | `OneCryptoLoaderStandaloneMm`     |
+- **Single-copy** (preferred): the secure-world MM Bin is the only stored
+  OneCrypto image; DXE fetches its bytes from MM and `LoadImage()`s them.
+  - DXE: `OneCryptoLoaderDxeFromMm`
+  - StandaloneMm: `OneCryptoImageProviderStandaloneMm` +
+    `OneCryptoBinStandaloneMm` + `OneCryptoLoaderStandaloneMm`
+- **Dual-copy**: dedicated normal-world and secure-world Bin and loader.
+  - DXE: `OneCryptoBinDxe` + `OneCryptoLoaderDxeByProtocol`
+  - StandaloneMm: `OneCryptoBinStandaloneMm` + `OneCryptoLoaderStandaloneMm`
 
 ### DXE Flow (AARCH64)
 
-On AARCH64 the DXE Loader **cannot** reach into the secure-world firmware
-volume to load the StandaloneMm binary. Instead, a dedicated `OneCryptoBinDxe`
-(`DXE_DRIVER`) is included in the normal-world FV:
+#### Single-copy mode
 
-1. `OneCryptoBinDxe` is dispatched normally by the UEFI DXE dispatcher. Its
-   entry point installs `gOneCryptoPrivateProtocolGuid` with the crypto
-   constructor.
+With no DXE Bin, `OneCryptoLoaderDxeFromMm` pulls the image from the MM provider
+over `EFI_MM_COMMUNICATION2_PROTOCOL`:
+
+1. Loader queries total image size and **serve format** via
+   `gOneCryptoImageProviderGuid`.
+2. Loader fetches the bytes in chunks sized to the MM communication buffer.
+3. Loader consumes the bytes according to the format (below), resolves
+   `CryptoEntry`, injects dependencies, and installs `gOneCryptoProtocolGuid`.
+
+##### Two serve formats (boot paths)
+
+The provider is format-agnostic and keys on one invariant: OneCryptoBin's
+`FILE_GUID` (`ONE_CRYPTO_BINARY_GUID`). How the platform *packages* that file
+selects which path runs — no provider change is needed.
+
+| Format                            | Provider serves               | DXE work                                        | When to use                             |
+| --------------------------------- | ----------------------------- | ----------------------------------------------- | --------------------------------------- |
+| `ONE_CRYPTO_IMAGE_FORMAT_PE32`    | pristine PE32 bytes           | `LoadImage()` directly                          | discoverable, uncompressed FV           |
+| `ONE_CRYPTO_IMAGE_FORMAT_GUIDED_FV` | raw compressed `GUID_DEFINED` bytes | decode, walk FV, extract by GUID, `LoadImage()` | flash constrained; OneCrypto compressed |
+
+The compressed path exists because secure-world MMRAM may not have room to
+decompress the image, so the provider passes the compressed binary to DXE,
+which has ample heap to expand it.
+
+#### Dual-copy mode
+
+This mode ships a dedicated `OneCryptoBinDxe` (`DXE_DRIVER`) in the normal-world
+FV:
+
+1. `OneCryptoBinDxe` is dispatched by DXE and installs
+    `gOneCryptoPrivateProtocolGuid`.
 2. `OneCryptoLoaderDxeByProtocol` has a `[Depex]` on
-   `gOneCryptoPrivateProtocolGuid`. It calls `LocateProtocol()` to find the
-   private protocol, invokes the constructor, and installs the public
-   `gOneCryptoProtocolGuid`.
+    `gOneCryptoPrivateProtocolGuid`, calls `LocateProtocol()`, invokes the
+    constructor, and installs `gOneCryptoProtocolGuid`.
 
-This protocol-based approach avoids PE/COFF export parsing entirely.
+This protocol-based approach avoids PE/COFF export parsing.
 
 ### MM Flow (AARCH64)
 
-The MM two-driver pattern (Bin + Loader) is the same as X64 —
-`OneCryptoBinStandaloneMm` and `OneCryptoLoaderStandaloneMm` are the same
-source modules on both architectures. See
-[Why the Difference?](#why-the-difference) for why AARCH64 needs a separate
-`OneCryptoBinDxe` instead of reusing the MM binary during DXE.
+`OneCryptoBinStandaloneMm` + `OneCryptoLoaderStandaloneMm` follow the same MM
+Bin+Loader pattern as X64.
+
+In single-copy mode, `OneCryptoImageProviderStandaloneMm` is a separate MM module
+that owns the DXE transport path described above. Splitting it from
+`OneCryptoLoaderStandaloneMm` keeps MM-communication failures isolated from the
+protocol-construction logic.
+
+## Packaging the Single-Copy Image (FDF / DSC)
+
+Packaging trades flash size against a DXE-side decode, and discovery is
+**strict**: the provider scans the FVs published to MM as FV/FV2/FV3 HOBs
+(FV3 first) and matches a well-known `FILE_GUID`. It takes either OneCryptoBin's
+PE32 directly (`ONE_CRYPTO_BINARY_GUID`, Mode A) or a container file
+(`ONE_CRYPTO_CONTAINER_FV_GUID`) whose `GUID_DEFINED` section wraps the nested FV
+(Mode B). It does **not** scan generic compressed nested FVs. Both GUIDs are
+defined in `OneCryptoPkg/Include/Guid/OneCryptoFileGuid.h`.
+
+### Two packaging modes
+
+| Mode                            | FDF packaging                                     | Flash   | DXE decode |
+| ------------------------------- | ------------------------------------------------- | ------- | ---------- |
+| **A - Direct PE32**             | top-level file in a discoverable FV, uncompressed | largest | none       |
+| **B - Dedicated compressed FV** | its own identity-tagged, LZMA-wrapped FV          | small   | in DXE     |
+
+Mode A and B map to the `PE32` and `GUIDED_FV`
+[serve formats](#two-serve-formats-boot-paths) the provider reports at runtime.
+
+Mode A is simplest and most robust; Mode B trades a DXE-side LZMA decode for a
+smaller flash footprint on space-constrained parts.
+
+### FDF (Mode B example)
+
+Give OneCryptoBin its own compressed FV anchored by a well-known container GUID,
+and keep the DXE loader + MM provider/loader in their normal FVs:
+
+```text
+[FV.OneCryptoFv]                       # dedicated, compressed
+  INF .../OneCryptoBin/OneCryptoBinStandaloneMm.inf
+
+[FV.<SecureMmPayload>]                 # secure-world MM FV
+  INF .../OneCryptoLoaders/OneCryptoLoaderStandaloneMm.inf
+  INF .../OneCryptoLoaders/OneCryptoImageProviderStandaloneMm.inf
+  # anchor the dedicated FV so the provider finds it by identity:
+  FILE FV_IMAGE = <ONE_CRYPTO_CONTAINER_FV_GUID> {
+    SECTION GUIDED <LZMA_GUID> PROCESSING_REQUIRED = TRUE {
+      SECTION FV_IMAGE = OneCryptoFv
+    }
+  }
+
+[FV.<DxeFv>]                           # normal-world DXE FV
+  INF .../OneCryptoLoaders/OneCryptoLoaderDxeFromMm.inf
+```
+
+### DSC
+
+Disable shared-crypto for the DXE/MM phases and route `BaseCryptLib` through the
+OneCrypto protocol, so the variable/TPM/secure-boot MM consumers depend on
+`gOneCryptoProtocolGuid` (published by OneCryptoBin in MM) rather than a
+shared-crypto SMM protocol that no longer exists:
+
+```text
+[LibraryClasses.common.DXE_DRIVER]
+  BaseCryptLib|.../BaseCryptLibOnOneCrypto/DxeCryptLib.inf
+
+[LibraryClasses.common.MM_STANDALONE]
+  BaseCryptLib|.../BaseCryptLibOnOneCrypto/StandaloneMmCryptLib.inf
+```
+
+Every INF referenced by the FDF must also appear in `[Components]`; list the DXE
+loader, MM loader, MM provider, and MM Bin there.
+
+### Heap budget expectations
+
+The bytes that matter are **StandaloneMmCore heap** (secure-world MMRAM), not
+the flash FV size. Rough per-component costs during MM bring-up:
+
+| Component                        | Secure-world heap cost                        | Notes                  |
+| -------------------------------- | --------------------------------------------- | ---------------------- |
+| `OneCryptoBinStandaloneMm`       | ~1.5 MB, ~doubled while resident (FV + image) | full crypto + TLS      |
+| MM communication bounce buffer   | up to the comm-buffer size (e.g. ~1 MB)       | transient, per request |
+| MM loader / provider             | small (tens of KB)                            | --                     |
+
+Treat these as per-component estimates to sum against the platform's own MMRAM
+carve-out, not a fixed budget. The **~2 MB** Mode B LZMA decode is not included;
+it runs in DXE.
 
 ## Why the Difference?
 
-On AARCH64, StandaloneMm runs inside TrustZone and the secure-world firmware
-volume is not accessible from normal-world DXE. On X64, `GetSectionFromAnyFv()`
-can reach the MM firmware volume, so the DXE Loader reuses the MM binary
-directly. On AARCH64, a separate `OneCryptoBinDxe` must be included in the
-normal-world FV.
+On X64, `GetSectionFromAnyFv()` can reach the MM firmware volume, so the DXE
+Loader reuses the MM binary directly. On AARCH64, StandaloneMm runs inside
+TrustZone and its firmware volume is not accessible from normal-world DXE, which
+is why AARCH64 needs the two modes above rather than X64's direct reuse.
 
 ## Module Summary
 
@@ -103,6 +218,11 @@ normal-world FV.
 | `OneCryptoLoaderSupvMm`        | `MM_STANDALONE` |  ✓  |         |
 | `OneCryptoLoaderDxe`           | `DXE_DRIVER`    |  ✓  |         |
 | `OneCryptoLoaderDxeByProtocol` | `DXE_DRIVER`    |     |    ✓    |
+
+Single-copy mode modules on AARCH64:
+
+- `OneCryptoLoaderDxeFromMm` (`DXE_DRIVER`)
+- `OneCryptoImageProviderStandaloneMm` (`MM_STANDALONE`)
 
 ## Dependency Injection
 
@@ -119,10 +239,6 @@ populates this structure with the platform's real implementations and calls
 `OneCryptoCrtSetup()` before invoking `CryptoEntry`.
 
 ```mermaid
----
-config:
-  layout: elk
----
 classDiagram
     direction TB
 
