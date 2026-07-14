@@ -193,12 +193,15 @@ def get_file_layout(workspace, arch, target, toolchain):
                 (f"{workspace}/OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinStandaloneMm.inf", "OneCryptoBinStandaloneMm.inf"),
             ],
             "OneCryptoLoaders": [
-                # OneCryptoBinDxeLoader (OneCryptoLoaderDxe)
-                *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderDxeByProtocol", "OneCryptoLoaderDxe", "OneCryptoLoaderDxe"),
+                # OneCryptoBinDxeLoader (AARCH64 path: OneCryptoLoaderDxeFromMm, packaged as OneCryptoLoaderDxe)
+                *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderDxeFromMm", "OneCryptoLoaderDxeFromMm", "OneCryptoLoaderDxe"),
                 (f"{workspace}/OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxe.inf", "OneCryptoLoaderDxe.inf"),
                 # OneCryptoBinStandaloneMmLoader (OneCryptoLoaderStandaloneMm)
                 *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm", "OneCryptoLoaderStandaloneMm", "OneCryptoLoaderStandaloneMm"),
                 (f"{workspace}/OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderStandaloneMm.inf", "OneCryptoLoaderStandaloneMm.inf"),
+                # StandaloneMM image provider for AARCH64 fetch path
+                *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoImageProviderStandaloneMm", "OneCryptoImageProviderStandaloneMm", "OneCryptoImageProviderStandaloneMm"),
+                (f"{workspace}/OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoImageProviderStandaloneMm.inf", "OneCryptoImageProviderStandaloneMm.inf"),
             ],
             "BuildInfo": [
                 (f"{build_output}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
