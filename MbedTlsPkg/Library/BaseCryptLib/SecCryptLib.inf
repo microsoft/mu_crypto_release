@@ -54,6 +54,7 @@
   Pk/CryptAuthenticodeNull.c
   Pk/CryptTrustAnchorNull.c # MU_CHANGE
   Hash/CryptHashAllNull.c # MU_CHANGE
+  Pk/CryptAuthenticodeHashNull.c # MU_CHANGE
   Pk/CryptTsNull.c
   Rand/CryptRandNull.c
   SysCall/CrtWrapper.c
