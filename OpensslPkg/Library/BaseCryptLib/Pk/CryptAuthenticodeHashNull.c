@@ -65,3 +65,34 @@ GetAuthenticodeHashAlgorithm (
   ASSERT (FALSE);
   return EFI_UNSUPPORTED;
 }
+
+/**
+  Compute the digest of the TBSCertificate of an X.509 certificate.
+
+  Return EFI_UNSUPPORTED to indicate this interface is not supported.
+
+  @param[in]   Cert        Pointer to the DER-encoded X.509 certificate.
+  @param[in]   CertSize    Size of Cert in bytes.
+  @param[in]   HashType    Signature-type GUID identifying the hash
+                           algorithm to use.
+  @param[out]  Digest      Caller-provided buffer that receives the
+                           computed digest.
+  @param[out]  DigestSize  On success, receives the digest length in
+                           bytes.
+
+  @retval EFI_UNSUPPORTED  This interface is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+X509GetTbsCertHash (
+  IN  VOID            *Cert,
+  IN  UINTN           CertSize,
+  IN  CONST EFI_GUID  *HashType,
+  OUT UINT8           *Digest,
+  OUT UINTN           *DigestSize
+  )
+{
+  ASSERT (FALSE);
+  return EFI_UNSUPPORTED;
+}
