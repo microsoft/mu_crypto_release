@@ -445,3 +445,395 @@ Done:
 
   return Status;
 }
+
+//
+// ===========================================================================
+// Authenticode hash-algorithm discovery (SpcIndirectDataContent parsing)
+// ===========================================================================
+//
+// The functions below walk the PKCS#7 SignedData ASN.1 structure to recover
+// the digest algorithm recorded by the signer, without depending on any
+// particular crypto provider. AuthData is untrusted, so every length field
+// is decoded with bounds checking.
+//
+
+//
+// ASN.1 DER tag bytes used while walking the PKCS#7 SignedData structure.
+//
+#define AUTH_ASN1_TAG_INTEGER     0x02
+#define AUTH_ASN1_TAG_OID         0x06
+#define AUTH_ASN1_TAG_SEQUENCE    0x30
+#define AUTH_ASN1_TAG_SET         0x31
+#define AUTH_ASN1_TAG_CTX_CONS_0  0xA0  // [0] EXPLICIT, constructed
+
+//
+// OID 1.2.840.113549.1.7.2 (PKCS#7 signedData) - DER value bytes.
+//
+STATIC CONST UINT8  mAuthPkcs7SignedDataOid[] = {
+  0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02
+};
+
+//
+// OID 1.3.6.1.4.1.311.2.1.4 (SPC_INDIRECT_DATA_OBJID) - DER value bytes.
+//
+STATIC CONST UINT8  mAuthSpcIndirectDataOid[] = {
+  0x2B, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x02, 0x01, 0x04
+};
+
+//
+// Digest-algorithm OIDs (DER value bytes) recognized by Authenticode.
+//
+STATIC CONST UINT8  mAuthOidSha1[] = {
+  0x2B, 0x0E, 0x03, 0x02, 0x1A                                  // 1.3.14.3.2.26
+};
+STATIC CONST UINT8  mAuthOidSha256[] = {
+  0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01          // 2.16.840.1.101.3.4.2.1
+};
+STATIC CONST UINT8  mAuthOidSha384[] = {
+  0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02          // 2.16.840.1.101.3.4.2.2
+};
+STATIC CONST UINT8  mAuthOidSha512[] = {
+  0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03          // 2.16.840.1.101.3.4.2.3
+};
+
+//
+// Mapping of digest-algorithm OID to the signature-type GUID consumed by
+// GetAuthenticodeHash().
+//
+typedef struct {
+  CONST UINT8       *Oid;
+  UINTN             OidSize;
+  CONST EFI_GUID    *HashGuid;
+} AUTH_DIGEST_OID_INFO;
+
+STATIC CONST AUTH_DIGEST_OID_INFO  mAuthDigestOidInfo[] = {
+  { mAuthOidSha1,   sizeof (mAuthOidSha1),   &gEfiCertSha1Guid   },
+  { mAuthOidSha256, sizeof (mAuthOidSha256), &gEfiCertSha256Guid },
+  { mAuthOidSha384, sizeof (mAuthOidSha384), &gEfiCertSha384Guid },
+  { mAuthOidSha512, sizeof (mAuthOidSha512), &gEfiCertSha512Guid },
+};
+
+#define AUTH_DIGEST_OID_INFO_COUNT  (sizeof (mAuthDigestOidInfo) / sizeof (mAuthDigestOidInfo[0]))
+
+/**
+  Decode an ASN.1 DER length field starting at *Cursor. On success, the
+  decoded length is written to *Length and *Cursor is advanced past the
+  length octets.
+
+  Only the definite form is accepted. Lengths > the remaining input are
+  rejected.
+
+  @param[in,out] Cursor    Pointer to the cursor pointer; advanced on
+                           success.
+  @param[in]     End       One past the last valid input byte.
+  @param[out]    Length    Receives the decoded content length.
+
+  @retval EFI_SUCCESS            Length parsed.
+  @retval EFI_INVALID_PARAMETER  Malformed encoding or out of bounds.
+**/
+STATIC
+EFI_STATUS
+Asn1DecodeLength (
+  IN OUT CONST UINT8  **Cursor,
+  IN     CONST UINT8  *End,
+  OUT    UINTN        *Length
+  )
+{
+  CONST UINT8  *P;
+  UINTN        Result;
+  UINTN        NumOctets;
+  UINTN        Index;
+
+  P = *Cursor;
+  if (P >= End) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if ((*P & 0x80) == 0) {
+    Result = (UINTN)*P;
+    P++;
+  } else {
+    NumOctets = (UINTN)(*P & 0x7F);
+    P++;
+    //
+    // Reject indefinite (0x80) and lengths longer than UINTN.
+    //
+    if ((NumOctets == 0) || (NumOctets > sizeof (UINTN))) {
+      return EFI_INVALID_PARAMETER;
+    }
+
+    if ((UINTN)(End - P) < NumOctets) {
+      return EFI_INVALID_PARAMETER;
+    }
+
+    Result = 0;
+    for (Index = 0; Index < NumOctets; Index++) {
+      Result = (Result << 8) | P[Index];
+    }
+
+    P += NumOctets;
+  }
+
+  if ((UINTN)(End - P) < Result) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *Cursor = P;
+  *Length = Result;
+  return EFI_SUCCESS;
+}
+
+/**
+  Parse an ASN.1 DER TLV at *Cursor and require Tag. On success, *Body
+  points to the value bytes, *BodyLen is the value length, and *Cursor
+  is advanced past the entire TLV.
+
+  @param[in,out] Cursor    Cursor pointer.
+  @param[in]     End       One past the last valid input byte.
+  @param[in]     Tag       Required tag byte.
+  @param[out]    Body      Receives a pointer to the value bytes.
+  @param[out]    BodyLen   Receives the value length.
+
+  @retval EFI_SUCCESS            TLV parsed.
+  @retval EFI_INVALID_PARAMETER  Wrong tag or malformed encoding.
+**/
+STATIC
+EFI_STATUS
+Asn1ExpectTagged (
+  IN OUT CONST UINT8  **Cursor,
+  IN     CONST UINT8  *End,
+  IN     UINT8        Tag,
+  OUT    CONST UINT8  **Body,
+  OUT    UINTN        *BodyLen
+  )
+{
+  CONST UINT8  *P;
+  EFI_STATUS   Status;
+  UINTN        Length;
+
+  P = *Cursor;
+  if ((P >= End) || (*P != Tag)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  P++;
+  Status = Asn1DecodeLength (&P, End, &Length);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  *Body    = P;
+  *BodyLen = Length;
+  *Cursor  = P + Length;
+  return EFI_SUCCESS;
+}
+
+/**
+  Determine the image-hash algorithm used by an Authenticode signature.
+
+  Parses the PKCS#7 SignedData blob's SpcIndirectDataContent
+  (OID 1.3.6.1.4.1.311.2.1.4) and reads the digestAlgorithm of its
+  embedded messageDigest DigestInfo, mapping it to the corresponding
+  signature-type GUID. The recovered GUID can be passed directly to
+  GetAuthenticodeHash() as its HashType.
+
+  Caution: AuthData is untrusted. The ASN.1 DER is parsed with
+  bounds-checked length decoding to avoid out-of-bounds reads.
+
+  @param[in]   AuthData      Pointer to the PKCS#7 SignedData blob
+                             (DER-encoded Authenticode signature).
+  @param[in]   AuthDataSize  Size of AuthData in bytes.
+  @param[out]  HashType      On success, receives the signature-type
+                             GUID identifying the digest algorithm.
+
+  @retval EFI_SUCCESS            The hash algorithm was identified.
+  @retval EFI_INVALID_PARAMETER  A required pointer is NULL,
+                                 AuthDataSize is 0, or AuthData is not a
+                                 well-formed Authenticode SignedData
+                                 blob.
+  @retval EFI_UNSUPPORTED        The digest algorithm is not a
+                                 recognized image hash algorithm.
+**/
+EFI_STATUS
+EFIAPI
+GetAuthenticodeHashAlgorithm (
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        AuthDataSize,
+  OUT EFI_GUID     *HashType
+  )
+{
+  EFI_STATUS   Status;
+  CONST UINT8  *Cursor;
+  CONST UINT8  *End;
+  CONST UINT8  *Body;
+  UINTN        BodyLen;
+  CONST UINT8  *OidBody;
+  UINTN        OidLen;
+  UINTN        Index;
+
+  if ((AuthData == NULL) || (AuthDataSize == 0) || (HashType == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = AuthData;
+  End    = AuthData + AuthDataSize;
+
+  //
+  // ContentInfo ::= SEQUENCE { contentType OID, content [0] EXPLICIT }
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // contentType OID == pkcs7-signedData (1.2.840.113549.1.7.2).
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_OID, &OidBody, &OidLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if ((OidLen != sizeof (mAuthPkcs7SignedDataOid)) ||
+      (CompareMem (OidBody, mAuthPkcs7SignedDataOid, OidLen) != 0))
+  {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // content [0] EXPLICIT -> SignedData.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_CTX_CONS_0, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // SignedData ::= SEQUENCE { version, digestAlgorithms, encapContentInfo, ... }
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // version INTEGER (skip).
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_INTEGER, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // digestAlgorithms SET (skip).
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SET, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // encapContentInfo ::= SEQUENCE { contentType OID, content [0] EXPLICIT }.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // contentType OID == SPC_INDIRECT_DATA (1.3.6.1.4.1.311.2.1.4).
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_OID, &OidBody, &OidLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if ((OidLen != sizeof (mAuthSpcIndirectDataOid)) ||
+      (CompareMem (OidBody, mAuthSpcIndirectDataOid, OidLen) != 0))
+  {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // content [0] EXPLICIT -> SpcIndirectDataContent.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_CTX_CONS_0, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // SpcIndirectDataContent ::= SEQUENCE { data, messageDigest }.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // data SpcAttributeTypeAndOptionalValue SEQUENCE (skip).
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // messageDigest DigestInfo ::= SEQUENCE { digestAlgorithm, digest }.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // digestAlgorithm AlgorithmIdentifier ::= SEQUENCE { algorithm OID, ... }.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_SEQUENCE, &Body, &BodyLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Cursor = Body;
+  End    = Body + BodyLen;
+
+  //
+  // algorithm OID.
+  //
+  Status = Asn1ExpectTagged (&Cursor, End, AUTH_ASN1_TAG_OID, &OidBody, &OidLen);
+  if (EFI_ERROR (Status)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  for (Index = 0; Index < AUTH_DIGEST_OID_INFO_COUNT; Index++) {
+    if ((OidLen == mAuthDigestOidInfo[Index].OidSize) &&
+        (CompareMem (OidBody, mAuthDigestOidInfo[Index].Oid, OidLen) == 0))
+    {
+      CopyGuid (HashType, mAuthDigestOidInfo[Index].HashGuid);
+      return EFI_SUCCESS;
+    }
+  }
+
+  return EFI_UNSUPPORTED;
+}
