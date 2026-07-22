@@ -837,3 +837,98 @@ GetAuthenticodeHashAlgorithm (
 
   return EFI_UNSUPPORTED;
 }
+
+/**
+  Compute the digest of the TBSCertificate of an X.509 certificate.
+
+  Extracts the TBSCertificate (the to-be-signed portion) of the given
+  DER-encoded certificate and hashes it with the algorithm selected by
+  HashType. The TBSCertificate is the exact byte range a certificate
+  authority signs, so its digest uniquely identifies the certificate
+  independent of the issuer signature.
+
+  The caller selects the digest algorithm by HashType (e.g.
+  gEfiCertSha256Guid, gEfiCertSha384Guid). The digest is written to
+  Digest, which must be large enough to hold the largest supported
+  digest (at least SHA512_DIGEST_SIZE bytes).
+
+  @param[in]   Cert        Pointer to the DER-encoded X.509 certificate.
+  @param[in]   CertSize    Size of Cert in bytes.
+  @param[in]   HashType    Signature-type GUID identifying the hash
+                           algorithm to use.
+  @param[out]  Digest      Caller-provided buffer that receives the
+                           computed TBSCertificate digest. Must be at
+                           least SHA512_DIGEST_SIZE bytes.
+  @param[out]  DigestSize  On success, receives the digest length in
+                           bytes.
+
+  @retval EFI_SUCCESS            Digest was computed successfully.
+  @retval EFI_INVALID_PARAMETER  A required pointer is NULL, CertSize is
+                                 0, or Cert is not a well-formed X.509
+                                 certificate.
+  @retval EFI_UNSUPPORTED        HashType is not a recognized image
+                                 hash algorithm.
+  @retval EFI_OUT_OF_RESOURCES   Could not allocate the hash context.
+  @retval EFI_DEVICE_ERROR       A hash primitive failed.
+**/
+EFI_STATUS
+EFIAPI
+X509GetTbsCertHash (
+  IN  VOID            *Cert,
+  IN  UINTN           CertSize,
+  IN  CONST EFI_GUID  *HashType,
+  OUT UINT8           *Digest,
+  OUT UINTN           *DigestSize
+  )
+{
+  EFI_STATUS            Status;
+  CONST AUTH_HASH_INFO  *HashInfo;
+  UINT8                 *TbsCert;
+  UINTN                 TbsCertSize;
+  VOID                  *HashCtx;
+  UINTN                 CtxSize;
+
+  if ((Cert == NULL) || (CertSize == 0) || (HashType == NULL) ||
+      (Digest == NULL) || (DigestSize == NULL))
+  {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  HashInfo = LookupAuthHashInfo (HashType);
+  if (HashInfo == NULL) {
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // Extract the TBSCertificate byte range. X509GetTBSCert() returns a
+  // pointer into Cert (it does not allocate), so TbsCert must not be
+  // freed here.
+  //
+  TbsCert     = NULL;
+  TbsCertSize = 0;
+  if (!X509GetTBSCert ((CONST UINT8 *)Cert, CertSize, &TbsCert, &TbsCertSize)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Allocate and initialize the hash context, then hash the
+  // TBSCertificate bytes.
+  //
+  CtxSize = HashInfo->GetContextSize ();
+  HashCtx = AllocatePool (CtxSize);
+  if (HashCtx == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = EFI_DEVICE_ERROR;
+  if (HashInfo->Init (HashCtx) &&
+      HashInfo->Update (HashCtx, TbsCert, TbsCertSize) &&
+      HashInfo->Final (HashCtx, Digest))
+  {
+    *DigestSize = HashInfo->DigestSize;
+    Status      = EFI_SUCCESS;
+  }
+
+  FreePool (HashCtx);
+  return Status;
+}
