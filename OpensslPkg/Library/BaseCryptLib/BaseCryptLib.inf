@@ -65,6 +65,7 @@
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
   Pk/CryptTs.c
   Pk/CryptRsaPss.c
   Pk/CryptRsaPssSign.c
@@ -116,6 +117,14 @@
   # gEfiMpServiceProtocolGuid # MU_CHANGE
 
 [Guids]
+  gEfiHashAlgorithmSha1Guid
+  gEfiHashAlgorithmSha256Guid
+  gEfiHashAlgorithmSha384Guid
+  gEfiHashAlgorithmSha512Guid
+  gEfiCertSha1Guid
+  gEfiCertSha256Guid
+  gEfiCertSha384Guid
+  gEfiCertSha512Guid
   gCryptoOpCmsVerifyGuid            ## CONSUMES ## MU_CHANGE
   gCryptoOpCmsContentDigestGuid     ## CONSUMES ## MU_CHANGE
   gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES ## MU_CHANGE
