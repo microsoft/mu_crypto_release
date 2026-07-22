@@ -41,3 +41,27 @@ GetAuthenticodeHash (
   ASSERT (FALSE);
   return EFI_UNSUPPORTED;
 }
+
+/**
+  Determine the image-hash algorithm used by an Authenticode signature.
+
+  Return EFI_UNSUPPORTED to indicate this interface is not supported.
+
+  @param[in]   AuthData      Pointer to the PKCS#7 SignedData blob.
+  @param[in]   AuthDataSize  Size of AuthData in bytes.
+  @param[out]  HashType      Receives the signature-type GUID.
+
+  @retval EFI_UNSUPPORTED  This interface is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+GetAuthenticodeHashAlgorithm (
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        AuthDataSize,
+  OUT EFI_GUID     *HashType
+  )
+{
+  ASSERT (FALSE);
+  return EFI_UNSUPPORTED;
+}
