@@ -51,6 +51,7 @@
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
   Hash/CryptHashAll.c # MU_CHANGE
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
   Pk/CryptTs.c
   Pk/CryptRsaPss.c
   Pk/CryptRsaPssSign.c
