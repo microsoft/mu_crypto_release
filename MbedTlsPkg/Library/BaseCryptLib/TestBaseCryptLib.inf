@@ -44,6 +44,7 @@
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
@@ -53,6 +54,12 @@
   Rand/CryptRand.c
   SysCall/CrtWrapper.c
   SysCall/UnitTestHostCrtWrapper.c
+
+[Guids]
+  gEfiHashAlgorithmSha1Guid
+  gEfiHashAlgorithmSha256Guid
+  gEfiHashAlgorithmSha384Guid
+  gEfiHashAlgorithmSha512Guid
 
 [Packages]
   MdePkg/MdePkg.dec
