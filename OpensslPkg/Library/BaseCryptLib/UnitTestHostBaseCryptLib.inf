@@ -28,6 +28,7 @@
   Pk/CryptOpCapabilityCommon.c  # MU_CHANGE
   Pk/CryptCmsOpCapability.c  # MU_CHANGE
   Pk/CryptAuthenticodeOpCapability.c  # MU_CHANGE
+  Pk/CryptAuthenticodeHashCapability.c  # MU_CHANGE
   Hash/CryptMd5.c
   Hash/CryptSha1.c
   Hash/CryptSha256.c
@@ -52,6 +53,7 @@
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
   Hash/CryptHashAll.c # MU_CHANGE
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
