@@ -139,6 +139,12 @@ X509ConstructCertificateStackV (
     NewlyAllocated = TRUE; // MU_CHANGE
   }
 
+  // MU_CHANGE [BEGIN] - An empty certificate list (only the NULL terminator) is
+  // a valid request that yields an empty stack; default to success now that the
+  // stack is allocated. Per-certificate failures below set Status = FALSE.
+  Status = TRUE;
+  // MU_CHANGE [END]
+
   while (TRUE) {
     //
     // If Cert is NULL, then it is the end of the list.
@@ -151,6 +157,7 @@ X509ConstructCertificateStackV (
 
     CertSize = VA_ARG (Args, UINTN);
     if (CertSize == 0) {
+      Status = FALSE; // MU_CHANGE - a supplied certificate with size 0 is a failure
       break;
     }
 
