@@ -55,6 +55,74 @@ jobs:
         run: |
           gh release upload ${{ github.event.release.tag_name }} ${{ inputs.publish_name }}.zip
 
+      - name: Publish ext_dep Descriptors (${{ inputs.variant }})
+        if: github.event_name == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          ZIP="${{ inputs.publish_name }}.zip"
+          SHA="$(sha256sum "$ZIP" | cut -d ' ' -f 1)"
+          URL="https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/$ZIP"
+          TAG="${{ github.event.release.tag_name }}"
+          PRERELEASE="${{ github.event.release.prerelease }}"
+
+          # Override descriptor: a *temporary* local override (override_id) that
+          # shadows a platform's onecrypto-bin ext_dep for testing, without
+          # editing the platform tree. Versioned by the full tag so it stays
+          # distinct across (pre)releases. Published for every release.
+          OVERRIDE="${{ inputs.publish_name }}_override_ext_dep.json"
+          cat > "$OVERRIDE" <<EOF
+          {
+            "scope": "global",
+            "type": "web",
+            "id": "onecrypto-bin-local-override",
+            "override_id": "onecrypto-bin",
+            "name": "onecrypto-bin-local-override",
+            "source": "$URL",
+            "version": "$TAG",
+            "sha256": "$SHA",
+            "compression_type": "zip",
+            "internal_path": "/",
+            "flags": [
+              "set_build_var"
+            ],
+            "var_name": "BLD_*_ONE_CRYPTO_PATH"
+          }
+          EOF
+          UPLOADS=("$OVERRIDE")
+
+          # Normal descriptor: the drop-in that updates a platform's committed
+          # CryptoPkg/Binaries/OneCrypto_ext_dep.json. Version is a plain semver
+          # (tag with leading "v" and any suffix stripped). Only published for a
+          # full release: a prerelease like v1.0.2-Beta0 would advertise "1.0.2"
+          # and collide with the eventual real 1.0.2 release.
+          if [ "$PRERELEASE" != "true" ]; then
+          VERSION="${TAG#v}"
+          VERSION="${VERSION%%-*}"
+          NORMAL="${{ inputs.publish_name }}_ext_dep.json"
+          cat > "$NORMAL" <<EOF
+          {
+            "scope": "global",
+            "type": "web",
+            "id": "onecrypto-bin",
+            "name": "onecrypto-bin",
+            "source": "$URL",
+            "version": "$VERSION",
+            "sha256": "$SHA",
+            "compression_type": "zip",
+            "internal_path": "/",
+            "flags": [
+              "set_build_var"
+            ],
+            "var_name": "BLD_*_ONE_CRYPTO_PATH"
+          }
+          EOF
+          UPLOADS+=("$NORMAL")
+          fi
+
+          gh release upload "$TAG" "${UPLOADS[@]}"
+
       - name: Delete Intermediate Artifact (${{ inputs.variant }})
         uses: geekyeggo/delete-artifact@v5
         with:
