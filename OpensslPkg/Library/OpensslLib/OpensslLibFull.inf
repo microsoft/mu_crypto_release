@@ -286,7 +286,6 @@
   $(OPENSSL_PATH)/crypto/evp/e_xcbc_d.c
   $(OPENSSL_PATH)/crypto/evp/ec_ctrl.c
   $(OPENSSL_PATH)/crypto/evp/ec_support.c
-  $(OPENSSL_PATH)/crypto/evp/enc_b64_avx2.c
   $(OPENSSL_PATH)/crypto/evp/enc_b64_scalar.c
   $(OPENSSL_PATH)/crypto/evp/encode.c
   $(OPENSSL_PATH)/crypto/evp/evp_cnf.c
@@ -788,6 +787,7 @@
 #  OpensslStub/EcSm2Null.c
   OpensslStub/uefiprov.c
   OpensslStub/EncoderNull.c
+  OpensslStub/EncB64Avx2.c
   OpensslStub/SslStatServNull.c
   OpensslStub/SslExtServNull.c
 
