@@ -265,6 +265,10 @@ def sources_filter_fn(filename):
         'defltprov.c',
         'baseprov.c',
         'provider_predefined.c',
+        # Replaced by OpensslStub/EncB64Avx2.c: the upstream file includes
+        # <immintrin.h>, which breaks the UEFI/MSVC build (CRT header size_t
+        # redefinition) because OpenSSL is compiled with _WIN64/_MSC_VER undefined.
+        'enc_b64_avx2.c',
         'ecp_nistz256.c',
         'x86_64-gcc.c',
         'armcap.c',

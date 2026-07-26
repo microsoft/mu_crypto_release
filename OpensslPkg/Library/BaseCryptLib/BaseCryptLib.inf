@@ -117,8 +117,9 @@
   #
   # suppress the following warnings so we do not break the build with warnings-as-errors:
   # C4090: 'function' : different 'const' qualifiers
+  # C4005: macro redefinition (OSSL_SSIZE_MAX; see GCC's -Wno-macro-redefined below)
   #
-  MSFT:*_*_*_CC_FLAGS = /wd4090
+  MSFT:*_*_*_CC_FLAGS = /wd4090 /wd4005
   MSFT:*_*_AARCH64_CC_FLAGS = /U_M_ARM64 /D_M_MS_ARM64
   #
   # MU_CHANGE [END]
