@@ -67,6 +67,14 @@ jobs:
       - name: Update
         run: stuart_update -c .pytool/CISettings.py -p ${{ matrix.package }}
 
+      - name: Verify README OpenSSL version badge
+        if: matrix.package == 'OpensslPkg' && matrix.target == 'NO-TARGET'
+        run: python Scripts/sync_readme_versions.py --check --component openssl
+
+      - name: Verify README Mbed TLS version badge
+        if: matrix.package == 'MbedTlsPkg' && matrix.target == 'NO-TARGET'
+        run: python Scripts/sync_readme_versions.py --check --component mbedtls
+
       - name: Build ${{ matrix.package }} ${{ matrix.target }} (${{ env.TOOL_CHAIN_TAG }})
         run: stuart_ci_build -c .pytool/CISettings.py -p ${{ matrix.package }} -t ${{ matrix.target }} TOOL_CHAIN_TAG=${{ env.TOOL_CHAIN_TAG }}
 
