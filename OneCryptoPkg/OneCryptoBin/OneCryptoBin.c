@@ -343,6 +343,7 @@ CryptoInit (
   CryptoProtocol->FreeTrustAnchorX509Cache       = FreeTrustAnchorX509Cache;
   CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
   CryptoProtocol->X509GetTbsCertHash             = X509GetTbsCertHash;
+  CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
 }
 
 /**

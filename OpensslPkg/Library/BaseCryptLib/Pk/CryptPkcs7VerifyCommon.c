@@ -1102,18 +1102,28 @@ Pkcs7VerifyWorker (
   // Trim the captured chain to the trust path: the image signer up to and
   // including the trust anchor. Under X509_V_FLAG_PARTIAL_CHAIN, OpenSSL may
   // extend the built chain past the anchor using the message's embedded
-  // certificates (for example when the anchor is the signer itself). The
-  // caller wants only signer..anchor, so drop any certificate above it.
+  // certificates (for example when the anchor is the signer itself).
+  //
+  // Fast path for the common case (anchor is the topmost certificate, so the
+  // chain already ends at it): a pointer compare - get1_chain up-refs the
+  // trust store's own object, so the top entry IS Cert - confirmed by
+  // X509_cmp. Only when the anchor sits below the top do we walk the chain to
+  // find it and drop the certificates above it.
   //
   if (Status && (Capture != NULL) && (Capture->Chain != NULL)) {
     ChainCount = sk_X509_num (Capture->Chain);
-    for (ChainIndex = 0; ChainIndex < ChainCount; ChainIndex++) {
-      if (X509_cmp (sk_X509_value (Capture->Chain, ChainIndex), Cert) == 0) {
-        while (sk_X509_num (Capture->Chain) > (ChainIndex + 1)) {
-          X509_free (sk_X509_pop (Capture->Chain));
-        }
+    if ((ChainCount > 1) &&
+        (sk_X509_value (Capture->Chain, ChainCount - 1) != Cert) &&
+        (X509_cmp (sk_X509_value (Capture->Chain, ChainCount - 1), Cert) != 0))
+    {
+      for (ChainIndex = 0; ChainIndex < ChainCount - 1; ChainIndex++) {
+        if (X509_cmp (sk_X509_value (Capture->Chain, ChainIndex), Cert) == 0) {
+          while (sk_X509_num (Capture->Chain) > (ChainIndex + 1)) {
+            X509_free (sk_X509_pop (Capture->Chain));
+          }
 
-        break;
+          break;
+        }
       }
     }
   }
@@ -1180,6 +1190,16 @@ Pkcs7VerifyEx (
   }
 
   //
+  // Only arm the chain capture when the caller actually wants the chain (both
+  // out-params present). Capturing is not free - it dups the built chain via
+  // X509_STORE_CTX_get1_chain() and trims it - so callers that do not request
+  // a chain (Pkcs7Verify(), AuthenticodeVerify()) must pay nothing for it.
+  //
+  if ((SignerChain == NULL) || (SignerChainSize == NULL)) {
+    return Pkcs7VerifyWorker (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, NULL);
+  }
+
+  //
   // Arm the observe-only chain capture (per-call, on the stack), then run
   // the standard verify through the shared worker.
   //
@@ -1187,9 +1207,7 @@ Pkcs7VerifyEx (
 
   Status = Pkcs7VerifyWorker (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, &Capture);
 
-  if (Status && (SignerChain != NULL) && (SignerChainSize != NULL) &&
-      (Capture.Chain != NULL))
-  {
+  if (Status && (Capture.Chain != NULL)) {
     //
     // Best-effort: if serialization fails the verify verdict still stands;
     // the caller simply gets no chain and can fall back.
