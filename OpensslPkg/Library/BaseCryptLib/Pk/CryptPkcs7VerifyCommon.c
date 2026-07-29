@@ -751,6 +751,147 @@ _Error:
   return Status;
 }
 
+//
+// Per-verification chain capture for AuthenticodeVerifyEx / Pkcs7VerifyEx.
+// The capture context lives on the caller's stack and is attached to the
+// X509_STORE via ex_data, so nested or concurrent verifications never
+// share mutable state. The verify callback OBSERVES (never alters) the
+// OpenSSL verification and, on success, records the chain OpenSSL built in
+// its X509_STORE_CTX.
+//
+// The ex_data *index* below is process-global and immutable once allocated
+// (the standard OpenSSL idiom); it is not per-call state.
+//
+typedef struct {
+  STACK_OF (X509)  *Chain;   // captured verified chain (signer..anchor), owned
+} PKCS7_CHAIN_CAPTURE;
+
+STATIC int  mChainCaptureIndex = -1;
+
+STATIC
+BOOLEAN
+Pkcs7VerifyWorker (
+  IN  CONST UINT8          *P7Data,
+  IN  UINTN                P7Length,
+  IN  CONST UINT8          *TrustedCert,
+  IN  UINTN                CertLength,
+  IN  CONST UINT8          *InData,
+  IN  UINTN                DataLength,
+  IN  PKCS7_CHAIN_CAPTURE  *Capture   OPTIONAL
+  );
+
+/**
+  X509_STORE verify callback that captures the built signer chain at the
+  end-entity (depth 0) once verification has succeeded. The capture slot is
+  retrieved from the store's ex_data. Returns Ok unchanged so it does not
+  affect the verification verdict.
+**/
+STATIC
+int
+Pkcs7ChainCaptureCb (
+  int             Ok,
+  X509_STORE_CTX  *Ctx
+  )
+{
+  X509_STORE           *Store;
+  PKCS7_CHAIN_CAPTURE  *Capture;
+
+  if (Ok && (mChainCaptureIndex >= 0) &&
+      (X509_STORE_CTX_get_error_depth (Ctx) == 0))
+  {
+    Store = X509_STORE_CTX_get0_store (Ctx);
+    if (Store != NULL) {
+      Capture = X509_STORE_get_ex_data (Store, mChainCaptureIndex);
+      if ((Capture != NULL) && (Capture->Chain == NULL)) {
+        //
+        // get1_chain returns an up-ref'd copy owned by us.
+        //
+        Capture->Chain = X509_STORE_CTX_get1_chain (Ctx);
+      }
+    }
+  }
+
+  return Ok;
+}
+
+/**
+  Serialize an OpenSSL STACK_OF(X509) chain (ordered signer..anchor) into
+  the EFI_CERT_STACK form:
+    UINT8  CertNumber;
+    { UINT32 CertLength; UINT8 Cert[]; } x CertNumber
+
+  @param[in]   Chain          The verified chain (leaf at index 0).
+  @param[out]  CertStack      Newly allocated EFI_CERT_STACK; caller frees.
+  @param[out]  CertStackSize  Length of CertStack in bytes.
+
+  @retval EFI_SUCCESS            Serialized.
+  @retval EFI_NOT_FOUND          Empty chain / too many certs.
+  @retval EFI_INVALID_PARAMETER  A certificate failed to encode.
+  @retval EFI_OUT_OF_RESOURCES   Allocation failed.
+**/
+STATIC
+EFI_STATUS
+SerializeSignerChain (
+  IN  STACK_OF (X509)  *Chain,
+  OUT UINT8            **CertStack,
+  OUT UINTN            *CertStackSize
+  )
+{
+  int            Count;
+  int            Index;
+  int            DerLen;
+  int            Written;
+  UINTN          TotalSize;
+  UINT8          *Buffer;
+  UINT8          *Cursor;
+  unsigned char  *P;
+
+  Count = sk_X509_num (Chain);
+  if ((Count <= 0) || (Count > MAX_UINT8)) {
+    return EFI_NOT_FOUND;
+  }
+
+  TotalSize = sizeof (UINT8);
+  for (Index = 0; Index < Count; Index++) {
+    DerLen = i2d_X509 (sk_X509_value (Chain, Index), NULL);
+    if (DerLen <= 0) {
+      return EFI_INVALID_PARAMETER;
+    }
+
+    TotalSize += sizeof (UINT32) + (UINTN)DerLen;
+  }
+
+  Buffer = AllocatePool (TotalSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Cursor    = Buffer;
+  *Cursor++ = (UINT8)Count;
+  for (Index = 0; Index < Count; Index++) {
+    DerLen = i2d_X509 (sk_X509_value (Chain, Index), NULL);
+    WriteUnaligned32 ((UINT32 *)Cursor, (UINT32)DerLen);
+    Cursor += sizeof (UINT32);
+    P       = Cursor;
+    Written = i2d_X509 (sk_X509_value (Chain, Index), &P);
+    if (Written != DerLen) {
+      //
+      // The sizing and encode passes must agree; a mismatch means the
+      // buffer layout is inconsistent, so fail rather than emit a
+      // malformed EFI_CERT_STACK.
+      //
+      FreePool (Buffer);
+      return EFI_INVALID_PARAMETER;
+    }
+
+    Cursor += DerLen;
+  }
+
+  *CertStack     = Buffer;
+  *CertStackSize = TotalSize;
+  return EFI_SUCCESS;
+}
+
 /**
   Verifies the validity of a PKCS#7 signed data as described in "PKCS #7:
   Cryptographic Message Syntax Standard". The input signed data could be wrapped
@@ -786,6 +927,29 @@ Pkcs7Verify (
   IN  UINTN        DataLength
   )
 {
+  return Pkcs7VerifyWorker (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, NULL);
+}
+
+/**
+  Core PKCS#7 verification worker shared by Pkcs7Verify() and
+  Pkcs7VerifyEx(). When Capture is non-NULL, an observe-only verify
+  callback records the signer chain that OpenSSL builds into
+  Capture->Chain (attached to the X509_STORE via ex_data).
+
+  @param[in]  Capture  Optional per-call chain-capture context.
+**/
+STATIC
+BOOLEAN
+Pkcs7VerifyWorker (
+  IN  CONST UINT8          *P7Data,
+  IN  UINTN                P7Length,
+  IN  CONST UINT8          *TrustedCert,
+  IN  UINTN                CertLength,
+  IN  CONST UINT8          *InData,
+  IN  UINTN                DataLength,
+  IN  PKCS7_CHAIN_CAPTURE  *Capture   OPTIONAL
+  )
+{
   PKCS7        *Pkcs7;
   BIO          *DataBio;
   BOOLEAN      Status;
@@ -795,6 +959,8 @@ Pkcs7Verify (
   CONST UINT8  *Temp;
   UINTN        SignedDataSize;
   BOOLEAN      Wrapped;
+  int          ChainCount;
+  int          ChainIndex;
 
   //
   // Check input parameters.
@@ -911,9 +1077,46 @@ Pkcs7Verify (
   X509_STORE_set_purpose (CertStore, X509_PURPOSE_ANY);
 
   //
+  // When a caller (AuthenticodeVerifyEx / Pkcs7VerifyEx) asked for the
+  // signer chain, attach the per-store capture context and an observe-only
+  // callback that records the chain OpenSSL builds. It does not change the
+  // verification result.
+  //
+  if (Capture != NULL) {
+    if (mChainCaptureIndex < 0) {
+      mChainCaptureIndex = X509_STORE_get_ex_new_index (0, NULL, NULL, NULL, NULL);
+    }
+
+    if (mChainCaptureIndex >= 0) {
+      X509_STORE_set_ex_data (CertStore, mChainCaptureIndex, Capture);
+      X509_STORE_set_verify_cb (CertStore, Pkcs7ChainCaptureCb);
+    }
+  }
+
+  //
   // Verifies the PKCS#7 signedData structure
   //
   Status = (BOOLEAN)PKCS7_verify (Pkcs7, NULL, CertStore, DataBio, NULL, PKCS7_BINARY);
+
+  //
+  // Trim the captured chain to the trust path: the image signer up to and
+  // including the trust anchor. Under X509_V_FLAG_PARTIAL_CHAIN, OpenSSL may
+  // extend the built chain past the anchor using the message's embedded
+  // certificates (for example when the anchor is the signer itself). The
+  // caller wants only signer..anchor, so drop any certificate above it.
+  //
+  if (Status && (Capture != NULL) && (Capture->Chain != NULL)) {
+    ChainCount = sk_X509_num (Capture->Chain);
+    for (ChainIndex = 0; ChainIndex < ChainCount; ChainIndex++) {
+      if (X509_cmp (sk_X509_value (Capture->Chain, ChainIndex), Cert) == 0) {
+        while (sk_X509_num (Capture->Chain) > (ChainIndex + 1)) {
+          X509_free (sk_X509_pop (Capture->Chain));
+        }
+
+        break;
+      }
+    }
+  }
 
 _Exit:
   //
@@ -926,6 +1129,76 @@ _Exit:
 
   if (!Wrapped) {
     OPENSSL_free (SignedData);
+  }
+
+  return Status;
+}
+
+/**
+  Same as Pkcs7Verify(), but on success also returns the signer's
+  cryptographically-verified certificate chain (as OpenSSL built and used
+  it) in EFI_CERT_STACK form. This lets a caller obtain the chain for
+  per-certificate revocation (dbx) checks without a second, redundant
+  chain-building pass.
+
+  @param[in]   P7Data          PKCS#7 message to verify.
+  @param[in]   P7Length        Length of P7Data.
+  @param[in]   TrustedCert     DER trust anchor for chain verification.
+  @param[in]   CertLength      Length of TrustedCert.
+  @param[in]   InData          Content to verify.
+  @param[in]   DataLength      Length of InData.
+  @param[out]  SignerChain     Optional. If non-NULL and verification
+                               succeeds, receives a newly allocated
+                               EFI_CERT_STACK (signer..anchor); caller frees.
+  @param[out]  SignerChainSize Optional. Length of SignerChain.
+
+  @retval TRUE   The PKCS#7 signed data is valid.
+  @retval FALSE  Invalid PKCS#7 signed data.
+**/
+BOOLEAN
+EFIAPI
+Pkcs7VerifyEx (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
+  )
+{
+  BOOLEAN              Status;
+  PKCS7_CHAIN_CAPTURE  Capture;
+
+  if (SignerChain != NULL) {
+    *SignerChain = NULL;
+  }
+
+  if (SignerChainSize != NULL) {
+    *SignerChainSize = 0;
+  }
+
+  //
+  // Arm the observe-only chain capture (per-call, on the stack), then run
+  // the standard verify through the shared worker.
+  //
+  Capture.Chain = NULL;
+
+  Status = Pkcs7VerifyWorker (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, &Capture);
+
+  if (Status && (SignerChain != NULL) && (SignerChainSize != NULL) &&
+      (Capture.Chain != NULL))
+  {
+    //
+    // Best-effort: if serialization fails the verify verdict still stands;
+    // the caller simply gets no chain and can fall back.
+    //
+    SerializeSignerChain (Capture.Chain, SignerChain, SignerChainSize);
+  }
+
+  if (Capture.Chain != NULL) {
+    sk_X509_pop_free (Capture.Chain, X509_free);
   }
 
   return Status;

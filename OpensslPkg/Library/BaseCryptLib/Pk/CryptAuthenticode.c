@@ -62,6 +62,29 @@ AuthenticodeVerify (
   IN  UINTN        CertSize,
   IN  CONST UINT8  *ImageHash,
   IN  UINTN        HashSize
+  );
+
+/**
+  Core Authenticode verification worker. Verifies the signature and, when
+  CertChain is non-NULL, additionally returns the cryptographically-verified
+  signer certificate chain (as OpenSSL built and used it) in EFI_CERT_STACK
+  form. Both AuthenticodeVerify() and AuthenticodeVerifyEx() call this so the
+  security-sensitive logic lives in exactly one place.
+
+  @param[out]  CertChain      Optional EFI_CERT_STACK output; caller frees.
+  @param[out]  CertChainSize  Optional length of CertChain.
+**/
+STATIC
+BOOLEAN
+AuthenticodeVerifyWorker (
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        DataSize,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertSize,
+  IN  CONST UINT8  *ImageHash,
+  IN  UINTN        HashSize,
+  OUT UINT8        **CertChain      OPTIONAL,
+  OUT UINTN        *CertChainSize   OPTIONAL
   )
 {
   BOOLEAN      Status;
@@ -179,9 +202,11 @@ AuthenticodeVerify (
   }
 
   //
-  // Verifies the PKCS#7 Signed Data in PE/COFF Authenticode Signature
+  // Verifies the PKCS#7 Signed Data in PE/COFF Authenticode Signature.
+  // Pkcs7VerifyEx additionally returns the verified signer chain when
+  // requested (CertChain != NULL), avoiding a second chain-building pass.
   //
-  Status = (BOOLEAN)Pkcs7Verify (OrigAuthData, DataSize, TrustedCert, CertSize, SpcIndirectDataContent, ContentSize);
+  Status = (BOOLEAN)Pkcs7VerifyEx (OrigAuthData, DataSize, TrustedCert, CertSize, SpcIndirectDataContent, ContentSize, CertChain, CertChainSize);
 
 _Exit:
   //
@@ -190,4 +215,83 @@ _Exit:
   PKCS7_free (Pkcs7);
 
   return Status;
+}
+
+/**
+  Verifies the validity of a PE/COFF Authenticode Signature as described in
+  "Windows Authenticode Portable Executable Signature Format".
+
+  See BaseCryptLib.h for the full contract.
+**/
+BOOLEAN
+EFIAPI
+AuthenticodeVerify (
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        DataSize,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertSize,
+  IN  CONST UINT8  *ImageHash,
+  IN  UINTN        HashSize
+  )
+{
+  return AuthenticodeVerifyWorker (
+           AuthData,
+           DataSize,
+           TrustedCert,
+           CertSize,
+           ImageHash,
+           HashSize,
+           NULL,
+           NULL
+           );
+}
+
+/**
+  Verifies a PE/COFF Authenticode Signature and, on success, additionally
+  returns the cryptographically-verified signer certificate chain that
+  OpenSSL built and used, in EFI_CERT_STACK form (signer..anchor). This
+  lets a caller obtain the chain for per-certificate revocation (dbx)
+  checks without a separate, redundant certificate-chain pass.
+
+  See BaseCryptLib.h for the full contract.
+**/
+EFI_STATUS
+EFIAPI
+AuthenticodeVerifyEx (
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        DataSize,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertSize,
+  IN  CONST UINT8  *ImageHash,
+  IN  UINTN        HashSize,
+  OUT UINT8        **CertChain      OPTIONAL,
+  OUT UINTN        *CertChainSize   OPTIONAL
+  )
+{
+  BOOLEAN  Valid;
+
+  if (CertChain != NULL) {
+    *CertChain = NULL;
+  }
+
+  if (CertChainSize != NULL) {
+    *CertChainSize = 0;
+  }
+
+  if ((AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Valid = AuthenticodeVerifyWorker (
+            AuthData,
+            DataSize,
+            TrustedCert,
+            CertSize,
+            ImageHash,
+            HashSize,
+            CertChain,
+            CertChainSize
+            );
+
+  return Valid ? EFI_SUCCESS : EFI_SECURITY_VIOLATION;
 }

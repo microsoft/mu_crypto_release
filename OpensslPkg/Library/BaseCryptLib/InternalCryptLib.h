@@ -63,4 +63,34 @@ WrapPkcs7Data (
   OUT UINTN        *WrapDataSize
   );
 
+/**
+  Same as Pkcs7Verify(), but on success also returns the signer's verified
+  certificate chain in EFI_CERT_STACK form (signer..anchor). Internal to
+  the OpenSSL BaseCryptLib instance; used by AuthenticodeVerifyEx().
+
+  @param[in]   P7Data          PKCS#7 message to verify.
+  @param[in]   P7Length        Length of P7Data.
+  @param[in]   TrustedCert     DER trust anchor.
+  @param[in]   CertLength      Length of TrustedCert.
+  @param[in]   InData          Content to verify.
+  @param[in]   DataLength      Length of InData.
+  @param[out]  SignerChain     Optional EFI_CERT_STACK output; caller frees.
+  @param[out]  SignerChainSize Optional length of SignerChain.
+
+  @retval TRUE   Valid PKCS#7 signed data.
+  @retval FALSE  Invalid PKCS#7 signed data.
+**/
+BOOLEAN
+EFIAPI
+Pkcs7VerifyEx (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
+  );
+
 #endif
