@@ -23,10 +23,10 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 //
 // ASN.1 DER constants used during the walk.
 //
-#define ASN1_TAG_SEQUENCE                0x30
-#define ASN1_TAG_SET                     0x31
-#define ASN1_TAG_OID                     0x06
-#define ASN1_TAG_CTX_CONS_0              0xA0  // [0] EXPLICIT / IMPLICIT constructed
+#define ASN1_TAG_SEQUENCE    0x30
+#define ASN1_TAG_SET         0x31
+#define ASN1_TAG_OID         0x06
+#define ASN1_TAG_CTX_CONS_0  0xA0              // [0] EXPLICIT / IMPLICIT constructed
 
 //
 // signedData OID 1.2.840.113549.1.7.2 = 06 09 2A 86 48 86 F7 0D 01 07 02
@@ -634,13 +634,13 @@ LocateCertificatesField (
 EFI_STATUS
 EFIAPI
 GetTrustAnchorX509FromAuthData (
-  IN OUT VOID         **CacheHandle  OPTIONAL,
-  IN  CONST UINT8     *TbsCertHash,
-  IN  UINTN           TbsCertHashSize,
-  IN  CONST UINT8     *AuthData,
-  IN  UINTN           AuthDataSize,
-  OUT UINT8           **TrustAnchorX509,
-  OUT UINTN           *TrustAnchorX509Size
+  IN OUT VOID      **CacheHandle  OPTIONAL,
+  IN  CONST UINT8  *TbsCertHash,
+  IN  UINTN        TbsCertHashSize,
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        AuthDataSize,
+  OUT UINT8        **TrustAnchorX509,
+  OUT UINTN        *TrustAnchorX509Size
   )
 {
   EFI_STATUS          Status;
