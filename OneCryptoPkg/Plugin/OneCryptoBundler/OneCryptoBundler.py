@@ -193,9 +193,14 @@ def get_file_layout(workspace, arch, target, toolchain):
                 (f"{workspace}/OneCryptoPkg/OneCryptoBin/Integration/OneCryptoBinStandaloneMm.inf", "OneCryptoBinStandaloneMm.inf"),
             ],
             "OneCryptoLoaders": [
-                # OneCryptoBinDxeLoader (AARCH64 path: OneCryptoLoaderDxeFromMm, packaged as OneCryptoLoaderDxe)
-                *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderDxeFromMm", "OneCryptoLoaderDxeFromMm", "OneCryptoLoaderDxe"),
+                # OneCryptoBinDxeLoader: direct/two-copy loader packaged as OneCryptoLoaderDxe (default;
+                # consumes OneCryptoBinDxe's private protocol). Two-copy platforms reference this name.
+                *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderDxeByProtocol", "OneCryptoLoaderDxe", "OneCryptoLoaderDxe"),
                 (f"{workspace}/OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxe.inf", "OneCryptoLoaderDxe.inf"),
+                # Single-copy DXE loader: fetches the OneCrypto image from StandaloneMM. Packaged under
+                # its own name so single-copy platforms opt in explicitly (see OneCryptoImageProviderStandaloneMm).
+                *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderDxeFromMm", "OneCryptoLoaderDxeFromMm", "OneCryptoLoaderDxeFromMm"),
+                (f"{workspace}/OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderDxeFromMm.inf", "OneCryptoLoaderDxeFromMm.inf"),
                 # OneCryptoBinStandaloneMmLoader (OneCryptoLoaderStandaloneMm)
                 *driver_files(f"{package_build_dir}/OneCryptoLoaders/OneCryptoLoaderStandaloneMm", "OneCryptoLoaderStandaloneMm", "OneCryptoLoaderStandaloneMm"),
                 (f"{workspace}/OneCryptoPkg/OneCryptoLoaders/Integration/OneCryptoLoaderStandaloneMm.inf", "OneCryptoLoaderStandaloneMm.inf"),

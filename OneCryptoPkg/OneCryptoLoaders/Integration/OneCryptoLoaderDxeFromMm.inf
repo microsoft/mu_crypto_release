@@ -1,0 +1,29 @@
+## @file
+#  OneCrypto DXE Loader (fetch-from-StandaloneMM) - fetches the OneCrypto image
+#  from the StandaloneMM image provider and installs the crypto protocol in DXE.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OneCryptoLoaderDxeFromMm
+  FILE_GUID                      = 9CAAC6D7-7A89-4A1D-AB95-08CD20B8E44A
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  ENTRY_POINT                    = DxeEntryPoint
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[Binaries]
+  PE32|OneCryptoLoaderDxeFromMm.efi
+  DXE_DEPEX|OneCryptoLoaderDxeFromMm.depex
+
+[Protocols]
+  gOneCryptoProtocolGuid              ## PRODUCES
+  gEfiRngProtocolGuid                 ## CONSUMES
