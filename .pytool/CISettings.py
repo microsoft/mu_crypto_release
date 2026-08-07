@@ -167,8 +167,15 @@ class Settings(
         return [
             {
                 "Path": "MU_BASECORE",
+                # MU_CHANGE [TEMP][DROP] - prototyping pin. The new
+                # BaseCryptLib/OneCrypto APIs (GetAuthenticodeHash,
+                # GetTrustAnchorX509FromAuthData, FreeTrustAnchorX509Cache,
+                # GetAuthenticodeHashAlgorithm, AuthenticodeVerifyEx,
+                # HashAllByGuid) currently live on the
+                # dev/202511/post-quantum-staging branch. Pin the commit rather
+                # than track a moving branch. Drop once these land on main.
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "5315549216a14e8b0f433af7012a99d6476afc31"
+                "Commit": "506bbaedde87d0e58731e6f5fe766b51d15fbf44"
             },
             {
                 "Path": "Features/MM_SUPV",
