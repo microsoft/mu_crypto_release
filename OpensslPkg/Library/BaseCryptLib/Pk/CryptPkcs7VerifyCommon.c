@@ -753,16 +753,153 @@ _Error:
   return Status;
 }
 
-/**
-  Verifies the validity of a PKCS#7/CMS signed data structure.
+//
+// Per-verification chain capture used by CmsVerify (on behalf of Authenticode).
+// The capture context lives on the caller's stack and is attached to the
+// X509_STORE via ex_data, so nested or concurrent verifications never
+// share mutable state. The verify callback OBSERVES (never alters) the
+// verification and, on success, records the chain OpenSSL built in its
+// X509_STORE_CTX. CMS_verify drives certificate-chain construction through
+// the same X509_STORE / X509_STORE_CTX as the legacy PKCS7 path, so the
+// callback fires identically here.
+//
+// The ex_data *index* below is process-global and immutable once allocated
+// (the standard OpenSSL idiom); it is not per-call state.
+//
+typedef struct {
+  STACK_OF (X509)  *Chain;   // captured verified chain (signer..anchor), owned
+} CMS_CHAIN_CAPTURE;
 
-  This function verifies signed data using OpenSSL's CMS (Cryptographic
-  Message Syntax, RFC 5652) implementation, which is the successor to
-  PKCS#7 and is backward-compatible at the ASN.1 level. CMS_verify
-  provides crypto-agile signature verification supporting RSA, ECDSA,
-  Ed25519, ML-DSA, and future algorithms through the EVP provider
-  framework. The input signed data may be wrapped in a ContentInfo
-  structure.
+STATIC int  mChainCaptureIndex = -1;
+
+/**
+  X509_STORE verify callback that captures the built signer chain at the
+  end-entity (depth 0) once verification has succeeded. The capture slot is
+  retrieved from the store's ex_data. Returns Ok unchanged so it does not
+  affect the verification verdict.
+**/
+STATIC
+int
+CmsChainCaptureCb (
+  int             Ok,
+  X509_STORE_CTX  *Ctx
+  )
+{
+  X509_STORE         *Store;
+  CMS_CHAIN_CAPTURE  *Capture;
+
+  if (Ok && (mChainCaptureIndex >= 0) &&
+      (X509_STORE_CTX_get_error_depth (Ctx) == 0))
+  {
+    Store = X509_STORE_CTX_get0_store (Ctx);
+    if (Store != NULL) {
+      Capture = X509_STORE_get_ex_data (Store, mChainCaptureIndex);
+      if ((Capture != NULL) && (Capture->Chain == NULL)) {
+        //
+        // get1_chain returns an up-ref'd copy owned by us.
+        //
+        Capture->Chain = X509_STORE_CTX_get1_chain (Ctx);
+      }
+    }
+  }
+
+  return Ok;
+}
+
+/**
+  Serialize an OpenSSL STACK_OF(X509) chain (ordered signer..anchor) into
+  the EFI_CERT_STACK form:
+    UINT8  CertNumber;
+    { UINT32 CertLength; UINT8 Cert[]; } x CertNumber
+
+  @param[in]   Chain          The verified chain (leaf at index 0).
+  @param[out]  CertStack      Newly allocated EFI_CERT_STACK; caller frees.
+  @param[out]  CertStackSize  Length of CertStack in bytes.
+
+  @retval EFI_SUCCESS            Serialized.
+  @retval EFI_NOT_FOUND          Empty chain / too many certs.
+  @retval EFI_INVALID_PARAMETER  A certificate failed to encode.
+  @retval EFI_OUT_OF_RESOURCES   Allocation failed.
+**/
+STATIC
+EFI_STATUS
+SerializeSignerChain (
+  IN  STACK_OF (X509)  *Chain,
+  OUT UINT8            **CertStack,
+  OUT UINTN            *CertStackSize
+  )
+{
+  int            Count;
+  int            Index;
+  int            DerLen;
+  int            Written;
+  UINTN          TotalSize;
+  UINT8          *Buffer;
+  UINT8          *Cursor;
+  unsigned char  *P;
+
+  Count = sk_X509_num (Chain);
+  if ((Count <= 0) || (Count > MAX_UINT8)) {
+    return EFI_NOT_FOUND;
+  }
+
+  TotalSize = sizeof (UINT8);
+  for (Index = 0; Index < Count; Index++) {
+    DerLen = i2d_X509 (sk_X509_value (Chain, Index), NULL);
+    if (DerLen <= 0) {
+      return EFI_INVALID_PARAMETER;
+    }
+
+    TotalSize += sizeof (UINT32) + (UINTN)DerLen;
+  }
+
+  Buffer = AllocatePool (TotalSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Cursor    = Buffer;
+  *Cursor++ = (UINT8)Count;
+  for (Index = 0; Index < Count; Index++) {
+    DerLen = i2d_X509 (sk_X509_value (Chain, Index), NULL);
+    WriteUnaligned32 ((UINT32 *)Cursor, (UINT32)DerLen);
+    Cursor += sizeof (UINT32);
+    P       = Cursor;
+    Written = i2d_X509 (sk_X509_value (Chain, Index), &P);
+    if (Written != DerLen) {
+      //
+      // The sizing and encode passes must agree; a mismatch means the
+      // buffer layout is inconsistent, so fail rather than emit a
+      // malformed EFI_CERT_STACK.
+      //
+      FreePool (Buffer);
+      return EFI_INVALID_PARAMETER;
+    }
+
+    Cursor += DerLen;
+  }
+
+  *CertStack     = Buffer;
+  *CertStackSize = TotalSize;
+  return EFI_SUCCESS;
+}
+
+/**
+  Verifies a PKCS#7/CMS SignedData structure and, when requested, returns
+  the signer's cryptographically-verified certificate chain.
+
+  Verification is performed with OpenSSL's CMS_verify so the signature
+  algorithm is dispatched through the EVP provider framework (RSA, ECDSA,
+  Ed25519, ML-DSA, and future provider algorithms). PKCS#7 SignedData is a
+  strict subset of CMS (RFC 5652), so this single routine backs both the
+  legacy Pkcs7Verify() entry point and the Authenticode verifier.
+
+  When SignerChain and SignerChainSize are both supplied, an observe-only
+  X509_STORE verify callback records the chain OpenSSL builds and, on
+  success, it is trimmed to signer..anchor and serialized into
+  EFI_CERT_STACK form so a caller can run per-certificate revocation (dbx)
+  checks without a second, redundant chain-building pass. Callers that do
+  not request the chain pay nothing for the capture.
 
   If P7Data, TrustedCert or InData is NULL, then return FALSE.
   If P7Length, CertLength or DataLength overflow, then return FALSE.
@@ -771,13 +908,17 @@ _Error:
   UEFI Authenticated Variable is external input, so this function will do basic
   check for data structure.
 
-  @param[in]  P7Data       Pointer to the PKCS#7/CMS message to verify.
-  @param[in]  P7Length     Length of the PKCS#7/CMS message in bytes.
-  @param[in]  TrustedCert  Pointer to a trusted/root certificate encoded in DER, which
-                           is used for certificate chain verification.
-  @param[in]  CertLength   Length of the trusted certificate in bytes.
-  @param[in]  InData       Pointer to the content to be verified.
-  @param[in]  DataLength   Length of InData in bytes.
+  @param[in]   P7Data          PKCS#7/CMS message to verify.
+  @param[in]   P7Length        Length of P7Data in bytes.
+  @param[in]   TrustedCert     DER trust anchor for chain verification.
+  @param[in]   CertLength      Length of TrustedCert in bytes.
+  @param[in]   InData          Content to verify.
+  @param[in]   DataLength      Length of InData in bytes.
+  @param[out]  SignerChain     Optional. If non-NULL (with SignerChainSize)
+                               and verification succeeds, receives a newly
+                               allocated EFI_CERT_STACK (signer..anchor);
+                               caller frees.
+  @param[out]  SignerChainSize Optional. Length of SignerChain in bytes.
 
   @retval  TRUE  The specified PKCS#7/CMS signed data is valid.
   @retval  FALSE Invalid PKCS#7/CMS signed data.
@@ -785,24 +926,47 @@ _Error:
 **/
 BOOLEAN
 EFIAPI
-Pkcs7Verify (
+CmsVerify (
   IN  CONST UINT8  *P7Data,
   IN  UINTN        P7Length,
   IN  CONST UINT8  *TrustedCert,
   IN  UINTN        CertLength,
   IN  CONST UINT8  *InData,
-  IN  UINTN        DataLength
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
   )
 {
-  CMS_ContentInfo  *Cms;
-  BIO              *DataBio;
-  BOOLEAN          Status;
-  X509             *Cert;
-  X509_STORE       *CertStore;
-  UINT8            *SignedData;
-  CONST UINT8      *Temp;
-  UINTN            SignedDataSize;
-  BOOLEAN          Wrapped;
+  CMS_ContentInfo    *Cms;
+  BIO                *DataBio;
+  BOOLEAN            Status;
+  X509               *Cert;
+  X509_STORE         *CertStore;
+  UINT8              *SignedData;
+  CONST UINT8        *Temp;
+  UINTN              SignedDataSize;
+  BOOLEAN            Wrapped;
+  int                ChainCount;
+  int                ChainIndex;
+  BOOLEAN            WantChain;
+  CMS_CHAIN_CAPTURE  Capture;
+
+  if (SignerChain != NULL) {
+    *SignerChain = NULL;
+  }
+
+  if (SignerChainSize != NULL) {
+    *SignerChainSize = 0;
+  }
+
+  //
+  // Only capture the chain when the caller actually wants it (both out-params
+  // present). Capturing is not free - it dups the built chain via
+  // X509_STORE_CTX_get1_chain() and trims it - so Pkcs7Verify() and other
+  // verdict-only callers pay nothing for it.
+  //
+  WantChain     = (BOOLEAN)((SignerChain != NULL) && (SignerChainSize != NULL));
+  Capture.Chain = NULL;
 
   //
   // Check input parameters.
@@ -881,6 +1045,22 @@ Pkcs7Verify (
   X509_STORE_set_purpose (CertStore, X509_PURPOSE_ANY);
 
   //
+  // When the caller asked for the signer chain, attach the per-store capture
+  // context and an observe-only callback that records the chain OpenSSL
+  // builds. It does not change the verification result.
+  //
+  if (WantChain) {
+    if (mChainCaptureIndex < 0) {
+      mChainCaptureIndex = X509_STORE_get_ex_new_index (0, NULL, NULL, NULL, NULL);
+    }
+
+    if (mChainCaptureIndex >= 0) {
+      X509_STORE_set_ex_data (CertStore, mChainCaptureIndex, &Capture);
+      X509_STORE_set_verify_cb (CertStore, CmsChainCaptureCb);
+    }
+  }
+
+  //
   // Parse the signed data as CMS ContentInfo. CMS is the successor to PKCS#7
   // and is backward-compatible at the ASN.1 level. Using CMS_verify provides
   // crypto-agile signature verification supporting RSA, ECDSA, Ed25519,
@@ -936,6 +1116,43 @@ Pkcs7Verify (
     ERR_clear_error ();
   }
 
+  //
+  // Trim the captured chain to the trust path: the image signer up to and
+  // including the trust anchor. Under X509_V_FLAG_PARTIAL_CHAIN, OpenSSL may
+  // extend the built chain past the anchor using the message's embedded
+  // certificates (for example when the anchor is the signer itself).
+  //
+  // Fast path for the common case (anchor is the topmost certificate, so the
+  // chain already ends at it): a pointer compare - get1_chain up-refs the
+  // trust store's own object, so the top entry IS Cert - confirmed by
+  // X509_cmp. Only when the anchor sits below the top do we walk the chain to
+  // find it and drop the certificates above it.
+  //
+  if (Status && WantChain && (Capture.Chain != NULL)) {
+    ChainCount = sk_X509_num (Capture.Chain);
+    if ((ChainCount > 1) &&
+        (sk_X509_value (Capture.Chain, ChainCount - 1) != Cert) &&
+        (X509_cmp (sk_X509_value (Capture.Chain, ChainCount - 1), Cert) != 0))
+    {
+      for (ChainIndex = 0; ChainIndex < ChainCount - 1; ChainIndex++) {
+        if (X509_cmp (sk_X509_value (Capture.Chain, ChainIndex), Cert) == 0) {
+          while (sk_X509_num (Capture.Chain) > (ChainIndex + 1)) {
+            X509_free (sk_X509_pop (Capture.Chain));
+          }
+
+          break;
+        }
+      }
+    }
+
+    //
+    // Serialize the trimmed chain into EFI_CERT_STACK form for the caller.
+    // Best-effort: if serialization fails the verify verdict still stands;
+    // the caller simply gets no chain and can fall back.
+    //
+    SerializeSignerChain (Capture.Chain, SignerChain, SignerChainSize);
+  }
+
 _Exit:
   //
   // Release Resources
@@ -945,9 +1162,56 @@ _Exit:
   X509_STORE_free (CertStore);
   CMS_ContentInfo_free (Cms);
 
+  if (Capture.Chain != NULL) {
+    sk_X509_pop_free (Capture.Chain, X509_free);
+  }
+
   if (!Wrapped) {
     OPENSSL_free (SignedData);
   }
 
   return Status;
+}
+
+/**
+  Verifies the validity of a PKCS#7/CMS signed data structure.
+
+  Pkcs7Verify() is retained for API compatibility. PKCS#7 SignedData is a
+  strict subset of CMS (RFC 5652), so verification is delegated to
+  CmsVerify(), which dispatches the signature algorithm through OpenSSL's
+  crypto-agile CMS_verify path (RSA, ECDSA, Ed25519, ML-DSA, and future
+  provider algorithms). Callers that also need the verified signer chain
+  should call CmsVerify() directly.
+
+  If P7Data, TrustedCert or InData is NULL, then return FALSE.
+  If P7Length, CertLength or DataLength overflow, then return FALSE.
+
+  Caution: This function may receive untrusted input.
+  UEFI Authenticated Variable is external input, so this function will do basic
+  check for data structure.
+
+  @param[in]  P7Data       Pointer to the PKCS#7/CMS message to verify.
+  @param[in]  P7Length     Length of the PKCS#7/CMS message in bytes.
+  @param[in]  TrustedCert  Pointer to a trusted/root certificate encoded in DER, which
+                           is used for certificate chain verification.
+  @param[in]  CertLength   Length of the trusted certificate in bytes.
+  @param[in]  InData       Pointer to the content to be verified.
+  @param[in]  DataLength   Length of InData in bytes.
+
+  @retval  TRUE  The specified PKCS#7/CMS signed data is valid.
+  @retval  FALSE Invalid PKCS#7/CMS signed data.
+
+**/
+BOOLEAN
+EFIAPI
+Pkcs7Verify (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength
+  )
+{
+  return CmsVerify (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, NULL, NULL);
 }
