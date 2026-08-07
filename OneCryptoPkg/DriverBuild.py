@@ -65,8 +65,15 @@ class CommonPlatform():
         return [
             {
                 "Path": "MU_BASECORE",
+                # MU_CHANGE [TEMP][DROP] - prototyping pin. The new
+                # BaseCryptLib/OneCrypto APIs (GetAuthenticodeHash,
+                # GetTrustAnchorX509FromAuthData, FreeTrustAnchorX509Cache,
+                # GetAuthenticodeHashAlgorithm, X509GetTbsCertHash,
+                # AuthenticodeVerifyEx) currently live only on the non-default
+                # dev/202511/post-quantum-staging branch, so track that branch
+                # rather than pin a commit. Drop once these land on main.
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "5315549216a14e8b0f433af7012a99d6476afc31"
+                "Branch": "dev/202511/post-quantum-staging"
             },
             {
                 "Path": "Features/MM_SUPV",
