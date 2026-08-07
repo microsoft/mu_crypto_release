@@ -167,13 +167,14 @@ class Settings(
         return [
             {
                 "Path": "MU_BASECORE",
-                # MU_CHANGE [TEMP] - pin to fork commit carrying the new
-                # BaseCryptLib/OneCrypto APIs (GetAuthenticodeHash,
-                # GetTrustAnchorX509FromAuthData, FreeTrustAnchorX509Cache,
-                # GetAuthenticodeHashAlgorithm, X509GetTbsCertHash). Revert to
-                # https://github.com/microsoft/mu_basecore.git once merged.
-                "Url": "https://github.com/flickdm/mu_basecore.git",
-                "Commit": "329789c5c7e3786480022910676275dbe7054904",
+                # MU_CHANGE [TEMP] - pin to the dev/202511/post-quantum-staging
+                # branch carrying the new BaseCryptLib/OneCrypto APIs
+                # (GetAuthenticodeHash, GetTrustAnchorX509FromAuthData,
+                # FreeTrustAnchorX509Cache, GetAuthenticodeHashAlgorithm,
+                # X509GetTbsCertHash). Move to a released mu_basecore commit
+                # once merged.
+                "Url": "https://github.com/microsoft/mu_basecore.git",
+                "Commit": "973cfe6e52f1e20567f5c36ee5e3f13386a1f32e",
                 "Recurse": {"CIFile": ".pytool/CISettings.py"},
             },
             {
