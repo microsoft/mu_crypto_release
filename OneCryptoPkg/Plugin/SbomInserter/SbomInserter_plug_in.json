@@ -1,5 +1,5 @@
 {
-  "scope": "global",
+  "scope": "OneCrypto",
   "name": "SBOM PECOFF section Inserter",
   "module": "SbomInserter"
 }
