@@ -11,8 +11,8 @@
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
 #include <Library/BaseLib.h>
-#include <Guid/CryptoOpId.h>
 #include "InternalCryptLib.h"
+#include <Guid/CryptoOpId.h>
 
 /**
   Gets the cryptographic provider version information.
@@ -81,7 +81,7 @@ GetCryptoProviderVersionString (
 // This dispatcher is intentionally minimal: a static GUID -> handler
 // table (mCryptoOpDispatch) and a linear search. Per-op handlers live
 // next to the verify pipeline they describe (e.g.
-// Pk/CryptPkcs7OpCapability.c next to Pk/CryptPkcs7VerifyCommon.c) so
+// Pk/CryptCmsOpCapability.c next to Pk/CryptPkcs7VerifyCommon.c) so
 // that adding or modifying an op never reaches across module boundaries.
 //
 // Each handler answers "what algorithms can my pipeline accept on the
@@ -106,7 +106,7 @@ GetCryptoProviderVersionString (
 //
 
 //
-// GUID storage for gCryptoOpPkcs7VerifyGuid and
+// GUID storage for gCryptoOpCmsVerifyGuid and
 // gCryptoOpAuthenticodeVerifyGuid is provided by AutoGen for every
 // module that lists those GUIDs in its INF [Guids] block. They are
 // declared in <Guid/CryptoOpId.h> and registered in CryptoPkg.dec.
@@ -147,7 +147,7 @@ typedef struct {
   small (<10 entries).
 **/
 STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
-  { &gCryptoOpPkcs7VerifyGuid,        Pkcs7VerifyOpCapability        },
+  { &gCryptoOpCmsVerifyGuid,        CmsVerifyOpCapability        },
   { &gCryptoOpAuthenticodeVerifyGuid, AuthenticodeVerifyOpCapability },
 };
 
@@ -170,7 +170,7 @@ STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
   @param[in]      OpIdGuid    GUID identifying the crypto operation.
                               See <Library/BaseCryptLib.h> for known
                               op-ID GUID externs (e.g.
-                              gCryptoOpPkcs7VerifyGuid).
+                              gCryptoOpCmsVerifyGuid).
   @param[out]     Buffer      NULL to probe required size, else receives
                               the payload.
   @param[in,out]  BufferSize  In: size of Buffer in bytes. Out: bytes

@@ -29,7 +29,7 @@
 STATIC
 BOOLEAN
 EFIAPI
-Pkcs7Accept (
+CmsAccept (
   IN INT32  SigNid,
   IN VOID   *Ctx
   )
@@ -39,10 +39,10 @@ Pkcs7Accept (
 
 EFI_STATUS
 EFIAPI
-Pkcs7VerifyOpCapability (
+CmsVerifyOpCapability (
   OUT    CHAR8  *Buffer       OPTIONAL,
   IN OUT UINTN  *BufferSize
   )
 {
-  return CryptOpEmitProviderSignatureOids (Pkcs7Accept, NULL, Buffer, BufferSize);
+  return CryptOpEmitProviderSignatureOids (CmsAccept, NULL, Buffer, BufferSize);
 }

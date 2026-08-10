@@ -61,7 +61,7 @@
   Pk/CryptAuthenticodeHash.c         # MU_CHANGE
   Pk/CryptTrustAnchor.c              # MU_CHANGE
   Pk/CryptOpCapabilityCommon.c       # MU_CHANGE
-  Pk/CryptPkcs7OpCapability.c        # MU_CHANGE
+  Pk/CryptCmsOpCapability.c          # MU_CHANGE
   Pk/CryptAuthenticodeOpCapability.c # MU_CHANGE
   Pk/CryptTs.c
   Pk/CryptRsaPss.c
@@ -97,7 +97,7 @@
 
 
 [Guids]
-  gCryptoOpPkcs7VerifyGuid          ## CONSUMES
+  gCryptoOpCmsVerifyGuid            ## CONSUMES
   gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES
 [LibraryClasses]
   BaseLib
