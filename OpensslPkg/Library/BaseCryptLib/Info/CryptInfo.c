@@ -11,8 +11,8 @@
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
 #include <Library/BaseLib.h>
-#include <Guid/CryptoOpId.h>
 #include "InternalCryptLib.h"
+#include <Guid/CryptoOpId.h>
 
 /**
   Gets the cryptographic provider version information.
@@ -104,7 +104,7 @@ typedef struct {
 // Crypto operation capability dispatch table.
 //
 STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
-  { &gCryptoOpPkcs7VerifyGuid,        Pkcs7VerifyOpCapability        },
+  { &gCryptoOpCmsVerifyGuid,          CmsVerifyOpCapability          },
   { &gCryptoOpAuthenticodeVerifyGuid, AuthenticodeVerifyOpCapability },
 };
 
