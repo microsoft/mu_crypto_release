@@ -21,5 +21,5 @@ AuthenticodeVerifyOpCapability (
   IN OUT UINTN  *BufferSize
   )
 {
-  return Pkcs7VerifyOpCapability (Buffer, BufferSize);
+  return CmsVerifyOpCapability (Buffer, BufferSize);
 }
