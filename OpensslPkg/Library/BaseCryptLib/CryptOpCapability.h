@@ -69,7 +69,7 @@ CryptOpEmitProviderSignatureOids (
   );
 
 /**
-  PKCS#7 verify op handler (gCryptoOpPkcs7VerifyGuid).
+  PKCS#7 verify op handler (gCryptoOpCmsVerifyGuid).
 
   Reports the algorithm OIDs the linked OpenSSL provider can verify when
   the BaseCryptLib PKCS#7/CMS verify pipeline hands a signature straight
@@ -84,7 +84,7 @@ CryptOpEmitProviderSignatureOids (
 **/
 EFI_STATUS
 EFIAPI
-Pkcs7VerifyOpCapability (
+CmsVerifyOpCapability (
   OUT    CHAR8  *Buffer       OPTIONAL,
   IN OUT UINTN  *BufferSize
   );
