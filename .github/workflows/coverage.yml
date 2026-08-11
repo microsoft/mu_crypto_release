@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set Safe Directory
         run: git config --global --add safe.directory '*'
@@ -114,7 +114,7 @@ jobs:
               -o "${FILTERED_XML}"
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: coverage_report/basecryptlib_coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -122,7 +122,7 @@ jobs:
 
       - name: Upload HTML Coverage Report
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ env.PACKAGE }}-coverage-html
           path: coverage_report/html/
