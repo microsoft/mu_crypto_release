@@ -58,6 +58,9 @@
   Pk/CryptDh.c
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
+  Pk/CryptOpCapabilityCommon.c
+  Pk/CryptPkcs7OpCapability.c
+  Pk/CryptAuthenticodeOpCapability.c
   Pk/CryptTs.c
   Pk/CryptRsaPss.c
   Pk/CryptRsaPssSign.c
@@ -90,6 +93,10 @@
   OpensslPkg/OpensslPkg.dec     # MU_CHANGE
   MdeModulePkg/MdeModulePkg.dec # MU_CHANGE
 
+
+[Guids]
+  gCryptoOpPkcs7VerifyGuid          ## CONSUMES
+  gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
