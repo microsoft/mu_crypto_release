@@ -172,10 +172,11 @@ class Settings(
                 # GetTrustAnchorX509FromAuthData, FreeTrustAnchorX509Cache,
                 # GetAuthenticodeHashAlgorithm, X509GetTbsCertHash,
                 # AuthenticodeVerifyEx) currently live only on the non-default
-                # dev/202511/post-quantum-staging branch, so track that branch
-                # rather than pin a commit. Drop once these land on main.
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Branch": "dev/202511/post-quantum-staging"
+                # flickdm feat/ecit-capability-reporting branch (post-quantum-staging +
+                # the ECIT capability GUIDs/GetCryptoOpCapability), so track that fork
+                # branch. Drop once these land on a released mu_basecore commit.
+                "Url": "https://github.com/flickdm/mu_basecore.git",
+                "Branch": "feat/ecit-capability-reporting"
             },
             {
                 "Path": "Features/MM_SUPV",
