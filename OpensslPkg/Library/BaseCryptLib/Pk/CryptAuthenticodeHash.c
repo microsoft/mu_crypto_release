@@ -18,6 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <IndustryStandard/PeImage.h>
 #include <Guid/ImageAuthentication.h>
 #include <Protocol/Hash.h>
+#include "CryptOpCapability.h"
 
 //
 // Function pointer table type for a single hash algorithm.
@@ -53,6 +54,7 @@ BOOLEAN
 
 typedef struct {
   CONST EFI_GUID                *HashGuid;
+  CONST CHAR8                   *DottedOid;
   UINTN                         DigestSize;
   AUTH_HASH_GET_CONTEXT_SIZE    GetContextSize;
   AUTH_HASH_INIT                Init;
@@ -65,10 +67,10 @@ typedef struct {
 // by the BaseCryptLib hash sources in this same library instance.
 //
 STATIC CONST AUTH_HASH_INFO  mAuthHashInfo[] = {
-  { &gEfiCertSha1Guid,   SHA1_DIGEST_SIZE,   Sha1GetContextSize,   Sha1Init,   Sha1Update,   Sha1Final   },
-  { &gEfiCertSha256Guid, SHA256_DIGEST_SIZE, Sha256GetContextSize, Sha256Init, Sha256Update, Sha256Final },
-  { &gEfiCertSha384Guid, SHA384_DIGEST_SIZE, Sha384GetContextSize, Sha384Init, Sha384Update, Sha384Final },
-  { &gEfiCertSha512Guid, SHA512_DIGEST_SIZE, Sha512GetContextSize, Sha512Init, Sha512Update, Sha512Final },
+  { &gEfiCertSha1Guid,   "1.3.14.3.2.26",          SHA1_DIGEST_SIZE,   Sha1GetContextSize,   Sha1Init,   Sha1Update,   Sha1Final   },
+  { &gEfiCertSha256Guid, "2.16.840.1.101.3.4.2.1", SHA256_DIGEST_SIZE, Sha256GetContextSize, Sha256Init, Sha256Update, Sha256Final },
+  { &gEfiCertSha384Guid, "2.16.840.1.101.3.4.2.2", SHA384_DIGEST_SIZE, Sha384GetContextSize, Sha384Init, Sha384Update, Sha384Final },
+  { &gEfiCertSha512Guid, "2.16.840.1.101.3.4.2.3", SHA512_DIGEST_SIZE, Sha512GetContextSize, Sha512Init, Sha512Update, Sha512Final },
 };
 
 #define AUTH_HASH_INFO_COUNT  (sizeof (mAuthHashInfo) / sizeof (mAuthHashInfo[0]))
@@ -96,6 +98,130 @@ LookupAuthHashInfo (
   }
 
   return NULL;
+}
+
+/**
+  Checks whether an Authenticode hash algorithm can be initialized.
+
+  @param[in]   HashInfo  Entry to probe.
+  @param[out]  Available TRUE if the algorithm initialized successfully.
+
+  @retval EFI_SUCCESS           The availability probe completed.
+  @retval EFI_OUT_OF_RESOURCES  The hash context could not be allocated.
+**/
+STATIC
+EFI_STATUS
+AuthHashAlgorithmAvailable (
+  IN  CONST AUTH_HASH_INFO  *HashInfo,
+  OUT BOOLEAN               *Available
+  )
+{
+  UINTN  CtxSize;
+  VOID   *Ctx;
+
+  *Available = FALSE;
+
+  if ((HashInfo->GetContextSize == NULL) || (HashInfo->Init == NULL) ||
+      (HashInfo->DottedOid == NULL))
+  {
+    return EFI_SUCCESS;
+  }
+
+  CtxSize = HashInfo->GetContextSize ();
+  if (CtxSize == 0) {
+    return EFI_SUCCESS;
+  }
+
+  Ctx = AllocatePool (CtxSize);
+  if (Ctx == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  *Available = HashInfo->Init (Ctx);
+  FreePool (Ctx);
+  return EFI_SUCCESS;
+}
+
+/**
+  Authenticode image-hash op handler (gCryptoOpAuthenticodeHashGuid). See
+  CryptOpCapability.h for the contract.
+
+  @param[out]     Buffer      NULL probes required size, else receives payload.
+  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+
+  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
+  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+  @retval EFI_OUT_OF_RESOURCES  Payload allocation failed.
+**/
+EFI_STATUS
+EFIAPI
+AuthenticodeHashOpCapability (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       Index;
+  UINTN       Capacity;
+  UINTN       Required;
+  UINTN       Written;
+  UINTN       OidLen;
+  UINTN       Need;
+  BOOLEAN     Available;
+  BOOLEAN     Overflow;
+
+  if (BufferSize == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Capacity = (Buffer != NULL) ? *BufferSize : 0;
+  Required = 1;
+  Written  = 0;
+  Overflow = FALSE;
+
+  for (Index = 0; Index < AUTH_HASH_INFO_COUNT; Index++) {
+    Status = AuthHashAlgorithmAvailable (&mAuthHashInfo[Index], &Available);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    if (!Available) {
+      continue;
+    }
+
+    OidLen = AsciiStrLen (mAuthHashInfo[Index].DottedOid);
+    Need   = OidLen + ((Required > 1) ? 1 : 0);
+
+    if ((Buffer != NULL) && !Overflow) {
+      if ((Written + Need + 1) > Capacity) {
+        Overflow = TRUE;
+      } else {
+        if (Written != 0) {
+          Buffer[Written++] = ',';
+        }
+
+        CopyMem (&Buffer[Written], mAuthHashInfo[Index].DottedOid, OidLen);
+        Written += OidLen;
+      }
+    }
+
+    Required += Need;
+  }
+
+  if (Buffer == NULL) {
+    *BufferSize = Required;
+    return EFI_SUCCESS;
+  }
+
+  if (Overflow || (Capacity < Required)) {
+    *BufferSize = Required;
+    return EFI_BUFFER_TOO_SMALL;
+  }
+
+  Buffer[Written] = '\0';
+  *BufferSize     = Required;
+  return EFI_SUCCESS;
 }
 
 /**
