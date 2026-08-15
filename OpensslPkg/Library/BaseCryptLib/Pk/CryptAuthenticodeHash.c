@@ -17,6 +17,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <IndustryStandard/PeImage.h>
 #include <Guid/ImageAuthentication.h>
+#include "CryptOpCapability.h"
 
 //
 // Function pointer table type for a single hash algorithm.
@@ -52,6 +53,7 @@ BOOLEAN
 
 typedef struct {
   CONST EFI_GUID                *HashGuid;
+  CONST CHAR8                   *DottedOid;
   UINTN                         DigestSize;
   AUTH_HASH_GET_CONTEXT_SIZE    GetContextSize;
   AUTH_HASH_INIT                Init;
@@ -64,10 +66,10 @@ typedef struct {
 // by the BaseCryptLib hash sources in this same library instance.
 //
 STATIC CONST AUTH_HASH_INFO  mAuthHashInfo[] = {
-  { &gEfiCertSha1Guid,   SHA1_DIGEST_SIZE,   Sha1GetContextSize,   Sha1Init,   Sha1Update,   Sha1Final   },
-  { &gEfiCertSha256Guid, SHA256_DIGEST_SIZE, Sha256GetContextSize, Sha256Init, Sha256Update, Sha256Final },
-  { &gEfiCertSha384Guid, SHA384_DIGEST_SIZE, Sha384GetContextSize, Sha384Init, Sha384Update, Sha384Final },
-  { &gEfiCertSha512Guid, SHA512_DIGEST_SIZE, Sha512GetContextSize, Sha512Init, Sha512Update, Sha512Final },
+  { &gEfiCertSha1Guid,   "1.3.14.3.2.26",          SHA1_DIGEST_SIZE,   Sha1GetContextSize,   Sha1Init,   Sha1Update,   Sha1Final   },
+  { &gEfiCertSha256Guid, "2.16.840.1.101.3.4.2.1", SHA256_DIGEST_SIZE, Sha256GetContextSize, Sha256Init, Sha256Update, Sha256Final },
+  { &gEfiCertSha384Guid, "2.16.840.1.101.3.4.2.2", SHA384_DIGEST_SIZE, Sha384GetContextSize, Sha384Init, Sha384Update, Sha384Final },
+  { &gEfiCertSha512Guid, "2.16.840.1.101.3.4.2.3", SHA512_DIGEST_SIZE, Sha512GetContextSize, Sha512Init, Sha512Update, Sha512Final },
 };
 
 #define AUTH_HASH_INFO_COUNT  (sizeof (mAuthHashInfo) / sizeof (mAuthHashInfo[0]))
@@ -95,6 +97,187 @@ LookupAuthHashInfo (
   }
 
   return NULL;
+}
+
+//
+// ===========================================================================
+// ECIT capability: Authenticode image-hash algorithms
+// ===========================================================================
+//
+// gCryptoOpAuthenticodeHashGuid reports the dotted OIDs of the digest
+// algorithms Authenticode image hashing (GetAuthenticodeHash) can actually
+// compute in THIS build. mAuthHashInfo is the single source of truth: each
+// entry is probed through its own BaseCryptLib primitives, so the report
+// reflects the exact path GetAuthenticodeHash uses. An algorithm is emitted
+// iff Init() succeeds -- which requires it to be present BOTH in BaseCryptLib
+// (not Null-linked) AND resolvable by the linked crypto provider. A static
+// table would miss a provider-level disable; a raw provider dump would miss a
+// BaseCryptLib-level disable. Probing Init catches both directions.
+//
+// The CSV is built once and cached: the provider set is fixed for the
+// lifetime of the binary, so re-probing on every call would be wasted work.
+//
+
+STATIC CHAR8  *mAuthHashOpCsv     = NULL;  // cached payload incl. trailing NUL
+STATIC UINTN  mAuthHashOpCsvSize  = 0;     // cached size in bytes incl. NUL
+
+/**
+  Probe whether a hash algorithm is usable in this build by exercising its
+  own BaseCryptLib primitives (GetContextSize + Init).
+
+  Init traverses the full stack (BaseCryptLib primitive -> provider
+  fetch/init), so TRUE means the digest is available end to end and FALSE
+  means it was disabled either above (Null-linked) or below (provider) --
+  exactly the set GetAuthenticodeHash could hash with.
+
+  @param[in]  HashInfo  Entry to probe.
+
+  @retval TRUE   The algorithm initialized successfully.
+  @retval FALSE  The algorithm is unavailable in this build.
+**/
+STATIC
+BOOLEAN
+AuthHashAlgorithmAvailable (
+  IN CONST AUTH_HASH_INFO  *HashInfo
+  )
+{
+  UINTN    CtxSize;
+  VOID     *Ctx;
+  BOOLEAN  Available;
+
+  if ((HashInfo->GetContextSize == NULL) || (HashInfo->Init == NULL) ||
+      (HashInfo->DottedOid == NULL))
+  {
+    return FALSE;
+  }
+
+  CtxSize = HashInfo->GetContextSize ();
+  if (CtxSize == 0) {
+    return FALSE;
+  }
+
+  Ctx = AllocatePool (CtxSize);
+  if (Ctx == NULL) {
+    return FALSE;
+  }
+
+  Available = HashInfo->Init (Ctx);
+  FreePool (Ctx);
+  return Available;
+}
+
+/**
+  Build (once) the cached CSV of available Authenticode image-hash OIDs.
+
+  @retval EFI_SUCCESS           Cache is populated.
+  @retval EFI_OUT_OF_RESOURCES  Allocation failed.
+**/
+STATIC
+EFI_STATUS
+AuthHashBuildCsv (
+  VOID
+  )
+{
+  UINTN    Index;
+  UINTN    Total;
+  UINTN    Written;
+  UINTN    OidLen;
+  CHAR8    *Csv;
+  BOOLEAN  Available[AUTH_HASH_INFO_COUNT];
+
+  if (mAuthHashOpCsv != NULL) {
+    return EFI_SUCCESS;
+  }
+
+  //
+  // Pass 1: probe each algorithm and size the CSV.
+  //
+  Total = 0;
+  for (Index = 0; Index < AUTH_HASH_INFO_COUNT; Index++) {
+    Available[Index] = AuthHashAlgorithmAvailable (&mAuthHashInfo[Index]);
+    if (Available[Index]) {
+      if (Total != 0) {
+        Total += 1; // separating comma
+      }
+
+      Total += AsciiStrLen (mAuthHashInfo[Index].DottedOid);
+    }
+  }
+
+  Total += 1; // trailing NUL (empty set -> single NUL)
+
+  Csv = AllocatePool (Total);
+  if (Csv == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  //
+  // Pass 2: emit the OIDs of the available algorithms.
+  //
+  Written = 0;
+  for (Index = 0; Index < AUTH_HASH_INFO_COUNT; Index++) {
+    if (!Available[Index]) {
+      continue;
+    }
+
+    if (Written != 0) {
+      Csv[Written++] = ',';
+    }
+
+    OidLen = AsciiStrLen (mAuthHashInfo[Index].DottedOid);
+    CopyMem (&Csv[Written], mAuthHashInfo[Index].DottedOid, OidLen);
+    Written += OidLen;
+  }
+
+  Csv[Written]       = '\0';
+  mAuthHashOpCsv     = Csv;
+  mAuthHashOpCsvSize = Written + 1;
+  return EFI_SUCCESS;
+}
+
+/**
+  Authenticode image-hash op handler (gCryptoOpAuthenticodeHashGuid). See
+  CryptOpCapability.h for the contract.
+
+  @param[out]     Buffer      NULL probes required size, else receives payload.
+  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+
+  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
+  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+  @retval EFI_OUT_OF_RESOURCES  Payload allocation failed.
+**/
+EFI_STATUS
+EFIAPI
+AuthenticodeHashOpCapability (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  )
+{
+  EFI_STATUS  Status;
+
+  if (BufferSize == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = AuthHashBuildCsv ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  if (Buffer == NULL) {
+    *BufferSize = mAuthHashOpCsvSize;
+    return EFI_SUCCESS;
+  }
+
+  if (*BufferSize < mAuthHashOpCsvSize) {
+    *BufferSize = mAuthHashOpCsvSize;
+    return EFI_BUFFER_TOO_SMALL;
+  }
+
+  CopyMem (Buffer, mAuthHashOpCsv, mAuthHashOpCsvSize);
+  *BufferSize = mAuthHashOpCsvSize;
+  return EFI_SUCCESS;
 }
 
 /**

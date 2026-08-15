@@ -75,6 +75,7 @@
 [Guids]
   gCryptoOpCmsVerifyGuid            ## CONSUMES
   gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES
+  gCryptoOpAuthenticodeHashGuid     ## CONSUMES
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
