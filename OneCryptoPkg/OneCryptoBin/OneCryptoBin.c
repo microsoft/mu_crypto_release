@@ -344,6 +344,18 @@ CryptoInit (
   CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
   CryptoProtocol->X509GetTbsCertHash             = X509GetTbsCertHash;
   CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
+
+  // ========================================================================================================
+  // v1.2 functions
+  // ========================================================================================================
+
+  CryptoProtocol->CmsVerify                      = CmsVerify;
+
+  // ========================================================================================================
+  // v1.3 functions
+  // ========================================================================================================
+
+  CryptoProtocol->GetCryptoOpCapability          = GetCryptoOpCapability;
 }
 
 /**

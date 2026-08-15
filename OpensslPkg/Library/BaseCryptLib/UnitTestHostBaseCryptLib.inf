@@ -45,8 +45,12 @@
   Pk/CryptDh.c
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
-  Pk/CryptAuthenticodeHash.c # MU_CHANGE
-  Pk/CryptTrustAnchor.c # MU_CHANGE
+  Pk/CryptAuthenticodeHash.c          # MU_CHANGE
+  Pk/CryptTrustAnchor.c               # MU_CHANGE
+  Pk/CryptOpCapabilityCommon.c        # MU_CHANGE
+  Pk/CryptCmsOpCapability.c           # MU_CHANGE
+  Pk/CryptAuthenticodeOpCapability.c  # MU_CHANGE
+  Info/CryptInfo.c
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
@@ -67,6 +71,11 @@
   CryptoPkg/CryptoPkg.dec
   OpensslPkg/OpensslPkg.dec # MU_CHANGE
 
+
+[Guids]
+  gCryptoOpCmsVerifyGuid            ## CONSUMES
+  gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES
+  gCryptoOpAuthenticodeHashGuid     ## CONSUMES
 [LibraryClasses]
   BaseLib
   BaseMemoryLib

@@ -1352,3 +1352,39 @@ Pkcs7GetCertificatesList (
   ASSERT (FALSE);
   return FALSE;
 }
+
+/**
+  CmsVerify() for the MbedTLS backend. MbedTLS cannot return the verified
+  signer certificate chain, so a SignerChain request is unsupported;
+  otherwise this forwards to Pkcs7Verify(). See <Library/BaseCryptLib.h>.
+**/
+BOOLEAN
+EFIAPI
+CmsVerify (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
+  )
+{
+  if (SignerChain != NULL) {
+    *SignerChain = NULL;
+  }
+
+  if (SignerChainSize != NULL) {
+    *SignerChainSize = 0;
+  }
+
+  //
+  // MbedTLS does not expose the verified signer chain; reject that request.
+  //
+  if ((SignerChain != NULL) || (SignerChainSize != NULL)) {
+    return FALSE;
+  }
+
+  return Pkcs7Verify (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength);
+}
