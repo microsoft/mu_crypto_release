@@ -113,4 +113,28 @@ AuthenticodeVerifyOpCapability (
   IN OUT UINTN  *BufferSize
   );
 
+/**
+  Authenticode image-hash op handler (gCryptoOpAuthenticodeHashGuid).
+
+  Reports the dotted OIDs of the digest algorithms Authenticode image
+  hashing (GetAuthenticodeHash) can compute in this build. Each candidate is
+  probed through the same BaseCryptLib context initialization path used by
+  GetAuthenticodeHash. Unlike the verify ops, this reports digest OIDs, not
+  signature OIDs.
+
+  @param[out]     Buffer      NULL probes required size, else receives payload.
+  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+
+  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
+  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+  @retval EFI_OUT_OF_RESOURCES  Payload allocation failed.
+**/
+EFI_STATUS
+EFIAPI
+AuthenticodeHashOpCapability (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  );
+
 #endif // BASE_CRYPT_LIB_OPENSSLPKG_OP_CAPABILITY_H_

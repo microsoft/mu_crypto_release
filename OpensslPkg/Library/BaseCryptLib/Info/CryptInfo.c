@@ -106,6 +106,7 @@ typedef struct {
 STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
   { &gCryptoOpCmsVerifyGuid,          CmsVerifyOpCapability          },
   { &gCryptoOpAuthenticodeVerifyGuid, AuthenticodeVerifyOpCapability },
+  { &gCryptoOpAuthenticodeHashGuid, AuthenticodeHashOpCapability   },
 };
 
 /**
