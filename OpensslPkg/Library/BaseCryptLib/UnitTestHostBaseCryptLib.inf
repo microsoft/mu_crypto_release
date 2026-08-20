@@ -52,6 +52,7 @@
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
+  Hash/CryptHashAll.c # MU_CHANGE
   Pk/CryptAuthenticodeHash.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
@@ -94,6 +95,7 @@
   XCODE:*_*_*_CC_FLAGS = -std=c99
 
 [Guids]
+  gEfiHashAlgorithmMD5Guid
   gEfiHashAlgorithmSha1Guid
   gEfiHashAlgorithmSha256Guid
   gEfiHashAlgorithmSha384Guid
