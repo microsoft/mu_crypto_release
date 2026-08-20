@@ -167,8 +167,17 @@ class Settings(
         return [
             {
                 "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "5315549216a14e8b0f433af7012a99d6476afc31"
+                # MU_CHANGE [TEMP][DROP] - prototyping pin. The new
+                # BaseCryptLib/OneCrypto APIs (GetAuthenticodeHash,
+                # GetTrustAnchorX509FromAuthData, FreeTrustAnchorX509Cache,
+                # GetAuthenticodeHashAlgorithm, X509GetTbsCertHash,
+                # AuthenticodeVerifyEx, HashAllByGuid) currently live only on a
+                # non-default branch, so track that branch rather than pin a
+                # commit. Points at the flickdm/mu_basecore fork until the
+                # HashAllByGuid work lands on dev/202511/post-quantum-staging.
+                # Drop once these land on main.
+                "Url": "https://github.com/flickdm/mu_basecore.git",
+                "Branch": "dev/onecrypto-hashallbyguid"
             },
             {
                 "Path": "Features/MM_SUPV",
