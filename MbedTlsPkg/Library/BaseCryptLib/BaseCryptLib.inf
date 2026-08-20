@@ -45,6 +45,7 @@
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
+  Hash/CryptHashAll.c # MU_CHANGE
   Pk/CryptTs.c
   Pk/CryptRsaPss.c
   Pk/CryptRsaPssSign.c
@@ -57,6 +58,13 @@
   SysCall/DummyOpensslSupport.c
   SysCall/BaseMemAllocation.c
   SysCall/TimerWrapper.c
+
+[Guids]
+  gEfiHashAlgorithmMD5Guid
+  gEfiHashAlgorithmSha1Guid
+  gEfiHashAlgorithmSha256Guid
+  gEfiHashAlgorithmSha384Guid
+  gEfiHashAlgorithmSha512Guid
 
 [Packages]
   MdePkg/MdePkg.dec
