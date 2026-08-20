@@ -344,6 +344,7 @@ CryptoInit (
   CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
   CryptoProtocol->X509GetTbsCertHash             = X509GetTbsCertHash;
   CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
+  CryptoProtocol->HashAllByGuid                  = HashAllByGuid;
 }
 
 /**
