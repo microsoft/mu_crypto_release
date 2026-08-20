@@ -28,7 +28,6 @@
   Pk/CryptOpCapabilityCommon.c  # MU_CHANGE
   Pk/CryptCmsOpCapability.c  # MU_CHANGE
   Pk/CryptAuthenticodeOpCapability.c  # MU_CHANGE
-  Pk/CryptAuthenticodeHashCapability.c  # MU_CHANGE
   Hash/CryptMd5.c
   Hash/CryptSha1.c
   Hash/CryptSha256.c
@@ -52,6 +51,7 @@
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
   Pk/CryptTrustAnchor.c # MU_CHANGE
+  Hash/CryptHashAll.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
@@ -93,6 +93,11 @@
   XCODE:*_*_*_CC_FLAGS = -std=c99
 
 [Guids]
+  gEfiHashAlgorithmMD5Guid
+  gEfiHashAlgorithmSha1Guid
+  gEfiHashAlgorithmSha256Guid
+  gEfiHashAlgorithmSha384Guid
+  gEfiHashAlgorithmSha512Guid
   gCryptoOpCmsVerifyGuid            ## CONSUMES ## MU_CHANGE
   gCryptoOpCmsContentDigestGuid     ## CONSUMES ## MU_CHANGE
   gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES ## MU_CHANGE
