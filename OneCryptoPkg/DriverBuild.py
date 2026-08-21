@@ -25,7 +25,7 @@ class CommonPlatform():
         for the different parts of stuart
     '''
     PackagesSupported = ("OneCryptoPkg",)
-    ArchSupported = ("X64", "AARCH64")
+    ArchSupported = ("IA32", "X64", "AARCH64")
     TargetsSupported = ("DEBUG", "RELEASE")
     Scopes = ('OneCrypto', 'edk2-build')
     # This script lives at <repo>/OneCryptoPkg/DriverBuild.py, so the
@@ -286,7 +286,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                     toolchain,
                 )
 
-                for file, after in layout["OneCryptoBin"]:
+                for file, after in layout.get("OneCryptoBin", []):
                     if file.endswith(".efi"):
                         logging.info(f"Creating SBOM for {file}")
                         efi_name = Path(after).name # after is what the file will be renamed to.
