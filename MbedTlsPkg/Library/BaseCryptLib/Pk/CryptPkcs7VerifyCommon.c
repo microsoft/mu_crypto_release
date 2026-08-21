@@ -1352,3 +1352,49 @@ Pkcs7GetCertificatesList (
   ASSERT (FALSE);
   return FALSE;
 }
+
+/**
+  Verifies a PKCS#7/CMS SignedData structure.
+
+  MbedTLS does not support returning the verified signer certificate chain.
+
+  @param[in]   P7Data          Pointer to the PKCS#7/CMS message.
+  @param[in]   P7Length        Length of P7Data in bytes.
+  @param[in]   TrustedCert     Pointer to the trusted certificate.
+  @param[in]   CertLength      Length of TrustedCert in bytes.
+  @param[in]   InData          Pointer to the content to verify.
+  @param[in]   DataLength      Length of InData in bytes.
+  @param[out]  SignerChain     If non-NULL, the function returns FALSE.
+  @param[out]  SignerChainSize If non-NULL, the function returns FALSE.
+
+  @retval TRUE   The PKCS#7/CMS signed data is valid.
+  @retval FALSE  The signed data is invalid or a signer chain was requested.
+**/
+BOOLEAN
+EFIAPI
+CmsVerify (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
+  )
+{
+  if (SignerChain != NULL) {
+    *SignerChain = NULL;
+  }
+
+  if (SignerChainSize != NULL) {
+    *SignerChainSize = 0;
+  }
+
+  if ((SignerChain != NULL) || (SignerChainSize != NULL)) {
+    DEBUG ((DEBUG_ERROR, "CmsVerify: Signer chain output is not supported by MbedTLS.\n"));
+    return FALSE;
+  }
+
+  return Pkcs7Verify (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength);
+}
