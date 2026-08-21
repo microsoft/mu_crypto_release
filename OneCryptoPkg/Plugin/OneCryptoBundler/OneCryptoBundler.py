@@ -29,7 +29,7 @@ class OneCryptoBundler(IUefiHelperPlugin):
         """
         Create a zip package with the specified files.
 
-        Package structure: <target>/<arch>/<BuildInfo|OneCryptoBin|OneCryptoLoaders>/
+        Package structure: <target>/<arch>/<BuildInfo|MbedTlsCryptoPei|OneCryptoBin|OneCryptoLoaders>/
 
         Args:
             output_zip: Full path (including filename) for the output zip file (e.g., "C:/OneCrypto.zip")
@@ -155,7 +155,8 @@ def get_file_layout(workspace, arch, target, toolchain):
     """
     Get the file layout for a specific architecture.
 
-    Architecture-specific layouts:
+    Architecture-specific OneCrypto layouts:
+    - IA32: MbedTlsCryptoPei only
     - AARCH64: OneCryptoBinDxe, OneCryptoBinDxeLoader, OneCryptoBinStandaloneMm, OneCryptoBinStandaloneMmLoader
     - X64: OneCryptoBinLoader, OneCryptoBinStandaloneMm, OneCryptoBinStandaloneMmLoader, OneCryptoBinSupvMm, OneCryptoBinSupvMmLoader
 
@@ -170,6 +171,7 @@ def get_file_layout(workspace, arch, target, toolchain):
     ws = Path(workspace)
     build_output = ws / "Build" / "OneCryptoPkg" / f"{target}_{toolchain}"
     package_build_dir = str(build_output / arch / "OneCryptoPkg")
+    mbed_tls_crypto_pei_dir = build_output / arch / "MbedTlsPkg" / "Driver" / "MbedTlsCryptoPei"
     is_debug = target == "DEBUG"
 
     def driver_files(driver_dir, driver_name, new_name):
@@ -182,8 +184,24 @@ def get_file_layout(workspace, arch, target, toolchain):
             files.append((f"{driver_dir}/OUTPUT/{driver_name}.pdb", f"{new_name}.pdb"))
         return files
 
+    mbed_tls_crypto_pei = {
+        "MbedTlsCryptoPei": [
+            *driver_files(mbed_tls_crypto_pei_dir, "MbedTlsCryptoPei", "MbedTlsCryptoPei"),
+            (f"{workspace}/MbedTlsPkg/Driver/Integration/MbedTlsCryptoPei.inf", "MbedTlsCryptoPei.inf"),
+        ],
+    }
+
+    if arch == "IA32":
+        return {
+            **mbed_tls_crypto_pei,
+            "BuildInfo": [
+                (f"{build_output}/BUILD_REPORT.TXT", "BUILD_REPORT.TXT"),
+            ],
+        }
+
     if arch == "AARCH64":
         return {
+            **mbed_tls_crypto_pei,
             "OneCryptoBin": [
                 # OneCryptoBinDxe
                 *driver_files(f"{package_build_dir}/OneCryptoBin/OneCryptoBinDxe", "OneCryptoBinDxe", "OneCryptoBinDxe"),
@@ -214,8 +232,9 @@ def get_file_layout(workspace, arch, target, toolchain):
                 (f"{package_build_dir}/OneCryptoBin/OneCryptoBinStandaloneMm/OUTPUT/OneCryptoBinStandaloneMm.spdx.xml", "OneCryptoBinStandaloneMm.spdx.xml"),
             ],
         }
-    else:  # X64 (default)
+    if arch == "X64":
         return {
+            **mbed_tls_crypto_pei,
             "OneCryptoBin": [
                 # OneCryptoBinStandaloneMm
                 *driver_files(f"{package_build_dir}/OneCryptoBin/OneCryptoBinStandaloneMm", "OneCryptoBinStandaloneMm", "OneCryptoBinStandaloneMm"),
@@ -241,6 +260,8 @@ def get_file_layout(workspace, arch, target, toolchain):
                 (f"{package_build_dir}/OneCryptoBin/OneCryptoBinSupvMm/OUTPUT/OneCryptoBinSupvMm.spdx.xml", "OneCryptoBinSupvMm.spdx.xml"),
             ],
         }
+
+    raise ValueError(f"Unsupported architecture: {arch}")
 
 
 def get_lzma_compress_path(workspace_root: Path) -> Path | None:

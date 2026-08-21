@@ -11,7 +11,7 @@
   PLATFORM_VERSION               = 1.0
   DSC_SPECIFICATION              = 0x00010005
   OUTPUT_DIRECTORY               = Build/OneCryptoPkg
-  SUPPORTED_ARCHITECTURES        = X64|AARCH64
+  SUPPORTED_ARCHITECTURES        = IA32|X64|AARCH64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
 
@@ -89,6 +89,23 @@
 [LibraryClasses.AARCH64]
   CompilerIntrinsicsLib|MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
+[Components]
+  MbedTlsPkg/Driver/MbedTlsCryptoPei.inf {
+    <LibraryClasses>
+      BaseLib                        | MdePkg/Library/BaseLib/BaseLib.inf
+      BaseMemoryLib                  | MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+      DebugLib                       | MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+      PcdLib                         | MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+      PeimEntryPoint                 | MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
+      PeiServicesLib                 | MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
+      PeiServicesTablePointerLib     | MdePkg/Library/PeiServicesTablePointerLib/PeiServicesTablePointerLib.inf
+      MemoryAllocationLib            | MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
+      RegisterFilterLib              | MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+      StackCheckLib                  | MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+      CompilerIntrinsicsLib          | MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+      HobLib                         | MdePkg/Library/PeiHobLib\PeiHobLib.inf
+  }
+
 [Components.X64]
 
   ## OneCryptBin meant for StandaloneMm
@@ -147,7 +164,7 @@
       MmServicesTableLib           | MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
       MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
       HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
-      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+      FvLib                        | MdePkg/Library/FvLib/FvLib.inf
   }
 
   ## OneCryptBin meant for SupvMm
@@ -239,7 +256,7 @@
       MmServicesTableLib           | MmSupervisorPkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
       MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
       HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
-      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+      FvLib                        | MdePkg/Library/FvLib/FvLib.inf
   }
 
 [Components.AARCH64]
@@ -313,7 +330,7 @@
       MmServicesTableLib           | MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
       MemoryAllocationLib          | StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
       HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
-      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+      FvLib                        | MdePkg/Library/FvLib/FvLib.inf
   }
 
   OneCryptoPkg/OneCryptoLoaders/OneCryptoImageProviderStandaloneMm.inf {
@@ -343,7 +360,7 @@
       MmServicesTableLib           | MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
       StandaloneMmMemLib           | StandaloneMmPkg/Library/StandaloneMmMemLib/StandaloneMmMemLib.inf
       HobLib                       | StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
-      FvLib                        | StandaloneMmPkg/Library/FvLib/FvLib.inf
+      FvLib                        | MdePkg/Library/FvLib/FvLib.inf
       ExtractGuidedSectionLib      | StandaloneMmPkg/Library/StandaloneMmExtractGuidedSectionLib/StandaloneMmExtractGuidedSectionLib.inf
   }
 
