@@ -69,7 +69,6 @@ GetCryptoProviderVersionString (
 //
 // Dispatch GetCryptoOpCapability() requests to operation-specific handlers.
 //
-//
 
 /**
   Per-op handler signature. Same shape as the public
@@ -105,8 +104,9 @@ typedef struct {
 //
 STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
   { &gCryptoOpCmsVerifyGuid,          CmsVerifyOpCapability          },
+  { &gCryptoOpCmsContentDigestGuid,   CmsContentDigestOpCapability   },
   { &gCryptoOpAuthenticodeVerifyGuid, AuthenticodeVerifyOpCapability },
-  { &gCryptoOpAuthenticodeHashGuid, AuthenticodeHashOpCapability   },
+  { &gCryptoOpAuthenticodeHashGuid,   AuthenticodeHashOpCapability   },
 };
 
 /**
