@@ -264,6 +264,60 @@ SignatureVisitorPassB (
   EVP_SIGNATURE_names_do_all (Sig, NameVisitorPassB, Arg);
 }
 
+STATIC
+VOID
+DigestVisitor (
+  EVP_MD  *Md,
+  VOID    *Arg
+  )
+{
+  INT32  DigestNid;
+
+  if (!IsFixedOutputDigest (Md)) {
+    return;
+  }
+
+  DigestNid = EVP_MD_get_type (Md);
+  if (DigestNid != NID_undef) {
+    EmitNidAsOid ((EMIT_STATE *)Arg, DigestNid);
+  }
+}
+
+EFI_STATUS
+CryptOpEmitProviderDigestOids (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  )
+{
+  EMIT_STATE  State;
+  UINTN       Required;
+
+  if (BufferSize == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  ZeroMem (&State, sizeof (State));
+  State.Buffer     = Buffer;
+  State.BufferSize = (Buffer != NULL) ? *BufferSize : 0;
+
+  EVP_MD_do_all_provided (NULL, DigestVisitor, &State);
+
+  Required = State.Written + 1;
+  if (Buffer == NULL) {
+    *BufferSize = Required;
+    return EFI_SUCCESS;
+  }
+
+  if (State.Overflow || (*BufferSize < Required)) {
+    *BufferSize = Required;
+    return EFI_BUFFER_TOO_SMALL;
+  }
+
+  Buffer[State.Committed] = '\0';
+  *BufferSize             = Required;
+  return EFI_SUCCESS;
+}
+
 EFI_STATUS
 CryptOpEmitProviderSignatureOids (
   IN     CRYPTO_OP_SIG_ACCEPT_FN  Accept,

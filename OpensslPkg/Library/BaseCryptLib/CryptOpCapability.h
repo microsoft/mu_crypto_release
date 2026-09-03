@@ -69,6 +69,25 @@ CryptOpEmitProviderSignatureOids (
   );
 
 /**
+  Reports the OIDs of fixed-output digest algorithms available from the
+  linked OpenSSL provider.
+
+  @param[out]     Buffer      NULL probes required size, else receives the
+                              NUL-terminated CSV payload.
+  @param[in,out]  BufferSize  On input, buffer capacity. On output, bytes
+                              written or required.
+
+  @retval EFI_SUCCESS           The operation completed successfully.
+  @retval EFI_BUFFER_TOO_SMALL  BufferSize was updated with the required size.
+  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+**/
+EFI_STATUS
+CryptOpEmitProviderDigestOids (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  );
+
+/**
   PKCS#7 verify op handler (gCryptoOpCmsVerifyGuid).
 
   Reports the algorithm OIDs the linked OpenSSL provider can verify when
@@ -85,6 +104,25 @@ CryptOpEmitProviderSignatureOids (
 EFI_STATUS
 EFIAPI
 CmsVerifyOpCapability (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  );
+
+/**
+  Reports the content-digest algorithms supported for CMS SignedData.
+
+  @param[out]     Buffer      NULL probes required size, else receives the
+                              NUL-terminated CSV payload.
+  @param[in,out]  BufferSize  On input, buffer capacity. On output, bytes
+                              written or required.
+
+  @retval EFI_SUCCESS           The operation completed successfully.
+  @retval EFI_BUFFER_TOO_SMALL  BufferSize was updated with the required size.
+  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+**/
+EFI_STATUS
+EFIAPI
+CmsContentDigestOpCapability (
   OUT    CHAR8  *Buffer       OPTIONAL,
   IN OUT UINTN  *BufferSize
   );
