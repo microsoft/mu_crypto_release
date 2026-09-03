@@ -46,3 +46,13 @@ CmsVerifyOpCapability (
 {
   return CryptOpEmitProviderSignatureOids (CmsAccept, NULL, Buffer, BufferSize);
 }
+
+EFI_STATUS
+EFIAPI
+CmsContentDigestOpCapability (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  )
+{
+  return CryptOpEmitProviderDigestOids (Buffer, BufferSize);
+}

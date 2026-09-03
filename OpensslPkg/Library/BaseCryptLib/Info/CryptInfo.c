@@ -106,10 +106,9 @@ GetCryptoProviderVersionString (
 //
 
 //
-// GUID storage for gCryptoOpCmsVerifyGuid and
-// gCryptoOpAuthenticodeVerifyGuid is provided by AutoGen for every
-// module that lists those GUIDs in its INF [Guids] block. They are
-// declared in <Guid/CryptoOpId.h> and registered in CryptoPkg.dec.
+// GUID storage is provided by AutoGen for modules that list each
+// operation GUID in their INF [Guids] block. The GUIDs are declared in
+// <Guid/CryptoOpId.h> and registered in CryptoPkg.dec.
 //
 
 /**
@@ -147,9 +146,10 @@ typedef struct {
   small (<10 entries).
 **/
 STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
-  { &gCryptoOpCmsVerifyGuid,        CmsVerifyOpCapability        },
+  { &gCryptoOpCmsVerifyGuid,          CmsVerifyOpCapability          },
+  { &gCryptoOpCmsContentDigestGuid,   CmsContentDigestOpCapability   },
   { &gCryptoOpAuthenticodeVerifyGuid, AuthenticodeVerifyOpCapability },
-  { &gCryptoOpAuthenticodeHashGuid, AuthenticodeHashOpCapability   },
+  { &gCryptoOpAuthenticodeHashGuid,   AuthenticodeHashOpCapability   },
 };
 
 /**

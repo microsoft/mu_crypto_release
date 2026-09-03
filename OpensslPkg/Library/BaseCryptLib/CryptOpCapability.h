@@ -12,14 +12,11 @@
 
    * Info/CryptInfo.c carries the GUID -> handler dispatch table.
 
-   * Per-op handlers live in Pk/Crypt<Op>OpCapability.c next to their
-     verify pipeline. Each handler defines a single accept predicate and
-     hands it to the shared engine; that's the only per-op code.
+   * Per-op handlers live next to their verify pipeline and delegate
+     provider enumeration to the shared engine.
 
-   * Pk/CryptOpCapabilityCommon.c implements the engine. It walks the
-     OpenSSL provider via two complementary passes (digest+key crossed
-     through OBJ_find_sigid_by_algs, plus EVP_SIGNATURE name walk) and
-     emits accepted OIDs as a CSV-encoded NUL-terminated payload.
+   * Pk/CryptOpCapabilityCommon.c enumerates provider signatures and
+     fixed-output digests as CSV-encoded, NUL-terminated OID sets.
 
   Design rules
   ------------
@@ -27,9 +24,8 @@
      truth source is always the linked OpenSSL provider. New algorithms
      in OpensslLib's deflt_signature[] flow through automatically.
 
-   * Per-op handlers describe their op as a small predicate over the
-     provider's published algorithms. They do not enumerate algorithms
-     themselves.
+   * Signature handlers express operation policy as small predicates.
+     Handlers do not enumerate algorithms themselves.
 
    * Headers in this directory are LIBRARY-PRIVATE. Anything callers
      outside BaseCryptLib need belongs in MU_BASECORE/CryptoPkg/Include/...
@@ -102,6 +98,28 @@ CryptOpEmitProviderSignatureOids (
   );
 
 /**
+  Emit the OIDs of the fixed-output digests the linked OpenSSL provider can
+  produce: the CMS content pre-hash algorithms available for SignedData (e.g.
+  the message-digest an ML-DSA signer covers via signed attributes). The set
+  is enumerated from the provider so no static digest list lives in UEFI;
+  extendable-output functions (SHAKE) are excluded because the EVP digest
+  interface has no fixed length for them. Payload / sizing follow the standard
+  ECIT contract (see CryptOpEmitProviderSignatureOids).
+
+  @param[out]     Buffer      NULL probes required size, else receives payload.
+  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+
+  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
+  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+**/
+EFI_STATUS
+CryptOpEmitProviderDigestOids (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  );
+
+/**
   PKCS#7 verify op handler (gCryptoOpCmsVerifyGuid).
 
   Reports the algorithm OIDs the linked OpenSSL provider can verify when
@@ -118,6 +136,27 @@ CryptOpEmitProviderSignatureOids (
 EFI_STATUS
 EFIAPI
 CmsVerifyOpCapability (
+  OUT    CHAR8  *Buffer       OPTIONAL,
+  IN OUT UINTN  *BufferSize
+  );
+
+/**
+  CMS content-digest op handler (gCryptoOpCmsContentDigestGuid).
+
+  Reports the digest (content pre-hash) OIDs usable in CMS SignedData with the
+  linked provider -- the message-digest algorithms an ML-DSA (or any) signer
+  relies on, derived from OpenSSL rather than a UEFI list. Delegates to
+  CryptOpEmitProviderDigestOids.
+
+  @param[out]     Buffer      NULL probes required size, else receives payload.
+  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+
+  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
+  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+**/
+EFI_STATUS
+EFIAPI
+CmsContentDigestOpCapability (
   OUT    CHAR8  *Buffer       OPTIONAL,
   IN OUT UINTN  *BufferSize
   );
