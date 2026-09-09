@@ -492,7 +492,7 @@ jobs:
         if-no-files-found: warn
 
     - name: Upload CodeQL Results (SARIF) To GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4.37.5
+      uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
       with:
         # Path to SARIF file relative to the root of the repository.
         sarif_file: ${{ steps.env_data.outputs.sarif_file_path }}
@@ -540,7 +540,7 @@ jobs:
             json.dump(sarif, f)
 
     - name: Upload Empty SARIF To GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4.37.5
+      uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
       with:
         sarif_file: empty.sarif
         category: no-packages
