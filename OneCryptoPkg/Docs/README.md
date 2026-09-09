@@ -40,7 +40,7 @@ To consume OneCryptoPkg in a platform:
    `OneCryptoBin/Integration/` and `OneCryptoLoaders/Integration/`.
 
 2. **Map BaseCryptLib** to
-   [`BaseCryptLibOnOneCrypto`](https://github.com/microsoft/mu_basecore/tree/release/202511/CryptoPkg/Library/BaseCryptLibOnOneCrypto)
+   [`BaseCryptLibOnOneCrypto`](https://github.com/microsoft/mu_basecore/tree/release/202608/CryptoPkg/Library/BaseCryptLibOnOneCrypto)
    in your DSC for the DXE and MM phases. This redirects all BaseCryptLib
    calls through the OneCrypto protocol.
 

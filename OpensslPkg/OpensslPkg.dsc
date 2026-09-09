@@ -56,7 +56,6 @@
   UefiBootServicesTableLib|MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
   UefiDriverEntryPoint|MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
-  RealTimeClockLib|MdeModulePkg/Library/RealTimeClockLibNull/RealTimeClockLibNull.inf # MU_CHANGE
 
 [LibraryClasses.common.SEC]
   BaseCryptLib|OpensslPkg/Library/BaseCryptLib/SecCryptLib.inf
