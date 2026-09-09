@@ -25,7 +25,7 @@ class CommonPlatform:
         for the different parts of stuart
     '''
     PackagesSupported = ("OneCryptoPkg",)
-    ArchSupported = ("X64", "AARCH64")
+    ArchSupported = ("IA32", "X64", "AARCH64")
     TargetsSupported = ("DEBUG", "RELEASE")
     Scopes = ('OneCrypto', 'edk2-build')
     # This script lives at <repo>/OneCryptoPkg/DriverBuild.py, so the
@@ -286,7 +286,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                     toolchain,
                 )
 
-                for file, after in layout["OneCryptoBin"]:
+                for file, after in layout.get("OneCryptoBin", []):
                     if file.endswith(".efi"):
                         logging.info(f"Creating SBOM for {file}")
                         efi_name = Path(after).name # after is what the file will be renamed to.
@@ -315,12 +315,12 @@ if __name__ == "__main__":
     from edk2toolext.invocables.edk2_setup import Edk2PlatformSetup
     from edk2toolext.invocables.edk2_update import Edk2Update
 
-    print("Invoking Stuart")
-    print(r"     ) _     _")
-    print(r"    ( (^)-~-(^)")
-    print(r"__,-.\_( 0 0 )__,-.___")
-    print(r"  'W'   \   /   'W'")
-    print(r"         >o<")
+    print(r"   ___              ____                  _        ")
+    print(r"  / _ \ _ __   ___ / ___|_ __ _   _ _ __ | |_ ___  ")
+    print(r" | | | | '_ \ / _ \ |   | '__| | | | '_ \| __/ _ \ ")
+    print(r" | |_| | | | |  __/ |___| |  | |_| | |_) | || (_) |")
+    print(r"  \___/|_| |_|\___|\____|_|   \__, | .__/ \__\___/ ")
+    print(r"                              |___/|_|              ")
 
     SCRIPT_PATH = os.path.relpath(__file__)
     parser = argparse.ArgumentParser(add_help=False)
