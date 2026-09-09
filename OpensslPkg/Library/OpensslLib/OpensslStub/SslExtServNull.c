@@ -563,3 +563,27 @@ tls_parse_ctos_server_cert_type (
 {
   return 0;
 }
+
+int
+tls_parse_ctos_ech (
+  SSL_CONNECTION  *s,
+  PACKET          *pkt,
+  unsigned int    context,
+  X509            *x,
+  size_t          chainidx
+  )
+{
+  return 0;
+}
+
+EXT_RETURN
+tls_construct_stoc_ech (
+  SSL_CONNECTION  *s,
+  WPACKET         *pkt,
+  unsigned int    context,
+  X509            *x,
+  size_t          chainidx
+  )
+{
+  return EXT_RETURN_NOT_SENT;
+}
