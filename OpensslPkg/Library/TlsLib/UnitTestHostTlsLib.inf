@@ -36,7 +36,6 @@
   BaseCryptLib
   BaseMemoryLib
   DebugLib
-  IntrinsicLib
   MemoryAllocationLib
   OpensslLib
   SafeIntLib
