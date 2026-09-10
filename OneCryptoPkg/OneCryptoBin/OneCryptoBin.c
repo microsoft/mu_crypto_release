@@ -344,6 +344,9 @@ CryptoInit (
   CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
   CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
   CryptoProtocol->HashAllByGuid                  = HashAllByGuid;
+
+  // v1.2 functions
+  CryptoProtocol->CmsGetSignerInfoNum = CmsGetSignerInfoNum;
 }
 
 /**
