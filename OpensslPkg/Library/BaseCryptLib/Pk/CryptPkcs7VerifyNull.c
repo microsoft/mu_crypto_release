@@ -192,3 +192,14 @@ CmsVerify (
   ASSERT (FALSE);
   return FALSE;
 }
+
+UINTN
+EFIAPI
+CmsGetSignerInfoNum (
+  IN CONST UINT8  *P7Data,
+  IN UINTN        P7Length
+  )
+{
+  ASSERT (FALSE);
+  return 0;
+}
