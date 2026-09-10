@@ -1174,6 +1174,72 @@ _Exit:
 }
 
 /**
+  Get the number of SignerInfo structures in a PKCS#7/CMS SignedData structure.
+
+  @param[in]  P7Data    PKCS#7/CMS message.
+  @param[in]  P7Length  Length of P7Data in bytes.
+
+  @retval  >0  Number of SignerInfo structures.
+  @retval  0   Error or no SignerInfo found.
+**/
+UINTN
+EFIAPI
+CmsGetSignerInfoNum (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length
+  )
+{
+  CMS_ContentInfo  *Cms;
+
+  STACK_OF (CMS_SignerInfo)   *SignerInfos;
+  UINT8        *SignedData;
+  CONST UINT8  *Temp;
+  UINTN        SignedDataSize;
+  BOOLEAN      Wrapped;
+  UINTN        SignerInfoNum;
+
+  if ((P7Data == NULL) || (P7Length == 0) || (P7Length > INT_MAX)) {
+    return 0;
+  }
+
+  Cms           = NULL;
+  SignerInfos   = NULL;
+  SignedData    = NULL;
+  SignerInfoNum = 0;
+
+  if (!WrapPkcs7Data (P7Data, P7Length, &Wrapped, &SignedData, &SignedDataSize)) {
+    return 0;
+  }
+
+  if (SignedDataSize > INT_MAX) {
+    goto Exit;
+  }
+
+  Temp = SignedData;
+  Cms  = d2i_CMS_ContentInfo (NULL, (CONST unsigned char **)&Temp, (long)SignedDataSize);
+  if (Cms == NULL) {
+    goto Exit;
+  }
+
+  if (OBJ_obj2nid (CMS_get0_type (Cms)) != NID_pkcs7_signed) {
+    goto Exit;
+  }
+
+  SignerInfos = CMS_get0_SignerInfos (Cms);
+  if (SignerInfos != NULL) {
+    SignerInfoNum = (UINTN)sk_CMS_SignerInfo_num (SignerInfos);
+  }
+
+Exit:
+  CMS_ContentInfo_free (Cms);
+  if (!Wrapped) {
+    OPENSSL_free (SignedData);
+  }
+
+  return SignerInfoNum;
+}
+
+/**
   Verifies the validity of a PKCS#7/CMS signed data structure.
 
   Pkcs7Verify() is retained for API compatibility. PKCS#7 SignedData is a
