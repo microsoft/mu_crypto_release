@@ -95,4 +95,20 @@ CmsVerify (
   OUT UINTN        *SignerChainSize   OPTIONAL
   );
 
+/**
+  Get the number of SignerInfo structures in a PKCS#7/CMS SignedData structure.
+
+  @param[in]  P7Data    PKCS#7/CMS message.
+  @param[in]  P7Length  Length of P7Data.
+
+  @retval  >0  Number of SignerInfo structures.
+  @retval  0   Error or no SignerInfo found.
+**/
+UINTN
+EFIAPI
+CmsGetSignerInfoNum (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length
+  );
+
 #endif
