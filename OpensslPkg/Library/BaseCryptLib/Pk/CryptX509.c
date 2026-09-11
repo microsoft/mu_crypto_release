@@ -1372,6 +1372,52 @@ _Exit:
 }
 
 /**
+  Determine whether the certificate subject public key is supported for a
+  signature operation by the active crypto provider.
+
+  @param[in]  Cert      Pointer to the DER-encoded X.509 certificate.
+  @param[in]  CertSize  Size of Cert in bytes.
+
+  @retval TRUE   The certificate is valid and its subject public key supports
+                  a signature operation.
+  @retval FALSE  The certificate is invalid or its subject public key is not
+                  supported for a signature operation.
+**/
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  )
+{
+  BOOLEAN   PublicKeySupported;
+  EVP_PKEY  *PublicKey;
+  X509      *X509Cert;
+
+  if ((Cert == NULL) || (CertSize == 0)) {
+    return FALSE;
+  }
+
+  PublicKey          = NULL;
+  X509Cert           = NULL;
+  PublicKeySupported = FALSE;
+
+  if (!X509ConstructCertificate (Cert, CertSize, (UINT8 **)&X509Cert)) {
+    goto Exit;
+  }
+
+  PublicKey = X509_get_pubkey (X509Cert);
+  if (PublicKey != NULL) {
+    PublicKeySupported = (BOOLEAN)(EVP_PKEY_can_sign (PublicKey) != 0);
+  }
+
+Exit:
+  EVP_PKEY_free (PublicKey);
+  X509_free (X509Cert);
+  return PublicKeySupported;
+}
+
+/**
   Retrieve Extension data from one X.509 certificate.
 
   @param[in]      Cert             Pointer to the DER-encoded X509 certificate.
