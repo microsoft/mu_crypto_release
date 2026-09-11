@@ -342,6 +342,9 @@ CryptoInit (
 
   // v1.2 functions
   CryptoProtocol->CmsGetSignerInfoNum = CmsGetSignerInfoNum;
+
+  // v1.3 functions
+  CryptoProtocol->X509IsPublicKeySupported = X509IsPublicKeySupported;
 }
 
 /**
