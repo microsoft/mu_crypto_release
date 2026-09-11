@@ -333,6 +333,17 @@ CryptoInit (
   // ========================================================================================================
 
   CryptoProtocol->GetCryptoProviderVersionString = GetCryptoProviderVersionString;
+
+  // ========================================================================================================
+  // v1.1 functions
+  // ========================================================================================================
+
+  CryptoProtocol->GetAuthenticodeHash            = GetAuthenticodeHash;
+  CryptoProtocol->GetTrustAnchorX509FromAuthData = GetTrustAnchorX509FromAuthData;
+  CryptoProtocol->FreeTrustAnchorX509Cache       = FreeTrustAnchorX509Cache;
+  CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
+  CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
+  CryptoProtocol->HashAllByGuid                  = HashAllByGuid;
 }
 
 /**

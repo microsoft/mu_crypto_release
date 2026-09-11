@@ -171,18 +171,18 @@ ConvertAsn1TimeToEfiTime (
     return FALSE;
   }
 
-  Str = (CONST CHAR8 *)Asn1Time->data;
+  Str = (CONST CHAR8 *)ASN1_STRING_get0_data (Asn1Time);
   SetMem (EfiTime, sizeof (EFI_TIME), 0);
 
   Index = 0;
-  if (Asn1Time->type == V_ASN1_UTCTIME) {
+  if (ASN1_STRING_type (Asn1Time) == V_ASN1_UTCTIME) {
     /* two digit year */
     EfiTime->Year  = (Str[Index++] - '0') * 10;
     EfiTime->Year += (Str[Index++] - '0');
     if (EfiTime->Year < 70) {
       EfiTime->Year += 100;
     }
-  } else if (Asn1Time->type == V_ASN1_GENERALIZEDTIME) {
+  } else if (ASN1_STRING_type (Asn1Time) == V_ASN1_GENERALIZEDTIME) {
     /* four digit year */
     EfiTime->Year  = (Str[Index++] - '0') * 1000;
     EfiTime->Year += (Str[Index++] - '0') * 100;
@@ -573,8 +573,8 @@ ImageTimestampVerify (
 
   STACK_OF (X509_ATTRIBUTE)     *Sk;
   X509_ATTRIBUTE     *Xa;
-  ASN1_OBJECT        *XaObj;
-  ASN1_TYPE          *Asn1Type;
+  CONST ASN1_OBJECT  *XaObj;
+  CONST ASN1_TYPE    *Asn1Type;
   ASN1_OCTET_STRING  *EncDigest;
   UINT8              *TSToken;
   UINTN              TokenSize;
@@ -679,8 +679,8 @@ ImageTimestampVerify (
     goto _Exit;
   }
 
-  TSToken   = Asn1Type->value.octet_string->data;
-  TokenSize = Asn1Type->value.octet_string->length;
+  TSToken   = (UINT8 *)ASN1_STRING_get0_data (Asn1Type->value.octet_string);
+  TokenSize = ASN1_STRING_length (Asn1Type->value.octet_string);
 
   //
   // TimeStamp counterSignature (Token) verification.
@@ -690,8 +690,8 @@ ImageTimestampVerify (
              TokenSize,
              TsaCert,
              CertSize,
-             EncDigest->data,
-             EncDigest->length,
+             ASN1_STRING_get0_data (EncDigest),
+             ASN1_STRING_length (EncDigest),
              SigningTime
              );
 

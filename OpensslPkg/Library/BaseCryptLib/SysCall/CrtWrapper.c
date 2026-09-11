@@ -651,3 +651,136 @@ printf (
 {
   return 0;
 }
+
+//
+// OpenSSL uses standard C format specifiers (%s for ASCII strings), but
+// EDK2 BasePrintLib uses %a for ASCII and %s for Unicode (UCS-2).  The
+// classic C wide-string specifier %S already aligns with what EDK2
+// AsciiVSPrint expects for a wide-string argument, so only the lowercase
+// 's' case needs rewriting.  The translation table is therefore:
+//
+//   C %s (ASCII)   -> EDK2 %a   (rewritten by this routine)
+//   C %S (wide)    -> %S        (passes through unchanged; AsciiVSPrint
+//                                interprets %S as the wide-string form)
+//
+// Performs a 1:1 character substitution, so the translated string is the
+// same length as the input.  Dest must have at least DestSize bytes
+// available; the function NUL-terminates Dest within that bound.
+//
+STATIC
+VOID
+TranslateFormatSpecifiers (
+  OUT CHAR8        *Dest,
+  IN  UINTN        DestSize,
+  IN  CONST CHAR8  *Src
+  )
+{
+  UINTN  Index;
+
+  Index = 0;
+  while ((*Src != '\0') && (Index < DestSize - 1)) {
+    if (*Src == '%') {
+      Dest[Index++] = *Src++;
+      if (Index >= DestSize - 1) {
+        break;
+      }
+
+      //
+      // Skip flags, width, precision, and length modifiers
+      //
+      while ((*Src == '-') || (*Src == '+') || (*Src == ' ') ||
+             (*Src == '#') || (*Src == '0') ||
+             ((*Src >= '1') && (*Src <= '9')) || (*Src == '.') ||
+             (*Src == 'l') || (*Src == 'h') || (*Src == 'z') ||
+             (*Src == 'j') || (*Src == 't') || (*Src == 'L') ||
+             (*Src == '*'))
+      {
+        Dest[Index++] = *Src++;
+        if (Index >= DestSize - 1) {
+          break;
+        }
+      }
+
+      if (Index >= DestSize - 1) {
+        break;
+      }
+
+      //
+      // Translate the conversion specifier:
+      //   C %s (ASCII)   -> EDK2 %a
+      //   any other char (including 'S') -> pass through unchanged
+      //
+      if (*Src == 's') {
+        Dest[Index++] = 'a';
+        Src++;
+      } else {
+        Dest[Index++] = *Src++;
+      }
+    } else {
+      Dest[Index++] = *Src++;
+    }
+  }
+
+  Dest[Index] = '\0';
+}
+
+int
+vsnprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  va_list     args
+  )
+{
+  CHAR8  TranslatedFmt[512];
+
+  if (fmt == NULL) {
+    return -1;
+  }
+
+  //
+  // TranslateFormatSpecifiers performs a 1:1 character substitution, so
+  // the translated format is exactly the same length as the input.  Reject
+  // format strings that would not fit instead of silently truncating: a
+  // truncated format that loses its trailing conversion specifier would
+  // produce silently wrong output and consume the wrong number of
+  // variadic arguments.  Dynamic allocation is intentionally not used here
+  // because this routine is shared with RuntimeCryptLib, which cannot call
+  // boot-services memory allocation after ExitBootServices().
+  //
+  if (AsciiStrSize (fmt) > sizeof (TranslatedFmt)) {
+    return -1;
+  }
+
+  //
+  // NOTE: OpenSSL 4.0 removed its self-contained BIO_snprintf formatter
+  // (_dopr/fmtstr) and now routes BIO_(v)snprintf through this platform
+  // vsnprintf (openssl PR #28305).  That formatter substituted "<NULL>"
+  // for a NULL %s argument; the platform is now expected to provide
+  // C99-conforming behaviour instead.  OpenSSL's own error paths pass NULL
+  // to %s in several places (see openssl issues #30402 and #31581), which
+  // is undefined behaviour in standard C.  EDK2 AsciiVSPrint is safe here:
+  // it prints "<null string>" for a NULL %a/%s pointer rather than
+  // dereferencing it.  That NULL guard must be preserved -- do not replace
+  // AsciiVSPrint with a formatter that lacks it, or OpenSSL 4.0 error
+  // reporting can crash on firmware the same way it did on Solaris.
+  //
+  TranslateFormatSpecifiers (TranslatedFmt, sizeof (TranslatedFmt), fmt);
+  return (int)AsciiVSPrint (buf, (UINTN)size, TranslatedFmt, args);
+}
+
+int
+sprintf (
+  char        *buf,
+  const char  *fmt,
+  ...
+  )
+{
+  VA_LIST  Args;
+  int      Ret;
+
+  VA_START (Args, fmt);
+  Ret = vsnprintf (buf, MAX_STRING_SIZE, fmt, Args);
+  VA_END (Args);
+  return Ret;
+}

@@ -48,6 +48,9 @@
   Pk/CryptDhNull.c
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
+  Hash/CryptHashAll.c # MU_CHANGE
+  Pk/CryptTrustAnchor.c # MU_CHANGE
   Pk/CryptTs.c
   Pk/CryptRsaPss.c
   Pk/CryptRsaPssSign.c
@@ -73,6 +76,19 @@
   OpensslLib
   PrintLib
   RngLib
+
+[Guids]
+  ## SOMETIMES_CONSUMES ## GUID # Image hash type used by GetAuthenticodeHash
+  gEfiCertSha1Guid    # MU_CHANGE
+  gEfiCertSha256Guid  # MU_CHANGE
+  gEfiCertSha384Guid  # MU_CHANGE
+  gEfiCertSha512Guid  # MU_CHANGE
+  ## SOMETIMES_CONSUMES ## GUID # Hash algorithm used by HashAllByGuid
+  gEfiHashAlgorithmSha1Guid    # MU_CHANGE
+  gEfiHashAlgorithmSha256Guid  # MU_CHANGE
+  gEfiHashAlgorithmSha384Guid  # MU_CHANGE
+  gEfiHashAlgorithmSha512Guid  # MU_CHANGE
+  gEfiHashAlgorithmMD5Guid     # MU_CHANGE
 
 #
 # Remove these [BuildOptions] after this library is cleaned up

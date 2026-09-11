@@ -45,6 +45,9 @@
   Pk/CryptDh.c
   Pk/CryptX509.c
   Pk/CryptAuthenticode.c
+  Pk/CryptAuthenticodeHash.c # MU_CHANGE
+  Hash/CryptHashAll.c # MU_CHANGE
+  Pk/CryptTrustAnchor.c # MU_CHANGE
   Pk/CryptTs.c
   Pem/CryptPem.c
   Pk/CryptRsaPss.c
@@ -73,6 +76,19 @@
   OpensslLib
   PrintLib
 
+[Guids]
+  ## SOMETIMES_CONSUMES ## GUID # Image hash type used by GetAuthenticodeHash
+  gEfiCertSha1Guid    # MU_CHANGE
+  gEfiCertSha256Guid  # MU_CHANGE
+  gEfiCertSha384Guid  # MU_CHANGE
+  gEfiCertSha512Guid  # MU_CHANGE
+  ## SOMETIMES_CONSUMES ## GUID # Hash algorithm used by HashAllByGuid
+  gEfiHashAlgorithmSha1Guid    # MU_CHANGE
+  gEfiHashAlgorithmSha256Guid  # MU_CHANGE
+  gEfiHashAlgorithmSha384Guid  # MU_CHANGE
+  gEfiHashAlgorithmSha512Guid  # MU_CHANGE
+  gEfiHashAlgorithmMD5Guid     # MU_CHANGE
+
 #
 # Remove these [BuildOptions] after this library is cleaned up
 #
@@ -81,6 +97,6 @@
   # suppress the following warnings so we do not break the build with warnings-as-errors:
   #
   GCC:*_CLANGDWARF_*_CC_FLAGS = -std=c99 -Wno-error=incompatible-pointer-types
-  GCC:*_CLANGPDB_*_CC_FLAGS = -std=c99 -Wno-error=incompatible-pointer-types
+  GCC:*_CLANGPDB_*_CC_FLAGS = -std=c99 -Wno-error=incompatible-pointer-types -Wno-macro-redefined
 
   XCODE:*_*_*_CC_FLAGS = -std=c99

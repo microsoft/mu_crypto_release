@@ -63,4 +63,36 @@ WrapPkcs7Data (
   OUT UINTN        *WrapDataSize
   );
 
+/**
+  Verifies a PKCS#7/CMS SignedData structure and, when requested, returns
+  the signer's cryptographically-verified certificate chain in
+  EFI_CERT_STACK form (signer..anchor). The chain is the one OpenSSL built
+  and used during CMS verification. Internal to the OpenSSL BaseCryptLib
+  instance; backs Pkcs7Verify() and is used by AuthenticodeVerifyEx().
+
+  @param[in]   P7Data          PKCS#7/CMS message to verify.
+  @param[in]   P7Length        Length of P7Data.
+  @param[in]   TrustedCert     DER trust anchor.
+  @param[in]   CertLength      Length of TrustedCert.
+  @param[in]   InData          Content to verify.
+  @param[in]   DataLength      Length of InData.
+  @param[out]  SignerChain     Optional EFI_CERT_STACK output; caller frees.
+  @param[out]  SignerChainSize Optional length of SignerChain.
+
+  @retval TRUE   Valid PKCS#7/CMS signed data.
+  @retval FALSE  Invalid PKCS#7/CMS signed data.
+**/
+BOOLEAN
+EFIAPI
+CmsVerify (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
+  );
+
 #endif
