@@ -111,4 +111,11 @@ CmsGetSignerInfoNum (
   IN  UINTN        P7Length
   );
 
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  );
+
 #endif
