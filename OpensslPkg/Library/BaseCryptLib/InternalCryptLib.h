@@ -111,4 +111,21 @@ CmsGetSignerInfoNum (
   IN  UINTN        P7Length
   );
 
+/**
+  Check whether the provider can use a certificate's public key to verify signatures.
+  This does not verify a signature or establish trust in the certificate.
+
+  @param[in] Cert      DER-encoded X.509 certificate.
+  @param[in] CertSize  Size of Cert in bytes.
+
+  @retval TRUE   The public key is supported for signature verification.
+  @retval FALSE  The certificate or key is invalid, or the key is unsupported.
+**/
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  );
+
 #endif

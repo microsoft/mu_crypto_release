@@ -1368,6 +1368,55 @@ _Exit:
 }
 
 /**
+  Determine whether the provider supports verification with a public key.
+
+  This does not authenticate the certificate or enforce enrollment policy.
+  Support for a key does not imply support for every digest/signature scheme.
+
+  @param[in]  Cert      Pointer to the DER-encoded X.509 certificate.
+  @param[in]  CertSize  Size of Cert in bytes.
+
+  @retval TRUE   The public key is valid and verification can be initialized.
+  @retval FALSE  The input is invalid or verification is not supported.
+**/
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  )
+{
+  BOOLEAN       Supported;
+  EVP_PKEY      *PublicKey;
+  EVP_PKEY_CTX  *KeyContext;
+  EVP_MD_CTX    *VerifyContext;
+  X509          *X509Cert;
+
+  if ((Cert == NULL) || (CertSize == 0)) {
+    return FALSE;
+  }
+
+  X509Cert = NULL;
+  if (!X509ConstructCertificate (Cert, CertSize, (UINT8 **)&X509Cert)) {
+    return FALSE;
+  }
+
+  PublicKey     = X509_get_pubkey (X509Cert);
+  KeyContext    = NULL;
+  VerifyContext = EVP_MD_CTX_new ();
+  Supported     = (BOOLEAN)(
+                            (PublicKey != NULL) && (VerifyContext != NULL) &&
+                            (EVP_DigestVerifyInit (VerifyContext, &KeyContext, NULL, NULL, PublicKey) == 1) &&
+                            (EVP_PKEY_public_check (KeyContext) == 1)
+                            );
+
+  EVP_MD_CTX_free (VerifyContext);
+  EVP_PKEY_free (PublicKey);
+  X509_free (X509Cert);
+  return Supported;
+}
+
+/**
   Retrieve Extension data from one X.509 certificate.
 
   @param[in]      Cert             Pointer to the DER-encoded X509 certificate.
