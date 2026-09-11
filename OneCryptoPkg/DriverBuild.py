@@ -4,15 +4,15 @@
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
-import os
 import io
 import logging
+import os
 from pathlib import Path
 
 from edk2toolext.environment.uefi_build import UefiBuilder
 from edk2toolext.invocables.edk2_ci_setup import CiSetupSettingsManager
 from edk2toolext.invocables.edk2_platform_build import BuildSettingsManager
-from edk2toolext.invocables.edk2_setup import SetupSettingsManager, RequiredSubmodule
+from edk2toolext.invocables.edk2_setup import RequiredSubmodule, SetupSettingsManager
 from edk2toolext.invocables.edk2_update import UpdateSettingsManager
 from edk2toollib.utility_functions import RunCmd
 
@@ -20,7 +20,7 @@ from edk2toollib.utility_functions import RunCmd
 # ####################################################################################### #
 #                                Common Configuration                                     #
 # ####################################################################################### #
-class CommonPlatform():
+class CommonPlatform:
     ''' Common settings for this platform.  Define static data here and use
         for the different parts of stuart
     '''
@@ -66,17 +66,17 @@ class CommonPlatform():
             {
                 "Path": "MU_BASECORE",
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "5315549216a14e8b0f433af7012a99d6476afc31"
+                "Commit": "5cac876414eae162971d0a4cc88191e4832b2a4d"
             },
             {
                 "Path": "Features/MM_SUPV",
                 "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
-                "Commit": "4f686975e6a3e76c2d64e097415abdb773b8e56b"
+                "Commit": "b783d3fcfb208ebddc96ef7ba9d9480b786e1f0e"
             },
             {
                 "Path": "Common/MU",
                 "Url": "https://github.com/microsoft/mu_plus.git",
-                "Commit": "31f2b85ddb606cf6e4b4019ec2db1349d97b162b"
+                "Commit": "d491bf02de6974425e247e4b7d33a99b6d66d225"
             }
         ]
 
@@ -237,7 +237,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             self.env.SetValue("BUILD_OUTPUT_BASE", new_base, BUILD_LOOP_REASON)
             
             # Update BUILDREPORT_FILE to the new location based off TARGET_TOOLCHAIN combination
-            build_report = str(Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / f"BUILD_REPORT.TXT")
+            build_report = str(Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / "BUILD_REPORT.TXT")
             self.env.GetEntry("BUILDREPORT_FILE").AllowOverride()
             self.env.SetValue("BUILDREPORT_FILE", build_report, BUILD_LOOP_REASON)
             
@@ -310,9 +310,10 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
 if __name__ == "__main__":
     import argparse
     import sys
-    from edk2toolext.invocables.edk2_update import Edk2Update
-    from edk2toolext.invocables.edk2_setup import Edk2PlatformSetup
+
     from edk2toolext.invocables.edk2_platform_build import Edk2PlatformBuild
+    from edk2toolext.invocables.edk2_setup import Edk2PlatformSetup
+    from edk2toolext.invocables.edk2_update import Edk2Update
 
     print("Invoking Stuart")
     print(r"     ) _     _")
