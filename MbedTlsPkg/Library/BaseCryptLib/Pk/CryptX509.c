@@ -1377,6 +1377,46 @@ InternalX509FindExtensionData (
 }
 
 /**
+  Determine whether the certificate subject public key is supported for a
+  signature operation by the active crypto provider.
+
+  @param[in]  Cert      Pointer to the DER-encoded X.509 certificate.
+  @param[in]  CertSize  Size of Cert in bytes.
+
+  @retval TRUE   The certificate is valid and its subject public key supports
+                  a signature operation.
+  @retval FALSE  The certificate is invalid or its subject public key is not
+                  supported for a signature operation.
+**/
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  )
+{
+  mbedtls_x509_crt  Crt;
+  BOOLEAN           Status;
+
+  if ((Cert == NULL) || (CertSize == 0)) {
+    return FALSE;
+  }
+
+  mbedtls_x509_crt_init (&Crt);
+  Status = FALSE;
+
+  if (mbedtls_x509_crt_parse_der (&Crt, Cert, CertSize) == 0) {
+    Status = (BOOLEAN)(
+                       mbedtls_pk_can_do (&Crt.pk, MBEDTLS_PK_RSA) ||
+                       mbedtls_pk_can_do (&Crt.pk, MBEDTLS_PK_ECDSA)
+                       );
+  }
+
+  mbedtls_x509_crt_free (&Crt);
+  return Status;
+}
+
+/**
   Retrieve Extension data from one X.509 certificate.
 
   @param[in]      Cert             Pointer to the DER-encoded X509 certificate.
