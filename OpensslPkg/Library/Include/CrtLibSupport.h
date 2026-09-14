@@ -58,6 +58,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define va_arg    VA_ARG
 #define va_start  VA_START
 #define va_end    VA_END
+#define va_copy   VA_COPY
 
 //
 // Definitions for global constants used by CRT library routines
@@ -443,8 +444,22 @@ strpbrk (
 #define strncmp(string1, string2, count)  (int)(AsciiStrnCmp(string1,string2,(UINTN)(count)))
 #define strcasecmp(str1, str2)            (int)AsciiStriCmp(str1,str2)
 #define strstr(s1, s2)                    AsciiStrStr(s1,s2)
-#define sprintf(buf, ...)                 AsciiSPrint(buf,MAX_STRING_SIZE,__VA_ARGS__)
-#define localtime(timer)                  NULL
+int
+sprintf (
+  char        *buf,
+  const char  *fmt,
+  ...
+  );
+
+int
+vsnprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  va_list     args
+  );
+
+#define localtime(timer)  NULL
 #define assert(expression)
 #define offsetof(type, member)  OFFSET_OF(type,member)
 #define atoi(nptr)              AsciiStrDecimalToUintn(nptr)
@@ -463,6 +478,19 @@ strpbrk (
 #ifndef INT64_MAX
 #define INT64_MAX  0x7FFFFFFFFFFFFFFFL
 #define INT64_MIN  (-0x7FFFFFFFFFFFFFFFL - 1)
+#endif
+
+#ifndef INT64_C
+#define INT64_C(c)  (c##LL)
+#endif
+#ifndef UINT64_C
+#define UINT64_C(c)  (c##ULL)
+#endif
+#ifndef INT32_C
+#define INT32_C(c)  (c)
+#endif
+#ifndef UINT32_C
+#define UINT32_C(c)  (c##U)
 #endif
 
 #ifndef INT16_MAX
