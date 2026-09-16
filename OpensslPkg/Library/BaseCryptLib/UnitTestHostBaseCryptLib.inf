@@ -100,10 +100,6 @@
   gEfiHashAlgorithmSha256Guid
   gEfiHashAlgorithmSha384Guid
   gEfiHashAlgorithmSha512Guid
-  gEfiCertSha1Guid
-  gEfiCertSha256Guid
-  gEfiCertSha384Guid
-  gEfiCertSha512Guid
   gCryptoOpCmsVerifyGuid            ## CONSUMES ## MU_CHANGE
   gCryptoOpCmsContentDigestGuid     ## CONSUMES ## MU_CHANGE
   gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES ## MU_CHANGE

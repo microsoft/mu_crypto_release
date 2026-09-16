@@ -7,7 +7,6 @@
 
 #include "InternalCryptLib.h"
 #include <Protocol/Hash.h>
-#include <Guid/ImageAuthentication.h>
 
 #define AUTH_ASN1_TAG_INTEGER     0x02
 #define AUTH_ASN1_TAG_OID         0x06
@@ -36,6 +35,11 @@ STATIC CONST UINT8  mAuthOidSha512[] = {
   0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03
 };
 
+//
+// Mapping of digest-algorithm OID to the generic hash-algorithm GUID
+// (as defined in Protocol/Hash.h) returned by
+// GetAuthenticodeHashAlgorithm().
+//
 typedef struct {
   CONST UINT8       *Oid;
   UINTN             OidSize;
@@ -43,10 +47,10 @@ typedef struct {
 } AUTH_DIGEST_OID_INFO;
 
 STATIC CONST AUTH_DIGEST_OID_INFO  mAuthDigestOidInfo[] = {
-  { mAuthOidSha1,   sizeof (mAuthOidSha1),   &gEfiCertSha1Guid   },
-  { mAuthOidSha256, sizeof (mAuthOidSha256), &gEfiCertSha256Guid },
-  { mAuthOidSha384, sizeof (mAuthOidSha384), &gEfiCertSha384Guid },
-  { mAuthOidSha512, sizeof (mAuthOidSha512), &gEfiCertSha512Guid },
+  { mAuthOidSha1,   sizeof (mAuthOidSha1),   &gEfiHashAlgorithmSha1Guid   },
+  { mAuthOidSha256, sizeof (mAuthOidSha256), &gEfiHashAlgorithmSha256Guid },
+  { mAuthOidSha384, sizeof (mAuthOidSha384), &gEfiHashAlgorithmSha384Guid },
+  { mAuthOidSha512, sizeof (mAuthOidSha512), &gEfiHashAlgorithmSha512Guid },
 };
 
 #define AUTH_DIGEST_OID_INFO_COUNT  (sizeof (mAuthDigestOidInfo) / sizeof (mAuthDigestOidInfo[0]))
