@@ -47,7 +47,9 @@
             "MbedTlsPkg/MbedTlsPkg.dec",
         ],
         # For host based unit tests
-        "AcceptableDependencies-HOST_APPLICATION": [],
+        "AcceptableDependencies-HOST_APPLICATION":[ # for host based unit tests
+            "UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec"
+        ],
         # For UEFI shell based apps
         "AcceptableDependencies-UEFI_APPLICATION": [],
         "IgnoreInf": []
@@ -57,7 +59,8 @@
         "IgnoreInf": [
             "MbedTlsPkg/Library/MbedTlsLib/MbedTlsLibFull.inf",
             "MbedTlsPkg/Library/BaseCryptLib/TestBaseCryptLib.inf",
-            "MbedTlsPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf"
+            "MbedTlsPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf",
+            "**/Integration/**"  # Contains the binary DSC INFs only used for post-build binary integration
         ]
     },
     "GuidCheck": {
@@ -67,7 +70,9 @@
             "BaseCryptLib", # SeaPkg from mu_feature_mm_supv copied a BaseCryptLib implementation.
         ],
         "IgnoreGuidValue": [],
-        "IgnoreFoldersAndFiles": []
+        "IgnoreFoldersAndFiles": [
+            "**/Integration/**",  # Contains the binary DSC INFs only used for post-build binary integration
+        ]
     },
     "LibraryClassCheck": {
         "IgnoreHeaderFile": []

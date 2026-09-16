@@ -21,7 +21,6 @@
 [LibraryClasses]
   BaseCryptLib|OpensslPkg/Library/BaseCryptLib/UnitTestHostBaseCryptLib.inf
   TlsLib|OpensslPkg/Library/TlsLib/UnitTestHostTlsLib.inf
-  IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   OpensslLib|OpensslPkg/Library/OpensslLib/OpensslLibFull.inf
   MmServicesTableLib|MdePkg/Library/MmServicesTableLib/MmServicesTableLib.inf
   SynchronizationLib|MdePkg/Library/BaseSynchronizationLib/BaseSynchronizationLib.inf

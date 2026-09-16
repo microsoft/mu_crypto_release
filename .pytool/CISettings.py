@@ -168,17 +168,17 @@ class Settings(
             {
                 "Path": "MU_BASECORE",
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "5315549216a14e8b0f433af7012a99d6476afc31"
+                "Commit": "5cac876414eae162971d0a4cc88191e4832b2a4d"
             },
             {
                 "Path": "Features/MM_SUPV",
                 "Url": "https://github.com/microsoft/mu_feature_mm_supv.git",
-                "Commit": "4f686975e6a3e76c2d64e097415abdb773b8e56b"
+                "Commit": "b783d3fcfb208ebddc96ef7ba9d9480b786e1f0e"
             },
             {
                 "Path": "Common/MU",
                 "Url": "https://github.com/microsoft/mu_plus.git",
-                "Commit": "31f2b85ddb606cf6e4b4019ec2db1349d97b162b"
+                "Commit": "d491bf02de6974425e247e4b7d33a99b6d66d225"
             }
         ]
 
