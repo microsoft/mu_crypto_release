@@ -498,10 +498,9 @@ STATIC CONST UINT8  mAuthOidSha512[] = {
 };
 
 //
-// Mapping of digest-algorithm OID to the signature-type GUID
-// (gEfiCertSha*Guid) returned by GetAuthenticodeHashAlgorithm(). These are
-// the same GUIDs keyed by mAuthHashInfo above, so the value returned here can
-// be passed directly to AuthenticodeHash().
+// Mapping of digest-algorithm OID to the generic hash-algorithm GUID
+// (as defined in Protocol/Hash.h) returned by
+// GetAuthenticodeHashAlgorithm().
 //
 typedef struct {
   CONST UINT8       *Oid;
@@ -510,10 +509,10 @@ typedef struct {
 } AUTH_DIGEST_OID_INFO;
 
 STATIC CONST AUTH_DIGEST_OID_INFO  mAuthDigestOidInfo[] = {
-  { mAuthOidSha1,   sizeof (mAuthOidSha1),   &gEfiCertSha1Guid   },
-  { mAuthOidSha256, sizeof (mAuthOidSha256), &gEfiCertSha256Guid },
-  { mAuthOidSha384, sizeof (mAuthOidSha384), &gEfiCertSha384Guid },
-  { mAuthOidSha512, sizeof (mAuthOidSha512), &gEfiCertSha512Guid },
+  { mAuthOidSha1,   sizeof (mAuthOidSha1),   &gEfiHashAlgorithmSha1Guid   },
+  { mAuthOidSha256, sizeof (mAuthOidSha256), &gEfiHashAlgorithmSha256Guid },
+  { mAuthOidSha384, sizeof (mAuthOidSha384), &gEfiHashAlgorithmSha384Guid },
+  { mAuthOidSha512, sizeof (mAuthOidSha512), &gEfiHashAlgorithmSha512Guid },
 };
 
 #define AUTH_DIGEST_OID_INFO_COUNT  (sizeof (mAuthDigestOidInfo) / sizeof (mAuthDigestOidInfo[0]))
