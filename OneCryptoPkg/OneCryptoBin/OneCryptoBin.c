@@ -344,10 +344,14 @@ CryptoInit (
   CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
   CryptoProtocol->HashAllByGuid                  = HashAllByGuid;
 
-  // v1.2 functions
+  // v2.0 CMS functions
   CryptoProtocol->CmsGetSignerInfoNum = CmsGetSignerInfoNum;
+  CryptoProtocol->CmsVerify = CmsVerify;
 
-  // v1.3 functions
+  // v2.0 Info functions
+  CryptoProtocol->GetCryptoOpCapability = GetCryptoOpCapability;
+
+  // v2.0 X509 functions
   CryptoProtocol->X509IsPublicKeySupported = X509IsPublicKeySupported;
 }
 
