@@ -1,7 +1,7 @@
-# Host-based unit test workflow that builds and runs NOOPT host tests with GCC5.
+# Host-based unit test workflow that builds and runs NOOPT host tests with GCC.
 #
 # CLANGPDB uses llvm-lib for static linking which cannot process ELF objects
-# produced by HOST_APPLICATION modules on Linux. GCC5 uses ar/gcc natively
+# produced by HOST_APPLICATION modules on Linux. GCC uses ar/gcc natively
 # and handles host-based unit tests correctly.
 #
 ##
@@ -31,13 +31,13 @@ on:
       - '.github/workflows/host-based-test-runner.yml'
 
 env:
-  TOOL_CHAIN_TAG: GCC5
+  TOOL_CHAIN_TAG: GCC
 
 jobs:
   host-based-tests:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:76935a3
     strategy:
       fail-fast: false
       matrix:
