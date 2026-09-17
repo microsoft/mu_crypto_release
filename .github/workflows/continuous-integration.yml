@@ -33,7 +33,7 @@ jobs:
   crypto-ci:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:76935a3
     strategy:
       fail-fast: false
       matrix:

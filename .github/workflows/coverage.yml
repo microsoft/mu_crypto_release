@@ -30,7 +30,7 @@ on:
       - '.github/workflows/coverage.yml'
 
 env:
-  TOOL_CHAIN_TAG: GCC5
+  TOOL_CHAIN_TAG: GCC
   PACKAGE: OpensslPkg
   TARGET: NOOPT
 
@@ -38,7 +38,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:8b4aa53
+      image: ghcr.io/microsoft/mu_devops/ubuntu-24-dev:76935a3
 
     steps:
       - name: Checkout
