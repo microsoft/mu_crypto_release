@@ -1,13 +1,5 @@
 /** @file
-  PE/COFF Authenticode Image Hash computation.
-
-  Implements GetAuthenticodeHash() per the "Windows Authenticode Portable
-  Executable Signature Format" specification. The hash covers the entire
-  PE/COFF image except for the image checksum, the Certificate Table
-  data-directory entry, and the certificate table content itself.
-
-  Caution: This module operates on untrusted input (the PE/COFF image),
-  so each header field is validated against FileSize before use.
+  PE/COFF Authenticode hash and hash-algorithm discovery.
 
 Copyright (C) Microsoft Corporation. All rights reserved.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -20,11 +12,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/Hash.h>
 #include "CryptOpCapability.h"
 
-//
-// Function pointer table type for a single hash algorithm.
-// We use the BaseCryptLib hash primitives so this implementation is
-// independent of the underlying crypto provider (OpenSSL / Mbed TLS).
-//
 typedef
 UINTN
 (EFIAPI *AUTH_HASH_GET_CONTEXT_SIZE)(
@@ -62,10 +49,6 @@ typedef struct {
   AUTH_HASH_FINAL               Final;
 } AUTH_HASH_INFO;
 
-//
-// Forward references to BaseCryptLib hash primitives. These are provided
-// by the BaseCryptLib hash sources in this same library instance.
-//
 STATIC CONST AUTH_HASH_INFO  mAuthHashInfo[] = {
   { &gEfiCertSha1Guid,   "1.3.14.3.2.26",          SHA1_DIGEST_SIZE,   Sha1GetContextSize,   Sha1Init,   Sha1Update,   Sha1Final   },
   { &gEfiCertSha256Guid, "2.16.840.1.101.3.4.2.1", SHA256_DIGEST_SIZE, Sha256GetContextSize, Sha256Init, Sha256Update, Sha256Final },
@@ -76,12 +59,12 @@ STATIC CONST AUTH_HASH_INFO  mAuthHashInfo[] = {
 #define AUTH_HASH_INFO_COUNT  (sizeof (mAuthHashInfo) / sizeof (mAuthHashInfo[0]))
 
 /**
-  Look up an entry in mAuthHashInfo by HashType GUID.
+  Returns the Authenticode hash information for a hash type.
 
   @param[in] HashType  Signature-type GUID identifying the hash algorithm.
 
-  @retval Pointer to the AUTH_HASH_INFO on match.
-  @retval NULL if HashType does not match a supported algorithm.
+  @retval non-NULL  Hash information for HashType.
+  @retval NULL      HashType is not supported.
 **/
 STATIC
 CONST AUTH_HASH_INFO *
@@ -234,8 +217,7 @@ AuthenticodeHashOpCapability (
   Digest, which must be large enough to hold the largest supported
   digest (at least SHA512_DIGEST_SIZE bytes).
 
-  Caution: This function may receive untrusted input. The PE/COFF image
-  is external input, so this function validates the image's data
+  FileBuffer is untrusted. This function validates the PE/COFF image data
   structure before hashing.
 
   @param[in]   FileBuffer  Pointer to the in-memory PE/COFF image.
@@ -574,17 +556,6 @@ Done:
 }
 
 //
-// ===========================================================================
-// Authenticode hash-algorithm discovery (SpcIndirectDataContent parsing)
-// ===========================================================================
-//
-// The functions below walk the PKCS#7 SignedData ASN.1 structure to recover
-// the digest algorithm recorded by the signer, without depending on any
-// particular crypto provider. AuthData is untrusted, so every length field
-// is decoded with bounds checking.
-//
-
-//
 // ASN.1 DER tag bytes used while walking the PKCS#7 SignedData structure.
 //
 #define AUTH_ASN1_TAG_INTEGER     0x02
@@ -766,8 +737,7 @@ Asn1ExpectTagged (
   recovered GUID identifies the digest algorithm used to compute the
   Authenticode image hash.
 
-  Caution: AuthData is untrusted. The ASN.1 DER is parsed with
-  bounds-checked length decoding to avoid out-of-bounds reads.
+  AuthData is untrusted. ASN.1 DER lengths are decoded with bounds checking.
 
   @param[in]   AuthData      Pointer to the PKCS#7 SignedData blob
                              (DER-encoded Authenticode signature).
