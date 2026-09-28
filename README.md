@@ -5,7 +5,7 @@
 [![Host-Based Unit Tests](https://github.com/microsoft/mu_crypto_release/actions/workflows/host-based-test-runner.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/host-based-test-runner.yml)
 [![CodeQL](https://github.com/microsoft/mu_crypto_release/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/codeql.yml)
 [![Coverage](https://github.com/microsoft/mu_crypto_release/actions/workflows/coverage.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/coverage.yml)
-[![OpenSSL](https://img.shields.io/badge/OpenSSL-3.5.5-blue)](https://github.com/openssl/openssl/releases/tag/openssl-3.5.5)
+[![OpenSSL](https://img.shields.io/badge/OpenSSL-3.5.8-blue)](https://github.com/openssl/openssl/releases/tag/openssl-3.5.8)
 [![Mbed TLS](https://img.shields.io/badge/Mbed_TLS-3.6.5-blue)](https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.5)
 
 This repository hosts the cryptographic library packages for [Project Mu](https://microsoft.github.io/mu/).
@@ -45,10 +45,10 @@ stuart_ci_build -c .pytool/CISettings.py -p <Pkg> -t RELEASE TOOL_CHAIN_TAG=CLAN
 ## Host-Based Unit Tests
 
 ```bash
-# Run host-based unit tests locally with GCC5
+# Run host-based unit tests locally with GCC
 
 # Packages: (OpensslPkg, MbedTlsPkg)
-stuart_ci_build -c .pytool/CISettings.py -p <Pkg> -t NOOPT -d HostUnitTestCompilerPlugin=run TOOL_CHAIN_TAG=GCC5
+stuart_ci_build -c .pytool/CISettings.py -p <Pkg> -t NOOPT -d HostUnitTestCompilerPlugin=run TOOL_CHAIN_TAG=GCC
 ```
 
 > **Note:** MbedTlsPkg host-based tests are currently disabled due to known test
