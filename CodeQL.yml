@@ -1,0 +1,8 @@
+queries:
+  # exclude external submodules
+  -exclude:
+     path:
+      - "Common/"
+      - "MU_BASECORE/"
+      - "OpensslPkg/Library/OpensslLib/openssl"
+      - "MbedTlsPkg/Library/MbedTlsLib/mbedtls"
