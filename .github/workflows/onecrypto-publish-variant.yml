@@ -70,8 +70,15 @@ jobs:
           # Override descriptor: a *temporary* local override (override_id) that
           # shadows a platform's onecrypto-bin ext_dep for testing, without
           # editing the platform tree. Versioned by the full tag so it stays
-          # distinct across (pre)releases. Published for every release.
+          # distinct across (pre)releases. Prereleases use a non-production
+          # build variable so they cannot silently replace production binaries.
+          # Published for every release.
           OVERRIDE="${{ inputs.publish_name }}_override_ext_dep.json"
+          if [ "$PRERELEASE" = "true" ]; then
+            OVERRIDE_VAR_NAME="BLD_*_NON_PRODUCTION_ONE_CRYPTO_PATH"
+          else
+            OVERRIDE_VAR_NAME="BLD_*_ONE_CRYPTO_PATH"
+          fi
           cat > "$OVERRIDE" <<EOF
           {
             "scope": "global",
@@ -87,7 +94,7 @@ jobs:
             "flags": [
               "set_build_var"
             ],
-            "var_name": "BLD_*_ONE_CRYPTO_PATH"
+            "var_name": "$OVERRIDE_VAR_NAME"
           }
           EOF
           UPLOADS=("$OVERRIDE")
