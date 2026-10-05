@@ -111,6 +111,18 @@ After a successful build the OneCryptoBundler plugin automatically produces
 stuart_build -c OneCryptoPkg/DriverBuild.py --skip-packaging TOOL_CHAIN_TAG=CLANGPDB
 ```
 
+### Release ext_dep Descriptors
+
+OneCrypto releases publish standard and override ext_dep descriptors. The
+standard descriptor updates a platform's `onecrypto-bin` dependency. The
+override descriptor uses `override_id: onecrypto-bin` to shadow that standard
+dependency.
+
+Platforms that use an override descriptor in a production firmware
+must periodically update the override descriptor themselves. The
+platform owner must track OneCrypto releases and explicitly refresh the
+override's source, version, and hash.
+
 ## Contributing
 
 Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for
