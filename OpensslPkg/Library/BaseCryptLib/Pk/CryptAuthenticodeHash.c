@@ -129,39 +129,39 @@ AuthHashAlgorithmAvailable (
   Authenticode image-hash op handler (gCryptoOpAuthenticodeHashGuid). See
   CryptOpCapability.h for the contract.
 
-  @param[out]     Buffer      NULL probes required size, else receives payload.
-  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
-  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
-  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
-  @retval EFI_OUT_OF_RESOURCES  Payload allocation failed.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
 **/
 EFI_STATUS
 EFIAPI
 AuthenticodeHashOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   )
 {
-  EFI_STATUS  Status;
-  UINTN       Index;
-  UINTN       Capacity;
-  UINTN       Required;
-  UINTN       Written;
-  UINTN       OidLen;
-  UINTN       Need;
-  BOOLEAN     Available;
-  BOOLEAN     Overflow;
+  EFI_STATUS   Status;
+  UINTN        Index;
+  BOOLEAN      Available;
+  CONST CHAR8  *AlgorithmOids[AUTH_HASH_INFO_COUNT];
+  UINTN        AlgorithmCount;
 
-  if (BufferSize == NULL) {
+  if (Capabilities != NULL) {
+    *Capabilities = NULL;
+  }
+
+  if (CapabilityCount != NULL) {
+    *CapabilityCount = 0;
+  }
+
+  if ((Capabilities == NULL) || (CapabilityCount == NULL)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  Capacity = (Buffer != NULL) ? *BufferSize : 0;
-  Required = 1;
-  Written  = 0;
-  Overflow = FALSE;
+  AlgorithmCount = 0;
 
   for (Index = 0; Index < AUTH_HASH_INFO_COUNT; Index++) {
     Status = AuthHashAlgorithmAvailable (&mAuthHashInfo[Index], &Available);
@@ -173,38 +173,15 @@ AuthenticodeHashOpCapability (
       continue;
     }
 
-    OidLen = AsciiStrLen (mAuthHashInfo[Index].DottedOid);
-    Need   = OidLen + ((Required > 1) ? 1 : 0);
-
-    if ((Buffer != NULL) && !Overflow) {
-      if ((Written + Need + 1) > Capacity) {
-        Overflow = TRUE;
-      } else {
-        if (Written != 0) {
-          Buffer[Written++] = ',';
-        }
-
-        CopyMem (&Buffer[Written], mAuthHashInfo[Index].DottedOid, OidLen);
-        Written += OidLen;
-      }
-    }
-
-    Required += Need;
+    AlgorithmOids[AlgorithmCount++] = mAuthHashInfo[Index].DottedOid;
   }
 
-  if (Buffer == NULL) {
-    *BufferSize = Required;
-    return EFI_SUCCESS;
-  }
-
-  if (Overflow || (Capacity < Required)) {
-    *BufferSize = Required;
-    return EFI_BUFFER_TOO_SMALL;
-  }
-
-  Buffer[Written] = '\0';
-  *BufferSize     = Required;
-  return EFI_SUCCESS;
+  return CryptOpCreateCapabilities (
+           AlgorithmOids,
+           AlgorithmCount,
+           Capabilities,
+           CapabilityCount
+           );
 }
 
 /**

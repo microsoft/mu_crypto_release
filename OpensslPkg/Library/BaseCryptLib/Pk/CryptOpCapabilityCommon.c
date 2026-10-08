@@ -1,5 +1,5 @@
 /** @file
-  Provider-backed algorithm OID enumeration for ECIT capability reporting.
+  Provider-backed algorithm OID enumeration for crypto capabilities.
 
   Copyright (C) Microsoft Corporation
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -11,16 +11,23 @@
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 
+#define MAX_ALGORITHM_OID_SIZE  80
+
 typedef struct {
-  CHAR8                      *Buffer;
-  UINTN                      BufferSize;
-  UINTN                      Written;    ///< Required payload bytes, excluding the NUL.
-  UINTN                      Committed;  ///< Payload bytes written to Buffer.
-  BOOLEAN                    Overflow;
+  LIST_ENTRY    Link;
+  UINTN         OidSize;
+  CHAR8         Oid[MAX_ALGORITHM_OID_SIZE];
+} CAPABILITY_NODE;
+
+typedef struct {
+  LIST_ENTRY                 Capabilities;
+  UINTN                      CapabilityCount;
+  UINTN                      OidBytes;
+  EFI_STATUS                 Status;
   CRYPTO_OP_SIG_ACCEPT_FN    Accept;
   VOID                       *AcceptCtx;
   CONST BOOLEAN              *PkAvail;
-} EMIT_STATE;
+} COLLECT_STATE;
 
 //
 // OBJ_find_sigid_by_algs() does not verify that the provider implements the
@@ -66,38 +73,38 @@ PkTypeIsAvailable (
 }
 
 STATIC
-BOOLEAN
-StateContainsOid (
-  IN CONST EMIT_STATE  *State,
-  IN CONST CHAR8       *Oid
+VOID
+FreeCollectedCapabilities (
+  IN OUT COLLECT_STATE  *State
   )
 {
-  UINTN  OidLen;
-  UINTN  Index;
-  CHAR8  Prev;
+  LIST_ENTRY       *Link;
+  CAPABILITY_NODE  *Node;
 
-  if ((State->Buffer == NULL) || (State->Committed == 0)) {
-    return FALSE;
+  while (!IsListEmpty (&State->Capabilities)) {
+    Link = GetFirstNode (&State->Capabilities);
+    Node = BASE_CR (Link, CAPABILITY_NODE, Link);
+    RemoveEntryList (Link);
+    FreePool (Node);
   }
+}
 
-  OidLen = AsciiStrLen (Oid);
-  if (OidLen == 0) {
-    return FALSE;
-  }
+STATIC
+BOOLEAN
+StateContainsOid (
+  IN CONST COLLECT_STATE  *State,
+  IN CONST CHAR8          *Oid
+  )
+{
+  LIST_ENTRY       *Link;
+  CAPABILITY_NODE  *Node;
 
-  for (Index = 0; (Index + OidLen) <= State->Committed; Index++) {
-    Prev = (Index == 0) ? ',' : State->Buffer[Index - 1];
-    if (Prev != ',') {
-      continue;
-    }
-
-    if (CompareMem (&State->Buffer[Index], Oid, OidLen) != 0) {
-      continue;
-    }
-
-    if ((Index + OidLen == State->Committed) ||
-        (State->Buffer[Index + OidLen] == ','))
-    {
+  for (Link = GetFirstNode (&State->Capabilities);
+       !IsNull (&State->Capabilities, Link);
+       Link = GetNextNode (&State->Capabilities, Link))
+  {
+    Node = BASE_CR (Link, CAPABILITY_NODE, Link);
+    if (AsciiStrCmp (Node->Oid, Oid) == 0) {
       return TRUE;
     }
   }
@@ -107,67 +114,124 @@ StateContainsOid (
 
 STATIC
 VOID
-EmitOid (
-  IN OUT EMIT_STATE   *State,
-  IN     CONST CHAR8  *Oid
+CollectOid (
+  IN OUT COLLECT_STATE  *State,
+  IN     CONST CHAR8    *Oid
   )
 {
-  UINTN  OidLen;
-  UINTN  CommaLen;
-  UINTN  Need;
+  CAPABILITY_NODE  *Node;
+  UINTN            OidSize;
 
-  if (StateContainsOid (State, Oid)) {
+  if (EFI_ERROR (State->Status) || StateContainsOid (State, Oid)) {
     return;
   }
 
-  OidLen   = AsciiStrLen (Oid);
-  CommaLen = (State->Written > 0) ? 1 : 0;
-  Need     = CommaLen + OidLen;
+  OidSize = AsciiStrSize (Oid);
+  if ((OidSize <= 1) || (OidSize > sizeof (Node->Oid))) {
+    return;
+  }
 
-  State->Written += Need;
-
-  if ((State->Buffer == NULL) ||
-      State->Overflow ||
-      (State->Committed + Need + 1 > State->BufferSize))
+  if ((State->CapabilityCount == MAX_UINTN) ||
+      (State->OidBytes > (MAX_UINTN - OidSize)))
   {
-    if (State->Buffer != NULL) {
-      State->Overflow = TRUE;
-    }
-
+    State->Status = EFI_OUT_OF_RESOURCES;
     return;
   }
 
-  if (CommaLen != 0) {
-    State->Buffer[State->Committed++] = ',';
+  Node = AllocateZeroPool (sizeof (*Node));
+  if (Node == NULL) {
+    State->Status = EFI_OUT_OF_RESOURCES;
+    return;
   }
 
-  CopyMem (&State->Buffer[State->Committed], Oid, OidLen);
-  State->Committed += OidLen;
+  CopyMem (Node->Oid, Oid, OidSize);
+  Node->OidSize = OidSize;
+  InsertTailList (&State->Capabilities, &Node->Link);
+  State->CapabilityCount++;
+  State->OidBytes += OidSize;
 }
 
 STATIC
 VOID
-EmitNidAsOid (
-  IN OUT EMIT_STATE  *State,
-  IN     INT32       Nid
+CollectNidAsOid (
+  IN OUT COLLECT_STATE  *State,
+  IN     INT32          Nid
   )
 {
   ASN1_OBJECT  *Obj;
-  CHAR8        Buf[80];
-  int          Len;
+  CHAR8        Oid[MAX_ALGORITHM_OID_SIZE];
+  int          Length;
 
   Obj = OBJ_nid2obj (Nid);
   if (Obj == NULL) {
     return;
   }
 
-  Len = OBJ_obj2txt (Buf, sizeof (Buf), Obj, 1 /* always_dotted */);
-  if ((Len <= 0) || ((UINTN)Len >= sizeof (Buf))) {
+  Length = OBJ_obj2txt (Oid, sizeof (Oid), Obj, 1);
+  if ((Length <= 0) || ((UINTN)Length >= sizeof (Oid))) {
     return;
   }
 
-  Buf[Len] = '\0';
-  EmitOid (State, Buf);
+  Oid[Length] = '\0';
+  CollectOid (State, Oid);
+}
+
+STATIC
+EFI_STATUS
+BuildCapabilityArray (
+  IN OUT COLLECT_STATE          *State,
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
+  )
+{
+  UINTN                     ArraySize;
+  UINTN                     AllocationSize;
+  BASE_CRYPT_OP_CAPABILITY  *Result;
+  CHAR8                     *OidCursor;
+  UINTN                     Index;
+  LIST_ENTRY                *Link;
+  CAPABILITY_NODE           *Node;
+
+  if (EFI_ERROR (State->Status)) {
+    return State->Status;
+  }
+
+  if (State->CapabilityCount == 0) {
+    return EFI_SUCCESS;
+  }
+
+  if (State->CapabilityCount > (MAX_UINTN / sizeof (*Result))) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  ArraySize = State->CapabilityCount * sizeof (*Result);
+  if (ArraySize > (MAX_UINTN - State->OidBytes)) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  AllocationSize = ArraySize + State->OidBytes;
+  Result         = AllocateZeroPool (AllocationSize);
+  if (Result == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  OidCursor = (CHAR8 *)Result + ArraySize;
+  Index     = 0;
+  for (Link = GetFirstNode (&State->Capabilities);
+       !IsNull (&State->Capabilities, Link);
+       Link = GetNextNode (&State->Capabilities, Link))
+  {
+    Node = BASE_CR (Link, CAPABILITY_NODE, Link);
+    CopyMem (OidCursor, Node->Oid, Node->OidSize);
+    Result[Index].AlgorithmOid     = OidCursor;
+    Result[Index].AlgorithmOidSize = Node->OidSize;
+    OidCursor                     += Node->OidSize;
+    Index++;
+  }
+
+  *Capabilities    = Result;
+  *CapabilityCount = State->CapabilityCount;
+  return EFI_SUCCESS;
 }
 
 STATIC
@@ -195,14 +259,13 @@ DigestVisitorPassA (
   VOID    *Arg
   )
 {
-  EMIT_STATE  *State;
-  INT32       DigestNid;
-  UINTN       PkIdx;
-  INT32       SigNid;
+  COLLECT_STATE  *State;
+  INT32          DigestNid;
+  UINTN          PkIndex;
+  INT32          SignatureNid;
 
-  State = (EMIT_STATE *)Arg;
-
-  if (!IsFixedOutputDigest (Md)) {
+  State = (COLLECT_STATE *)Arg;
+  if (EFI_ERROR (State->Status) || !IsFixedOutputDigest (Md)) {
     return;
   }
 
@@ -211,21 +274,24 @@ DigestVisitorPassA (
     return;
   }
 
-  for (PkIdx = 0; PkIdx < ARRAY_SIZE (mPassAPkTypes); PkIdx++) {
-    if (!State->PkAvail[PkIdx]) {
+  for (PkIndex = 0; PkIndex < ARRAY_SIZE (mPassAPkTypes); PkIndex++) {
+    if (!State->PkAvail[PkIndex]) {
       continue;
     }
 
-    SigNid = NID_undef;
-    if (OBJ_find_sigid_by_algs (&SigNid, DigestNid, mPassAPkTypes[PkIdx].PkNid) != 1) {
+    SignatureNid = NID_undef;
+    if (OBJ_find_sigid_by_algs (
+          &SignatureNid,
+          DigestNid,
+          mPassAPkTypes[PkIndex].PkNid
+          ) != 1)
+    {
       continue;
     }
 
-    if (!State->Accept (SigNid, State->AcceptCtx)) {
-      continue;
+    if (State->Accept (SignatureNid, State->AcceptCtx)) {
+      CollectNidAsOid (State, SignatureNid);
     }
-
-    EmitNidAsOid (State, SigNid);
   }
 }
 
@@ -236,32 +302,28 @@ NameVisitorPassB (
   VOID         *Arg
   )
 {
-  EMIT_STATE  *State;
-  INT32       Nid;
+  COLLECT_STATE  *State;
+  INT32          Nid;
 
-  State = (EMIT_STATE *)Arg;
-  State = (EMIT_STATE *)Arg;
+  State = (COLLECT_STATE *)Arg;
+  if (EFI_ERROR (State->Status)) {
+    return;
+  }
 
   Nid = OBJ_txt2nid (Name);
-  if (!IsSignatureNid (Nid)) {
-    return;
+  if (IsSignatureNid (Nid) && State->Accept (Nid, State->AcceptCtx)) {
+    CollectNidAsOid (State, Nid);
   }
-
-  if (!State->Accept (Nid, State->AcceptCtx)) {
-    return;
-  }
-
-  EmitNidAsOid (State, Nid);
 }
 
 STATIC
 VOID
 SignatureVisitorPassB (
-  EVP_SIGNATURE  *Sig,
+  EVP_SIGNATURE  *Signature,
   VOID           *Arg
   )
 {
-  EVP_SIGNATURE_names_do_all (Sig, NameVisitorPassB, Arg);
+  EVP_SIGNATURE_names_do_all (Signature, NameVisitorPassB, Arg);
 }
 
 STATIC
@@ -271,99 +333,137 @@ DigestVisitor (
   VOID    *Arg
   )
 {
-  INT32  DigestNid;
+  COLLECT_STATE  *State;
+  INT32          DigestNid;
 
-  if (!IsFixedOutputDigest (Md)) {
+  State = (COLLECT_STATE *)Arg;
+  if (EFI_ERROR (State->Status) || !IsFixedOutputDigest (Md)) {
     return;
   }
 
   DigestNid = EVP_MD_get_type (Md);
   if (DigestNid != NID_undef) {
-    EmitNidAsOid ((EMIT_STATE *)Arg, DigestNid);
+    CollectNidAsOid (State, DigestNid);
   }
 }
 
 EFI_STATUS
-CryptOpEmitProviderDigestOids (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+CryptOpCreateCapabilities (
+  IN  CONST CHAR8               *CONST  *AlgorithmOids OPTIONAL,
+  IN  UINTN                             AlgorithmCount,
+  OUT BASE_CRYPT_OP_CAPABILITY          **Capabilities,
+  OUT UINTN                             *CapabilityCount
   )
 {
-  EMIT_STATE  State;
-  UINTN       Required;
+  COLLECT_STATE  State;
+  EFI_STATUS     Status;
+  UINTN          Index;
 
-  if (BufferSize == NULL) {
+  if (Capabilities != NULL) {
+    *Capabilities = NULL;
+  }
+
+  if (CapabilityCount != NULL) {
+    *CapabilityCount = 0;
+  }
+
+  if ((Capabilities == NULL) || (CapabilityCount == NULL) ||
+      ((AlgorithmCount != 0) && (AlgorithmOids == NULL)))
+  {
     return EFI_INVALID_PARAMETER;
   }
 
   ZeroMem (&State, sizeof (State));
-  State.Buffer     = Buffer;
-  State.BufferSize = (Buffer != NULL) ? *BufferSize : 0;
+  InitializeListHead (&State.Capabilities);
+  State.Status = EFI_SUCCESS;
+
+  for (Index = 0; Index < AlgorithmCount; Index++) {
+    if (AlgorithmOids[Index] == NULL) {
+      Status = EFI_INVALID_PARAMETER;
+      goto Exit;
+    }
+
+    CollectOid (&State, AlgorithmOids[Index]);
+  }
+
+  Status = BuildCapabilityArray (&State, Capabilities, CapabilityCount);
+
+Exit:
+  FreeCollectedCapabilities (&State);
+  return Status;
+}
+
+EFI_STATUS
+CryptOpGetProviderDigestCapabilities (
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
+  )
+{
+  COLLECT_STATE  State;
+  EFI_STATUS     Status;
+
+  if (Capabilities != NULL) {
+    *Capabilities = NULL;
+  }
+
+  if (CapabilityCount != NULL) {
+    *CapabilityCount = 0;
+  }
+
+  if ((Capabilities == NULL) || (CapabilityCount == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  ZeroMem (&State, sizeof (State));
+  InitializeListHead (&State.Capabilities);
+  State.Status = EFI_SUCCESS;
 
   EVP_MD_do_all_provided (NULL, DigestVisitor, &State);
-
-  Required = State.Written + 1;
-  if (Buffer == NULL) {
-    *BufferSize = Required;
-    return EFI_SUCCESS;
-  }
-
-  if (State.Overflow || (*BufferSize < Required)) {
-    *BufferSize = Required;
-    return EFI_BUFFER_TOO_SMALL;
-  }
-
-  Buffer[State.Committed] = '\0';
-  *BufferSize             = Required;
-  return EFI_SUCCESS;
+  Status = BuildCapabilityArray (&State, Capabilities, CapabilityCount);
+  FreeCollectedCapabilities (&State);
+  return Status;
 }
 
 EFI_STATUS
-CryptOpEmitProviderSignatureOids (
-  IN     CRYPTO_OP_SIG_ACCEPT_FN  Accept,
-  IN     VOID                     *Ctx,
-  OUT    CHAR8                    *Buffer       OPTIONAL,
-  IN OUT UINTN                    *BufferSize
+CryptOpGetProviderSignatureCapabilities (
+  IN  CRYPTO_OP_SIG_ACCEPT_FN   Accept,
+  IN  VOID                      *Ctx,
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   )
 {
-  EMIT_STATE  State;
-  UINTN       Required;
-  BOOLEAN     PkAvail[ARRAY_SIZE (mPassAPkTypes)];
-  UINTN       PkIdx;
+  COLLECT_STATE  State;
+  EFI_STATUS     Status;
+  BOOLEAN        PkAvailable[ARRAY_SIZE (mPassAPkTypes)];
+  UINTN          PkIndex;
 
-  if ((Accept == NULL) || (BufferSize == NULL)) {
+  if (Capabilities != NULL) {
+    *Capabilities = NULL;
+  }
+
+  if (CapabilityCount != NULL) {
+    *CapabilityCount = 0;
+  }
+
+  if ((Accept == NULL) || (Capabilities == NULL) || (CapabilityCount == NULL)) {
     return EFI_INVALID_PARAMETER;
   }
 
   ZeroMem (&State, sizeof (State));
-  State.Buffer     = Buffer;
-  State.BufferSize = (Buffer != NULL) ? *BufferSize : 0;
-  State.Accept     = Accept;
-  State.AcceptCtx  = Ctx;
+  InitializeListHead (&State.Capabilities);
+  State.Status    = EFI_SUCCESS;
+  State.Accept    = Accept;
+  State.AcceptCtx = Ctx;
 
-  for (PkIdx = 0; PkIdx < ARRAY_SIZE (mPassAPkTypes); PkIdx++) {
-    PkAvail[PkIdx] = PkTypeIsAvailable (mPassAPkTypes[PkIdx].KeyMgmtName);
+  for (PkIndex = 0; PkIndex < ARRAY_SIZE (mPassAPkTypes); PkIndex++) {
+    PkAvailable[PkIndex] = PkTypeIsAvailable (mPassAPkTypes[PkIndex].KeyMgmtName);
   }
 
-  State.PkAvail = PkAvail;
-
-  EVP_MD_do_all_provided (NULL /* default libctx */, DigestVisitorPassA, &State);
-
+  State.PkAvail = PkAvailable;
+  EVP_MD_do_all_provided (NULL, DigestVisitorPassA, &State);
   EVP_SIGNATURE_do_all_provided (NULL, SignatureVisitorPassB, &State);
 
-  Required = State.Written + 1;
-
-  if (Buffer == NULL) {
-    *BufferSize = Required;
-    return EFI_SUCCESS;
-  }
-
-  if (State.Overflow || (*BufferSize < Required)) {
-    *BufferSize = Required;
-    return EFI_BUFFER_TOO_SMALL;
-  }
-
-  Buffer[State.Committed] = '\0';
-  *BufferSize             = Required;
-  return EFI_SUCCESS;
+  Status = BuildCapabilityArray (&State, Capabilities, CapabilityCount);
+  FreeCollectedCapabilities (&State);
+  return Status;
 }

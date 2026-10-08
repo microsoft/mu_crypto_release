@@ -71,21 +71,21 @@ GetCryptoProviderVersionString (
 //
 
 /**
-  Per-op handler signature. Same shape as the public
-  GetCryptoOpCapability minus the OpIdGuid parameter (dispatch already
-  matched it).
+  Per-op handler signature. Same shape as the public GetCryptoOpCapability
+  minus the OpIdGuid parameter because dispatch already matched it.
 
-  @param[out]     Buffer      NULL probes required size, else receives payload.
-  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
-  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 typedef
 EFI_STATUS
 (EFIAPI *CRYPTO_OP_HANDLER)(
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   );
 
 /**
@@ -112,35 +112,40 @@ STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
 /**
   Returns the supported algorithm OIDs for a crypto operation.
 
-  @param[in]      OpIdGuid    GUID identifying the crypto operation.
-  @param[out]     Buffer      NULL to query the required size, otherwise
-                              receives the capability data.
-  @param[in,out]  BufferSize  On input, the size of Buffer. On output, the
-                              number of bytes written or required.
+  @param[in]  OpIdGuid        GUID identifying the crypto operation.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS            The capability data or required size was
-                                 returned.
-  @retval EFI_BUFFER_TOO_SMALL   Buffer is too small.
+  @retval EFI_SUCCESS            The capability array was returned.
   @retval EFI_NOT_FOUND          OpIdGuid is not supported.
-  @retval EFI_INVALID_PARAMETER  OpIdGuid or BufferSize is NULL.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
 EFIAPI
 GetCryptoOpCapability (
-  IN     CONST EFI_GUID  *OpIdGuid,
-  OUT    VOID            *Buffer       OPTIONAL,
-  IN OUT UINTN           *BufferSize
+  IN  CONST EFI_GUID            *OpIdGuid,
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   )
 {
   UINTN  Index;
 
-  if ((OpIdGuid == NULL) || (BufferSize == NULL)) {
+  if (Capabilities != NULL) {
+    *Capabilities = NULL;
+  }
+
+  if (CapabilityCount != NULL) {
+    *CapabilityCount = 0;
+  }
+
+  if ((OpIdGuid == NULL) || (Capabilities == NULL) || (CapabilityCount == NULL)) {
     return EFI_INVALID_PARAMETER;
   }
 
   for (Index = 0; Index < ARRAY_SIZE (mCryptoOpDispatch); Index++) {
     if (CompareGuid (OpIdGuid, mCryptoOpDispatch[Index].OpId)) {
-      return mCryptoOpDispatch[Index].Handler ((CHAR8 *)Buffer, BufferSize);
+      return mCryptoOpDispatch[Index].Handler (Capabilities, CapabilityCount);
     }
   }
 

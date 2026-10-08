@@ -40,19 +40,24 @@ CmsAccept (
 EFI_STATUS
 EFIAPI
 CmsVerifyOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   )
 {
-  return CryptOpEmitProviderSignatureOids (CmsAccept, NULL, Buffer, BufferSize);
+  return CryptOpGetProviderSignatureCapabilities (
+           CmsAccept,
+           NULL,
+           Capabilities,
+           CapabilityCount
+           );
 }
 
 EFI_STATUS
 EFIAPI
 CmsContentDigestOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   )
 {
-  return CryptOpEmitProviderDigestOids (Buffer, BufferSize);
+  return CryptOpGetProviderDigestCapabilities (Capabilities, CapabilityCount);
 }
