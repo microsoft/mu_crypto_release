@@ -15,15 +15,16 @@
 /**
   Per-op acceptance predicate. The engine calls this for every signature
   NID the provider can form (digest+key composites and direct sig algs).
-  Return TRUE to include the NID's OID in the payload, FALSE to drop it.
+  Return TRUE to include the NID's OID in the capability array, FALSE to
+  drop it.
 
   @param[in]  SigNid  OpenSSL signature NID (e.g. NID_sha256WithRSAEncryption,
                       NID_ml_dsa_65). Always a NID OBJ_find_sigid_algs
                       recognizes.
   @param[in]  Ctx     Opaque caller context passed through unchanged from
-                      CryptOpEmitProviderSignatureOids; may be NULL.
+                      CryptOpGetProviderSignatureCapabilities; may be NULL.
 
-  @retval TRUE   Emit this NID's OID in the payload.
+  @retval TRUE   Include this NID's OID in the capability array.
   @retval FALSE  Skip this NID.
 **/
 typedef
@@ -34,57 +35,72 @@ BOOLEAN
   );
 
 /**
-  Engine entry point used by per-op handlers.
+  Collect the signature algorithms available from the linked provider.
 
   Walks every signature algorithm the linked OpenSSL provider can form,
-  filters through Accept, and writes the accepted OIDs as a CSV-encoded
-  NUL-terminated ASCII payload following the standard ECIT sizing
-  contract.
+  filters through Accept, and returns the accepted OIDs as one allocated
+  capability array.
 
   Two complementary passes cover OpenSSL's bifurcated signature surface:
   the legacy sigid table (sha*WithRSA, ecdsa-with-sha*) and the provider's
   EVP_SIGNATURE algorithm list (RSA-PSS, EdDSA, ML-DSA, ...). See
   Pk/CryptOpCapabilityCommon.c for the design.
 
-  @param[in]      Accept      Predicate; called once per candidate sig
-                              NID. Must not be NULL.
-  @param[in]      Ctx         Opaque pointer passed unchanged to Accept.
-                              May be NULL.
-  @param[out]     Buffer      NULL probes required size, else receives
-                              CSV-encoded NUL-terminated payload.
-  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required
-                              (always includes the trailing NUL).
+  @param[in]  Accept          Predicate called for each candidate signature NID.
+  @param[in]  Ctx             Opaque pointer passed unchanged to Accept.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           Sizing probe answered, or full payload written.
-  @retval EFI_BUFFER_TOO_SMALL  Buffer non-NULL and capacity insufficient;
-                                *BufferSize set to required size.
-  @retval EFI_INVALID_PARAMETER Accept or BufferSize is NULL.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
-CryptOpEmitProviderSignatureOids (
-  IN     CRYPTO_OP_SIG_ACCEPT_FN  Accept,
-  IN     VOID                     *Ctx,
-  OUT    CHAR8                    *Buffer       OPTIONAL,
-  IN OUT UINTN                    *BufferSize
+CryptOpGetProviderSignatureCapabilities (
+  IN  CRYPTO_OP_SIG_ACCEPT_FN   Accept,
+  IN  VOID                      *Ctx,
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   );
 
 /**
-  Reports the OIDs of fixed-output digest algorithms available from the
-  linked OpenSSL provider.
+  Collect the fixed-output digest algorithms available from the linked
+  OpenSSL provider.
 
-  @param[out]     Buffer      NULL probes required size, else receives the
-                              NUL-terminated CSV payload.
-  @param[in,out]  BufferSize  On input, buffer capacity. On output, bytes
-                              written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           The operation completed successfully.
-  @retval EFI_BUFFER_TOO_SMALL  BufferSize was updated with the required size.
-  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
-CryptOpEmitProviderDigestOids (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+CryptOpGetProviderDigestCapabilities (
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
+  );
+
+/**
+  Create one allocated capability array from OID strings.
+
+  Duplicate OIDs are omitted. The returned array and strings share one
+  allocation that the caller releases with FreePool().
+
+  @param[in]  AlgorithmOids   Array of NUL-terminated dotted-decimal OIDs.
+  @param[in]  AlgorithmCount  Number of elements in AlgorithmOids.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
+
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
+**/
+EFI_STATUS
+CryptOpCreateCapabilities (
+  IN  CONST CHAR8               *CONST  *AlgorithmOids OPTIONAL,
+  IN  UINTN                             AlgorithmCount,
+  OUT BASE_CRYPT_OP_CAPABILITY          **Capabilities,
+  OUT UINTN                             *CapabilityCount
   );
 
 /**
@@ -95,36 +111,35 @@ CryptOpEmitProviderDigestOids (
   to it. The accept predicate is "anything OpenSSL recognizes as a
   signature NID" -- the verify path doesn't filter further.
 
-  @param[out]     Buffer      NULL probes required size, else receives payload.
-  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
-  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
 EFIAPI
 CmsVerifyOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   );
 
 /**
   Reports the content-digest algorithms supported for CMS SignedData.
 
-  @param[out]     Buffer      NULL probes required size, else receives the
-                              NUL-terminated CSV payload.
-  @param[in,out]  BufferSize  On input, buffer capacity. On output, bytes
-                              written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           The operation completed successfully.
-  @retval EFI_BUFFER_TOO_SMALL  BufferSize was updated with the required size.
-  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
 EFIAPI
 CmsContentDigestOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   );
 
 /**
@@ -138,17 +153,18 @@ CmsContentDigestOpCapability (
   predicate so the report stays in lockstep with verify behavior with no
   separate allowlist.
 
-  @param[out]     Buffer      NULL probes required size, else receives payload.
-  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
-  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
 EFIAPI
 AuthenticodeVerifyOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   );
 
 /**
@@ -160,19 +176,18 @@ AuthenticodeVerifyOpCapability (
   GetAuthenticodeHash. Unlike the verify ops, this reports digest OIDs, not
   signature OIDs.
 
-  @param[out]     Buffer      NULL probes required size, else receives payload.
-  @param[in,out]  BufferSize  In: capacity. Out: bytes written or required.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
 
-  @retval EFI_SUCCESS           Sizing probe / fetch succeeded.
-  @retval EFI_BUFFER_TOO_SMALL  Buffer too small; *BufferSize set to required.
-  @retval EFI_INVALID_PARAMETER BufferSize is NULL.
-  @retval EFI_OUT_OF_RESOURCES  Payload allocation failed.
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
 **/
 EFI_STATUS
 EFIAPI
 AuthenticodeHashOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   );
 
 #endif // BASE_CRYPT_LIB_OPENSSLPKG_OP_CAPABILITY_H_
