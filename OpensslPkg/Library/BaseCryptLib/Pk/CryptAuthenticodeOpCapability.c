@@ -11,9 +11,9 @@
 EFI_STATUS
 EFIAPI
 AuthenticodeVerifyOpCapability (
-  OUT    CHAR8  *Buffer       OPTIONAL,
-  IN OUT UINTN  *BufferSize
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
   )
 {
-  return CmsVerifyOpCapability (Buffer, BufferSize);
+  return CmsVerifyOpCapability (Capabilities, CapabilityCount);
 }
