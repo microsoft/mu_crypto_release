@@ -490,3 +490,6 @@
 
 [BuildOptions.AARCH64]
   GCC:*_*_*_CC_FLAGS = -mbranch-protection=standard
+  # .S files are preprocessed with PP_FLAGS, not CC_FLAGS; OpenSSL emits BTI landing pads only when
+  # __ARM_FEATURE_BTI_DEFAULT is defined, and S-EL0 partitions map code as BTI-guarded pages.
+  GCC:*_*_*_PP_FLAGS = -mbranch-protection=standard
