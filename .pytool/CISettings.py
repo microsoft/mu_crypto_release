@@ -172,7 +172,7 @@ class Settings(
                 # dev/202511/post-quantum-staging branch. Pin the commit rather
                 # than track a moving branch. Drop once these land on main.
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "b8871ecd559a2391ea5d535335644038de3da2ba",
+                "Commit": "a1a22636524aad3e49d498ffcd8883a3472e7b7d",
                 "Recurse": {
                     "CIFile": ".pytool/CISettings.py"
                 }
