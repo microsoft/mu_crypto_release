@@ -35,6 +35,7 @@
   # Build HOST_APPLICATION that tests BaseCryptLib (OpenSSL implementation)
   #
   CryptoPkg/Test/UnitTest/Library/BaseCryptLib/TestBaseCryptLibHost.inf
+  OpensslPkg/Test/X509PublicKeySupported/X509PublicKeySupported.inf
 
   #
   # TLS verification test — enumerates cipher suites and TLS capabilities
