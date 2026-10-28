@@ -1,0 +1,32 @@
+## @file
+# Native tests of the production OpenSSL CRT formatter.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = CrtWrapperTest
+  FILE_GUID      = 599D00F7-C474-475F-8052-92A0459A7A10
+  MODULE_TYPE    = HOST_APPLICATION
+  VERSION_STRING = 1.0
+
+[Sources]
+  CrtWrapperHost.c
+  CrtWrapperTest.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OpensslPkg/OpensslPkg.dec
+  UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  PrintLib
+  UnitTestLib
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -fno-builtin

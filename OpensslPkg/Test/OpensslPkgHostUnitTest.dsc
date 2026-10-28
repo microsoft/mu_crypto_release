@@ -30,6 +30,8 @@
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
 
 [Components]
+  OpensslPkg/Test/CrtWrapper/CrtWrapperTest.inf
+
   #
   # Build HOST_APPLICATION that tests BaseCryptLib (OpenSSL implementation)
   #
