@@ -142,6 +142,8 @@ def copy_generated_file(src, dst):
     src_file = []
     with open(src, 'r') as fsrc:
         src_file = fsrc.readlines()
+    while src_file and not src_file[-1].strip():
+        src_file.pop()
     with open(dst, 'w') as fdst:
         for lines in range(len(src_file)):
             s = src_file[lines]
