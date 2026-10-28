@@ -5,6 +5,7 @@
 Copyright (c) 2010 - 2022, Intel Corporation. All rights reserved.<BR>
 Copyright (c) 2020, Hewlett Packard Enterprise Development LP. All rights reserved.<BR>
 Copyright (c) 2022, Loongson Technology Corporation Limited. All rights reserved.<BR>
+Copyright (c) Microsoft Corporation.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -52,12 +53,22 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #endif
 
 //
-// Map all va_xxxx elements to VA_xxx defined in MdePkg/Include/Base.h
+// OpenSSL uses the native C ABI, not EFIAPI's Microsoft x64 varargs ABI.
+// Base.h may already have been included by AutoGen.h without NO_MSABI_VA_FUNCS.
 //
+#if defined (__GNUC__) && defined (MDE_CPU_X64)
+#define va_list   __builtin_va_list
+#define va_arg    __builtin_va_arg
+#define va_start  __builtin_va_start
+#define va_end    __builtin_va_end
+#define va_copy   __builtin_va_copy
+#else
 #define va_list   VA_LIST
 #define va_arg    VA_ARG
 #define va_start  VA_START
 #define va_end    VA_END
+#define va_copy   VA_COPY
+#endif
 
 //
 // Definitions for global constants used by CRT library routines
@@ -432,6 +443,34 @@ strpbrk (
   );
 
 //
+// C99 required-length semantics for integer, ASCII string and character formats.
+// Floating point, wide characters, positional arguments and %n return -1.
+// NULL %s prints "<NULL>"; %p prints a hexadecimal address prefixed with "0x".
+//
+int
+vsnprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  va_list     args
+  );
+
+int
+snprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  ...
+  );
+
+int
+sprintf (
+  char        *buf,
+  const char  *fmt,
+  ...
+  );
+
+//
 // Macros that directly map functions to BaseLib, BaseMemoryLib, and DebugLib functions
 //
 #define memcpy(dest, source, count)       CopyMem(dest,source,(UINTN)(count))
@@ -443,11 +482,10 @@ strpbrk (
 #define strncmp(string1, string2, count)  (int)(AsciiStrnCmp(string1,string2,(UINTN)(count)))
 #define strcasecmp(str1, str2)            (int)AsciiStriCmp(str1,str2)
 #define strstr(s1, s2)                    AsciiStrStr(s1,s2)
-#define sprintf(buf, ...)                 AsciiSPrint(buf,MAX_STRING_SIZE,__VA_ARGS__)
 #define localtime(timer)                  NULL
-#define assert(expression)
-#define offsetof(type, member)  OFFSET_OF(type,member)
-#define atoi(nptr)              AsciiStrDecimalToUintn(nptr)
+#define assert(expression)                ((void)0)
+#define offsetof(type, member)            OFFSET_OF(type,member)
+#define atoi(nptr)                        AsciiStrDecimalToUintn(nptr)
 
 #ifndef _BYTESWAP_DEFINED
 #define _BYTESWAP_DEFINED
@@ -463,6 +501,19 @@ strpbrk (
 #ifndef INT64_MAX
 #define INT64_MAX  0x7FFFFFFFFFFFFFFFL
 #define INT64_MIN  (-0x7FFFFFFFFFFFFFFFL - 1)
+#endif
+
+#ifndef INT64_C
+#define INT64_C(c)  (c##LL)
+#endif
+#ifndef UINT64_C
+#define UINT64_C(c)  (c##ULL)
+#endif
+#ifndef INT32_C
+#define INT32_C(c)  (c)
+#endif
+#ifndef UINT32_C
+#define UINT32_C(c)  (c##U)
 #endif
 
 #ifndef INT16_MAX
