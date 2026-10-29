@@ -31,6 +31,8 @@
 
 [Components]
   OpensslPkg/Test/CrtWrapper/CrtWrapperTest.inf
+  OpensslPkg/Test/Pqc/PqcTest.inf
+  OpensslPkg/Test/Tls13/Tls13Test.inf
 
   #
   # Build HOST_APPLICATION that tests BaseCryptLib (OpenSSL implementation)

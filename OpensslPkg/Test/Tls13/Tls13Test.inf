@@ -1,0 +1,31 @@
+## @file
+# Focused tests of TLS cipher policy and supported groups.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = Tls13Test
+  FILE_GUID      = 23853710-D68A-4C5F-A277-B8E08A846FC7
+  MODULE_TYPE    = HOST_APPLICATION
+  VERSION_STRING = 1.0
+
+[Sources]
+  Tls13Test.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  OpensslPkg/OpensslPkg.dec
+  UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  OpensslLib
+  PrintLib
+  TlsLib
+  UnitTestLib
