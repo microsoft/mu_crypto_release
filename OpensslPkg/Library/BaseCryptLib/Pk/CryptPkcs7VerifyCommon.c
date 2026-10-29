@@ -21,6 +21,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs7.h>
+#include <openssl/cms.h>
+#include <openssl/err.h>
 
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT8  mOidValue[9] = { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02 };
 
@@ -44,7 +46,7 @@ GLOBAL_REMOVE_IF_UNREFERENCED const UINT8  mOidValue[9] = { 0x2A, 0x86, 0x48, 0x
   @param[out] WrapDataSize Length of ContentInfo structure in bytes.
 
   @retval     TRUE         The operation is finished successfully.
-  @retval     FALSE        The operation is failed due to lack of resources.
+  @retval     FALSE        The input is invalid or resources are unavailable.
 
 **/
 BOOLEAN
@@ -56,79 +58,79 @@ WrapPkcs7Data (
   OUT UINTN        *WrapDataSize
   )
 {
-  BOOLEAN  Wrapped;
-  UINT8    *SignedData;
+  CONST UINT8  *Cursor;
+  UINT8        *SignedData;
+  long         Length;
+  int          Tag;
+  int          Class;
+  int          Info;
+  int          ContentSize;
+  int          EncodedSize;
 
-  //
-  // Check whether input P7Data is a wrapped ContentInfo structure or not.
-  //
-  Wrapped = FALSE;
-  if ((P7Data[4] == 0x06) && (P7Data[5] == 0x09)) {
-    if (CompareMem (P7Data + 6, mOidValue, sizeof (mOidValue)) == 0) {
-      if ((P7Data[15] == 0xA0) && (P7Data[16] == 0x82)) {
-        Wrapped = TRUE;
-      }
-    }
+  if ((WrapFlag == NULL) || (WrapData == NULL) || (WrapDataSize == NULL)) {
+    return FALSE;
   }
 
-  if (Wrapped) {
+  *WrapFlag     = FALSE;
+  *WrapData     = NULL;
+  *WrapDataSize = 0;
+  if ((P7Data == NULL) || (P7Length == 0) || (P7Length > INT_MAX)) {
+    return FALSE;
+  }
+
+  Cursor = P7Data;
+  Info   = ASN1_get_object (&Cursor, &Length, &Tag, &Class, (long)P7Length);
+  if (((Info & 0x81) != 0) || ((Info & V_ASN1_CONSTRUCTED) == 0) ||
+      (Tag != V_ASN1_SEQUENCE) || (Class != V_ASN1_UNIVERSAL))
+  {
+    return FALSE;
+  }
+
+  Info = ASN1_get_object (&Cursor, &Length, &Tag, &Class, Length);
+  if (((Info & 0x81) != 0) || ((Info & V_ASN1_CONSTRUCTED) != 0) ||
+      (Class != V_ASN1_UNIVERSAL))
+  {
+    return FALSE;
+  }
+
+  if ((Tag == V_ASN1_OBJECT) && (Length == sizeof (mOidValue)) &&
+      (CompareMem (Cursor, mOidValue, sizeof (mOidValue)) == 0))
+  {
+    *WrapFlag     = TRUE;
     *WrapData     = (UINT8 *)P7Data;
     *WrapDataSize = P7Length;
-  } else {
-    //
-    // Wrap PKCS#7 signeddata to a ContentInfo structure - add a header in 19 bytes.
-    //
-    *WrapDataSize = P7Length + 19;
-    *WrapData     = malloc (*WrapDataSize);
-    if (*WrapData == NULL) {
-      *WrapFlag = Wrapped;
-      return FALSE;
-    }
-
-    SignedData = *WrapData;
-
-    //
-    // Part1: 0x30, 0x82.
-    //
-    SignedData[0] = 0x30;
-    SignedData[1] = 0x82;
-
-    //
-    // Part2: Length1 = P7Length + 19 - 4, in big endian.
-    //
-    SignedData[2] = (UINT8)(((UINT16)(*WrapDataSize - 4)) >> 8);
-    SignedData[3] = (UINT8)(((UINT16)(*WrapDataSize - 4)) & 0xff);
-
-    //
-    // Part3: 0x06, 0x09.
-    //
-    SignedData[4] = 0x06;
-    SignedData[5] = 0x09;
-
-    //
-    // Part4: OID value -- 0x2A 0x86 0x48 0x86 0xF7 0x0D 0x01 0x07 0x02.
-    //
-    CopyMem (SignedData + 6, mOidValue, sizeof (mOidValue));
-
-    //
-    // Part5: 0xA0, 0x82.
-    //
-    SignedData[15] = 0xA0;
-    SignedData[16] = 0x82;
-
-    //
-    // Part6: Length2 = P7Length, in big endian.
-    //
-    SignedData[17] = (UINT8)(((UINT16)P7Length) >> 8);
-    SignedData[18] = (UINT8)(((UINT16)P7Length) & 0xff);
-
-    //
-    // Part7: P7Data.
-    //
-    CopyMem (SignedData + 19, P7Data, P7Length);
+    return TRUE;
   }
 
-  *WrapFlag = Wrapped;
+  // Bare SignedData starts with its version INTEGER.
+  if (Tag != V_ASN1_INTEGER) {
+    return FALSE;
+  }
+
+  ContentSize = ASN1_object_size (1, (int)P7Length, 0);
+  if ((ContentSize <= 0) || (ContentSize > INT_MAX - (int)sizeof (mOidValue) - 2)) {
+    return FALSE;
+  }
+
+  ContentSize += sizeof (mOidValue) + 2;
+  EncodedSize  = ASN1_object_size (1, ContentSize, V_ASN1_SEQUENCE);
+  if (EncodedSize <= 0) {
+    return FALSE;
+  }
+
+  *WrapData = malloc ((UINTN)EncodedSize);
+  if (*WrapData == NULL) {
+    return FALSE;
+  }
+
+  SignedData = *WrapData;
+  ASN1_put_object (&SignedData, 1, ContentSize, V_ASN1_SEQUENCE, V_ASN1_UNIVERSAL);
+  ASN1_put_object (&SignedData, 0, sizeof (mOidValue), V_ASN1_OBJECT, V_ASN1_UNIVERSAL);
+  CopyMem (SignedData, mOidValue, sizeof (mOidValue));
+  SignedData += sizeof (mOidValue);
+  ASN1_put_object (&SignedData, 1, (int)P7Length, 0, V_ASN1_CONTEXT_SPECIFIC);
+  CopyMem (SignedData, P7Data, P7Length);
+  *WrapDataSize = (UINTN)EncodedSize;
   return TRUE;
 }
 
@@ -752,27 +754,32 @@ _Error:
 }
 
 /**
-  Verifies the validity of a PKCS#7 signed data as described in "PKCS #7:
-  Cryptographic Message Syntax Standard". The input signed data could be wrapped
-  in a ContentInfo structure.
+  Verifies the validity of a PKCS#7/CMS signed data structure.
+
+  This function verifies signed data using OpenSSL's CMS (Cryptographic
+  Message Syntax, RFC 5652) implementation, which is the successor to
+  PKCS#7. CMS_verify selects signature implementations through the EVP
+  provider framework. The input signed data may be wrapped in a ContentInfo
+  structure. Authenticode's legacy inline content requires conversion to
+  detached form by AuthenticodeVerify.
 
   If P7Data, TrustedCert or InData is NULL, then return FALSE.
   If P7Length, CertLength or DataLength overflow, then return FALSE.
 
   Caution: This function may receive untrusted input.
   UEFI Authenticated Variable is external input, so this function will do basic
-  check for PKCS#7 data structure.
+  check for data structure.
 
-  @param[in]  P7Data       Pointer to the PKCS#7 message to verify.
-  @param[in]  P7Length     Length of the PKCS#7 message in bytes.
+  @param[in]  P7Data       Pointer to the PKCS#7/CMS message to verify.
+  @param[in]  P7Length     Length of the PKCS#7/CMS message in bytes.
   @param[in]  TrustedCert  Pointer to a trusted/root certificate encoded in DER, which
                            is used for certificate chain verification.
   @param[in]  CertLength   Length of the trusted certificate in bytes.
   @param[in]  InData       Pointer to the content to be verified.
   @param[in]  DataLength   Length of InData in bytes.
 
-  @retval  TRUE  The specified PKCS#7 signed data is valid.
-  @retval  FALSE Invalid PKCS#7 signed data.
+  @retval  TRUE  The specified PKCS#7/CMS signed data is valid.
+  @retval  FALSE Invalid PKCS#7/CMS signed data.
 
 **/
 BOOLEAN
@@ -786,15 +793,15 @@ Pkcs7Verify (
   IN  UINTN        DataLength
   )
 {
-  PKCS7        *Pkcs7;
-  BIO          *DataBio;
-  BOOLEAN      Status;
-  X509         *Cert;
-  X509_STORE   *CertStore;
-  UINT8        *SignedData;
-  CONST UINT8  *Temp;
-  UINTN        SignedDataSize;
-  BOOLEAN      Wrapped;
+  CMS_ContentInfo  *Cms;
+  BIO              *DataBio;
+  BOOLEAN          Status;
+  X509             *Cert;
+  X509_STORE       *CertStore;
+  UINT8            *SignedData;
+  CONST UINT8      *Temp;
+  UINTN            SignedDataSize;
+  BOOLEAN          Wrapped;
 
   //
   // Check input parameters.
@@ -805,37 +812,10 @@ Pkcs7Verify (
     return FALSE;
   }
 
-  Pkcs7     = NULL;
+  Cms       = NULL;
   DataBio   = NULL;
   Cert      = NULL;
   CertStore = NULL;
-
-  //
-  // Register & Initialize necessary digest algorithms for PKCS#7 Handling
-  //
-  if (EVP_add_digest (EVP_md5 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha1 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha256 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha384 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest (EVP_sha512 ()) == 0) {
-    return FALSE;
-  }
-
-  if (EVP_add_digest_alias (SN_sha1WithRSAEncryption, SN_sha1WithRSA) == 0) {
-    return FALSE;
-  }
 
   Status = WrapPkcs7Data (P7Data, P7Length, &Wrapped, &SignedData, &SignedDataSize);
   if (!Status) {
@@ -845,22 +825,9 @@ Pkcs7Verify (
   Status = FALSE;
 
   //
-  // Retrieve PKCS#7 Data (DER encoding)
+  // Validate SignedData size.
   //
   if (SignedDataSize > INT_MAX) {
-    goto _Exit;
-  }
-
-  Temp  = SignedData;
-  Pkcs7 = d2i_PKCS7 (NULL, (const unsigned char **)&Temp, (int)SignedDataSize);
-  if (Pkcs7 == NULL) {
-    goto _Exit;
-  }
-
-  //
-  // Check if it's PKCS#7 Signed Data (for Authenticode Scenario)
-  //
-  if (!PKCS7_type_is_signed (Pkcs7)) {
     goto _Exit;
   }
 
@@ -886,15 +853,6 @@ Pkcs7Verify (
   }
 
   //
-  // For generic PKCS#7 handling, InData may be NULL if the content is present
-  // in PKCS#7 structure. So ignore NULL checking here.
-  //
-  DataBio = BIO_new_mem_buf (InData, (int)DataLength);
-  if (DataBio == NULL) {
-    goto _Exit;
-  }
-
-  //
   // Allow partial certificate chains, terminated by a non-self-signed but
   // still trusted intermediate certificate. Also disable time checks.
   //
@@ -904,16 +862,62 @@ Pkcs7Verify (
     );
 
   //
-  // OpenSSL PKCS7 Verification by default checks for SMIME (email signing) and
-  // doesn't support the extended key usage for Authenticode Code Signing.
   // Bypass the certificate purpose checking by enabling any purposes setting.
   //
   X509_STORE_set_purpose (CertStore, X509_PURPOSE_ANY);
 
   //
-  // Verifies the PKCS#7 signedData structure
+  // Parse CMS SignedData; signature algorithms are selected by the provider.
   //
-  Status = (BOOLEAN)PKCS7_verify (Pkcs7, NULL, CertStore, DataBio, NULL, PKCS7_BINARY);
+  Temp = SignedData;
+  Cms  = d2i_CMS_ContentInfo (NULL, (const unsigned char **)&Temp, (long)SignedDataSize);
+  if (Cms == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // Require the parsed CMS ContentInfo to be of type id-signedData.  Other
+  // CMS content types (envelopedData, digestedData, encryptedData, etc.) are
+  // not meaningful inputs to this verification path and CMS_verify's
+  // behavior on them is unspecified - reject explicitly so a malformed or
+  // misclassified blob cannot reach the verification engine.
+  //
+  if (OBJ_obj2nid (CMS_get0_type (Cms)) != NID_pkcs7_signed) {
+    goto _Exit;
+  }
+
+  //
+  // Pkcs7Verify rejected NULL InData at function entry: this routine treats
+  // the supplied (InData, DataLength) as the detached content that the
+  // signedAttributes.messageDigest covers.  CMS_verify is invoked without
+  // CMS_NO_CONTENT_VERIFY, so the message digest of these bytes must match
+  // the signed messageDigest attribute or verification fails.
+  //
+  DataBio = BIO_new_mem_buf (InData, (int)DataLength);
+  if (DataBio == NULL) {
+    goto _Exit;
+  }
+
+  //
+  // Verify the CMS signed data structure.
+  //
+  Status = (BOOLEAN)CMS_verify (
+                      Cms,
+                      NULL,
+                      CertStore,
+                      DataBio,
+                      NULL,
+                      CMS_BINARY
+                      );
+  if (!Status) {
+    //
+    // Drain OpenSSL's per-thread error queue so a later, unrelated call
+    // into libcrypto does not see (and potentially act on) stale errors
+    // left over from this failure.
+    //
+    DEBUG ((DEBUG_ERROR, "CMS_verify failed: 0x%Lx\n", (UINT64)ERR_peek_last_error ()));
+    ERR_clear_error ();
+  }
 
 _Exit:
   //
@@ -922,7 +926,7 @@ _Exit:
   BIO_free (DataBio);
   X509_free (Cert);
   X509_STORE_free (CertStore);
-  PKCS7_free (Pkcs7);
+  CMS_ContentInfo_free (Cms);
 
   if (!Wrapped) {
     OPENSSL_free (SignedData);

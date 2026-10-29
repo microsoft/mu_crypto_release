@@ -51,7 +51,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
   @param[out] WrapDataSize Length of ContentInfo structure in bytes.
 
   @retval     TRUE         The operation is finished successfully.
-  @retval     FALSE        The operation is failed due to lack of resources.
+  @retval     FALSE        The input is invalid or resources are unavailable.
 
 **/
 BOOLEAN
