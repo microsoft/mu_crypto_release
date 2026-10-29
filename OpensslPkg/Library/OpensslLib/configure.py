@@ -30,7 +30,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-chacha',
         'no-cmac',
         'no-cmp',
-        'no-cms',
         'no-ct',
         'no-deprecated',
         'no-des',
@@ -53,8 +52,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-module',
         'no-md4',
         'no-mdc2',
-        'no-ml-dsa',
-        'no-ml-kem',
         'no-multiblock',
         'no-nextprotoneg',
         'no-pic',
@@ -75,7 +72,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-shared',
         'no-siphash',
         'no-siv',
-        'no-slh-dsa',
         'no-sm2',
         'no-sm4',
         'no-sock',
@@ -87,7 +83,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-static-engine',
         'no-stdio',
         'no-threads',
-        'no-tls1_3',
         'no-ts',
         'no-ui-console',
         'no-whirlpool',
@@ -410,7 +405,7 @@ def main():
 
     update_inf('OpensslLibFull.inf',
                libcrypto_sources(cfg) + libssl_sources(cfg),
-               defines)
+               defines=defines)
 
     # noaccel - ec disabled
     openssl_configure(openssldir, 'UEFI', ec = False);

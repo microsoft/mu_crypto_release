@@ -92,9 +92,6 @@ extern "C" {
 # ifndef OPENSSL_NO_CMP
 #  define OPENSSL_NO_CMP
 # endif
-# ifndef OPENSSL_NO_CMS
-#  define OPENSSL_NO_CMS
-# endif
 # ifndef OPENSSL_NO_CRMF
 #  define OPENSSL_NO_CRMF
 # endif
@@ -218,12 +215,6 @@ extern "C" {
 # ifndef OPENSSL_NO_MDC2
 #  define OPENSSL_NO_MDC2
 # endif
-# ifndef OPENSSL_NO_ML_DSA
-#  define OPENSSL_NO_ML_DSA
-# endif
-# ifndef OPENSSL_NO_ML_KEM
-#  define OPENSSL_NO_ML_KEM
-# endif
 # ifndef OPENSSL_NO_MSAN
 #  define OPENSSL_NO_MSAN
 # endif
@@ -287,9 +278,6 @@ extern "C" {
 # ifndef OPENSSL_NO_SIV
 #  define OPENSSL_NO_SIV
 # endif
-# ifndef OPENSSL_NO_SLH_DSA
-#  define OPENSSL_NO_SLH_DSA
-# endif
 # ifndef OPENSSL_NO_SM2
 #  define OPENSSL_NO_SM2
 # endif
@@ -331,9 +319,6 @@ extern "C" {
 # endif
 # ifndef OPENSSL_NO_TLS_DEPRECATED_EC
 #  define OPENSSL_NO_TLS_DEPRECATED_EC
-# endif
-# ifndef OPENSSL_NO_TLS1_3
-#  define OPENSSL_NO_TLS1_3
 # endif
 # ifndef OPENSSL_NO_TRACE
 #  define OPENSSL_NO_TRACE
