@@ -94,6 +94,14 @@ TlsSetVersion (
       SSL_set_min_proto_version (TlsConn->Ssl, TLS1_2_VERSION);
       SSL_set_max_proto_version (TlsConn->Ssl, TLS1_2_VERSION);
       break;
+    case TLS1_3_VERSION:
+      if ((SSL_set_min_proto_version (TlsConn->Ssl, TLS1_3_VERSION) != 1) ||
+          (SSL_set_max_proto_version (TlsConn->Ssl, TLS1_3_VERSION) != 1))
+      {
+        return EFI_UNSUPPORTED;
+      }
+
+      break;
     default:
       //
       // Unsupported Protocol Version
@@ -181,9 +189,12 @@ TlsSetCipherList (
   UINTN             MappedCipherCount;
   UINTN             CipherStringSize;
   UINTN             Index;
+  UINTN             Family;
   INT32             StackIdx;
+  INT32             Ret;
   CHAR8             *CipherString;
   CHAR8             *CipherStringPosition;
+  CHAR8             *CipherStrings[2];
 
   STACK_OF (SSL_CIPHER)      *OpensslCipherStack;
   CONST SSL_CIPHER  *OpensslCipher;
@@ -193,6 +204,10 @@ TlsSetCipherList (
   TlsConn = (TLS_CONNECTION *)Tls;
   if ((TlsConn == NULL) || (TlsConn->Ssl == NULL) || (CipherId == NULL)) {
     return EFI_INVALID_PARAMETER;
+  }
+
+  if (CipherNum == 0) {
+    return EFI_UNSUPPORTED;
   }
 
   //
@@ -213,7 +228,11 @@ TlsSetCipherList (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  OpensslCipherStack = SSL_get_ciphers (TlsConn->Ssl);
+  //
+  // Use the context's available ciphers so a previously cleared connection
+  // cipher family can be selected again.
+  //
+  OpensslCipherStack = SSL_CTX_get_ciphers (SSL_get_SSL_CTX (TlsConn->Ssl));
 
   //
   // Map the cipher IDs, and count the number of bytes for the full
@@ -279,7 +298,7 @@ TlsSetCipherList (
 
   //
   // Verify that at least one IANA cipher ID could be mapped; account for the
-  // terminating NUL character in CipherStringSize; allocate CipherString.
+  // terminating NUL characters for both cipher families; allocate CipherString.
   //
   if (MappedCipherCount == 0) {
     DEBUG ((
@@ -292,7 +311,7 @@ TlsSetCipherList (
     goto FreeMappedCipher;
   }
 
-  Status = SafeUintnAdd (CipherStringSize, 1, &CipherStringSize);
+  Status = SafeUintnAdd (CipherStringSize, 2, &CipherStringSize);
   if (EFI_ERROR (Status)) {
     Status = EFI_OUT_OF_RESOURCES;
     goto FreeMappedCipher;
@@ -305,77 +324,55 @@ TlsSetCipherList (
   }
 
   //
-  // Go over the collected mappings and populate CipherString.
+  // Keep the relative preference order within each protocol's cipher list.
+  // Both lists must be set, including an empty list for an unrequested family.
   //
   CipherStringPosition = CipherString;
-  for (Index = 0; Index < MappedCipherCount; Index++) {
-    OpensslCipher           = MappedCipher[Index];
-    OpensslCipherName       = SSL_CIPHER_get_name (OpensslCipher);
-    OpensslCipherNameLength = AsciiStrLen (OpensslCipherName);
-    //
-    // Append the colon (":") prefix except for the first mapping, then append
-    // OpensslCipherName.
-    //
-    if (Index > 0) {
-      *(CipherStringPosition++) = ':';
+  for (Family = 0; Family < ARRAY_SIZE (CipherStrings); Family++) {
+    CipherStrings[Family] = CipherStringPosition;
+    for (Index = 0; Index < MappedCipherCount; Index++) {
+      OpensslCipher = MappedCipher[Index];
+      if ((AsciiStrCmp (SSL_CIPHER_get_version (OpensslCipher), "TLSv1.3") == 0) != (Family == 1)) {
+        continue;
+      }
+
+      OpensslCipherName       = SSL_CIPHER_get_name (OpensslCipher);
+      OpensslCipherNameLength = AsciiStrLen (OpensslCipherName);
+      if (CipherStringPosition != CipherStrings[Family]) {
+        *(CipherStringPosition++) = ':';
+      }
+
+      CopyMem (CipherStringPosition, OpensslCipherName, OpensslCipherNameLength);
+      CipherStringPosition += OpensslCipherNameLength;
     }
 
-    CopyMem (
-      CipherStringPosition,
-      OpensslCipherName,
-      OpensslCipherNameLength
-      );
-    CipherStringPosition += OpensslCipherNameLength;
+    *(CipherStringPosition++) = '\0';
   }
 
-  //
-  // NUL-terminate CipherString.
-  //
-  *(CipherStringPosition++) = '\0';
-  ASSERT (CipherStringPosition == CipherString + CipherStringSize);
-
-  //
-  // Log CipherString for debugging. CipherString can be very long if the
-  // caller provided a large CipherId array, so log CipherString in segments of
-  // 79 non-newline characters. (MAX_DEBUG_MESSAGE_LENGTH is usually 0x100 in
-  // DebugLib instances.)
-  //
-  DEBUG_CODE_BEGIN ();
-  UINTN  FullLength;
-  UINTN  SegmentLength;
-
-  FullLength = CipherStringSize - 1;
-  DEBUG ((
-    DEBUG_VERBOSE,
-    "%a:%a: CipherString={\n",
-    gEfiCallerBaseName,
-    __func__
-    ));
-  for (CipherStringPosition = CipherString;
-       CipherStringPosition < CipherString + FullLength;
-       CipherStringPosition += SegmentLength)
-  {
-    SegmentLength = FullLength - (CipherStringPosition - CipherString);
-    if (SegmentLength > 79) {
-      SegmentLength = 79;
-    }
-
-    DEBUG ((DEBUG_VERBOSE, "%.*a\n", SegmentLength, CipherStringPosition));
-  }
-
-  DEBUG ((DEBUG_VERBOSE, "}\n"));
-  //
-  // Restore the pre-debug value of CipherStringPosition by skipping over the
-  // trailing NUL.
-  //
-  CipherStringPosition++;
-  ASSERT (CipherStringPosition == CipherString + CipherStringSize);
-  DEBUG_CODE_END ();
+  ASSERT (CipherStringPosition <= CipherString + CipherStringSize);
 
   //
   // Sets the ciphers for use by the Tls object.
   //
-  if (SSL_set_cipher_list (TlsConn->Ssl, CipherString) <= 0) {
+  // OpenSSL clears the legacy list but reports NO_CIPHER_MATCH for an empty list.
+  // Discard only that expected error; allocation failures must still fail.
+  //
+  ERR_set_mark ();
+  Ret = SSL_set_cipher_list (TlsConn->Ssl, CipherStrings[0]);
+  if ((Ret <= 0) && (CipherStrings[0][0] == '\0') &&
+      (ERR_GET_LIB (ERR_peek_last_error ()) == ERR_LIB_SSL) &&
+      (ERR_GET_REASON (ERR_peek_last_error ()) == SSL_R_NO_CIPHER_MATCH))
+  {
+    ERR_pop_to_mark ();
+  } else {
+    ERR_clear_last_mark ();
+    if (Ret <= 0) {
+      Status = EFI_UNSUPPORTED;
+      goto FreeCipherString;
+    }
+  }
+
+  if (SSL_set_ciphersuites (TlsConn->Ssl, CipherStrings[1]) <= 0) {
     Status = EFI_UNSUPPORTED;
     goto FreeCipherString;
   }
@@ -673,7 +670,9 @@ TlsSetSessionId (
     return EFI_UNSUPPORTED;
   }
 
-  SSL_SESSION_set1_id (Session, (const unsigned char *)SessionId, SessionIdLen);
+  if (SSL_SESSION_set1_id (Session, (const unsigned char *)SessionId, SessionIdLen) != 1) {
+    return EFI_INVALID_PARAMETER;
+  }
 
   return EFI_SUCCESS;
 }
@@ -1125,12 +1124,12 @@ TlsSetSignatureAlgoList (
 }
 
 /**
-  Set the EC curve to be used for TLS flows
+  Set the supported group (EC curve or PQC hybrid) for TLS flows.
 
-  This function sets the EC curve to be used for TLS flows.
+  This function sets the supported group for TLS key exchange.
 
   @param[in]  Tls                Pointer to a TLS object.
-  @param[in]  Data               An EC named curve as defined in section 5.1.1 of RFC 4492.
+  @param[in]  Data               An IANA TLS Supported Group identifier as UINT32.
   @param[in]  DataSize           Size of Data, it should be sizeof (UINT32)
 
   @retval  EFI_SUCCESS           The EC curve was set successfully.
@@ -1147,9 +1146,7 @@ TlsSetEcCurve (
   )
 {
   TLS_CONNECTION  *TlsConn;
-  EC_KEY          *EcKey;
-  INT32           Nid;
-  INT32           Ret;
+  CONST CHAR8     *GroupName;
 
   TlsConn = (TLS_CONNECTION *)Tls;
 
@@ -1159,36 +1156,37 @@ TlsSetEcCurve (
 
   switch (*((UINT32 *)Data)) {
     case TlsEcNamedCurveSecp256r1:
-      return EFI_UNSUPPORTED;
+      GroupName = "P-256";
+      break;
     case TlsEcNamedCurveSecp384r1:
-      Nid = NID_secp384r1;
+      GroupName = "P-384";
       break;
     case TlsEcNamedCurveSecp521r1:
-      Nid = NID_secp521r1;
+      GroupName = "P-521";
       break;
     case TlsEcNamedCurveX25519:
-      Nid = NID_X25519;
+      GroupName = "X25519";
       break;
     case TlsEcNamedCurveX448:
-      Nid = NID_X448;
+      GroupName = "X448";
+      break;
+    //
+    // IANA TLS Supported Groups: ML-KEM hybrid key exchange.
+    //
+    case 0x11EB:
+      GroupName = "SecP256r1MLKEM768";
+      break;
+    case 0x11EC:
+      GroupName = "X25519MLKEM768";
+      break;
+    case 0x11ED:
+      GroupName = "SecP384r1MLKEM1024";
       break;
     default:
       return EFI_UNSUPPORTED;
   }
 
-  if (SSL_set1_curves (TlsConn->Ssl, &Nid, 1) != 1) {
-    return EFI_UNSUPPORTED;
-  }
-
-  EcKey = EC_KEY_new_by_curve_name (Nid);
-  if (EcKey == NULL) {
-    return EFI_UNSUPPORTED;
-  }
-
-  Ret = SSL_set_tmp_ecdh (TlsConn->Ssl, EcKey);
-  EC_KEY_free (EcKey);
-
-  if (Ret != 1) {
+  if (SSL_set1_groups_list (TlsConn->Ssl, GroupName) != 1) {
     return EFI_UNSUPPORTED;
   }
 
@@ -1399,8 +1397,8 @@ TlsGetVerify (
   specified TLS connection.
 
   @param[in]      Tls             Pointer to the TLS object.
-  @param[in,out]  SessionId       Buffer to contain the returned session ID.
-  @param[in,out]  SessionIdLen    The length of Session ID in bytes.
+  @param[out]     SessionId       Buffer of at least 32 bytes for the session ID.
+  @param[out]     SessionIdLen    The returned length of Session ID in bytes.
 
   @retval  EFI_SUCCESS           The Session ID was returned successfully.
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
@@ -1418,6 +1416,7 @@ TlsGetSessionId (
   TLS_CONNECTION  *TlsConn;
   SSL_SESSION     *Session;
   CONST UINT8     *SslSessionId;
+  unsigned int    SslSessionIdLen;
 
   TlsConn = (TLS_CONNECTION *)Tls;
   Session = NULL;
@@ -1431,8 +1430,9 @@ TlsGetSessionId (
     return EFI_UNSUPPORTED;
   }
 
-  SslSessionId = SSL_SESSION_get_id (Session, (unsigned int *)SessionIdLen);
-  CopyMem (SessionId, SslSessionId, *SessionIdLen);
+  SslSessionId  = SSL_SESSION_get_id (Session, &SslSessionIdLen);
+  *SessionIdLen = (UINT16)SslSessionIdLen;
+  CopyMem (SessionId, SslSessionId, SslSessionIdLen);
 
   return EFI_SUCCESS;
 }
