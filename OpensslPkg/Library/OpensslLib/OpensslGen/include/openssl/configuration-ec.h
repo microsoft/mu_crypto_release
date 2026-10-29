@@ -38,8 +38,8 @@ extern "C" {
 # ifndef OPENSSL_NO_ACVP_TESTS
 #  define OPENSSL_NO_ACVP_TESTS
 # endif
-# ifndef OPENSSL_NO_AFALGENG
-#  define OPENSSL_NO_AFALGENG
+# ifndef OPENSSL_NO_ALLOCFAIL_TESTS
+#  define OPENSSL_NO_ALLOCFAIL_TESTS
 # endif
 # ifndef OPENSSL_NO_APPS
 #  define OPENSSL_NO_APPS
@@ -55,6 +55,9 @@ extern "C" {
 # endif
 # ifndef OPENSSL_NO_ASYNC
 #  define OPENSSL_NO_ASYNC
+# endif
+# ifndef OPENSSL_NO_ATEXIT
+#  define OPENSSL_NO_ATEXIT
 # endif
 # ifndef OPENSSL_NO_AUTOERRINIT
 #  define OPENSSL_NO_AUTOERRINIT
@@ -77,9 +80,6 @@ extern "C" {
 # ifndef OPENSSL_NO_CAMELLIA
 #  define OPENSSL_NO_CAMELLIA
 # endif
-# ifndef OPENSSL_NO_CAPIENG
-#  define OPENSSL_NO_CAPIENG
-# endif
 # ifndef OPENSSL_NO_CAST
 #  define OPENSSL_NO_CAST
 # endif
@@ -92,20 +92,17 @@ extern "C" {
 # ifndef OPENSSL_NO_CMP
 #  define OPENSSL_NO_CMP
 # endif
-# ifndef OPENSSL_NO_CMS
-#  define OPENSSL_NO_CMS
-# endif
 # ifndef OPENSSL_NO_CRMF
 #  define OPENSSL_NO_CRMF
 # endif
 # ifndef OPENSSL_NO_CRYPTO_MDEBUG
 #  define OPENSSL_NO_CRYPTO_MDEBUG
 # endif
-# ifndef OPENSSL_NO_CRYPTO_MDEBUG_BACKTRACE
-#  define OPENSSL_NO_CRYPTO_MDEBUG_BACKTRACE
-# endif
 # ifndef OPENSSL_NO_CT
 #  define OPENSSL_NO_CT
+# endif
+# ifndef OPENSSL_NO_CT_VALIDATION
+#  define OPENSSL_NO_CT_VALIDATION
 # endif
 # ifndef OPENSSL_NO_DEFAULT_THREAD_POOL
 #  define OPENSSL_NO_DEFAULT_THREAD_POOL
@@ -118,9 +115,6 @@ extern "C" {
 # endif
 # ifndef OPENSSL_NO_DES
 #  define OPENSSL_NO_DES
-# endif
-# ifndef OPENSSL_NO_DEVCRYPTOENG
-#  define OPENSSL_NO_DEVCRYPTOENG
 # endif
 # ifndef OPENSSL_NO_DGRAM
 #  define OPENSSL_NO_DGRAM
@@ -146,8 +140,17 @@ extern "C" {
 # ifndef OPENSSL_NO_DTLS1_2_METHOD
 #  define OPENSSL_NO_DTLS1_2_METHOD
 # endif
+# ifndef OPENSSL_NO_DTLS1_3
+#  define OPENSSL_NO_DTLS1_3
+# endif
+# ifndef OPENSSL_NO_DYNAMIC_ENGINE
+#  define OPENSSL_NO_DYNAMIC_ENGINE
+# endif
 # ifndef OPENSSL_NO_EC2M
 #  define OPENSSL_NO_EC2M
+# endif
+# ifndef OPENSSL_NO_EC_EXPLICIT_CURVES
+#  define OPENSSL_NO_EC_EXPLICIT_CURVES
 # endif
 # ifndef OPENSSL_NO_EC_NISTP_64_GCC_128
 #  define OPENSSL_NO_EC_NISTP_64_GCC_128
@@ -200,8 +203,8 @@ extern "C" {
 # ifndef OPENSSL_NO_KTLS
 #  define OPENSSL_NO_KTLS
 # endif
-# ifndef OPENSSL_NO_LOADERENG
-#  define OPENSSL_NO_LOADERENG
+# ifndef OPENSSL_NO_LMS
+#  define OPENSSL_NO_LMS
 # endif
 # ifndef OPENSSL_NO_MD2
 #  define OPENSSL_NO_MD2
@@ -211,12 +214,6 @@ extern "C" {
 # endif
 # ifndef OPENSSL_NO_MDC2
 #  define OPENSSL_NO_MDC2
-# endif
-# ifndef OPENSSL_NO_ML_DSA
-#  define OPENSSL_NO_ML_DSA
-# endif
-# ifndef OPENSSL_NO_ML_KEM
-#  define OPENSSL_NO_ML_KEM
 # endif
 # ifndef OPENSSL_NO_MSAN
 #  define OPENSSL_NO_MSAN
@@ -232,9 +229,6 @@ extern "C" {
 # endif
 # ifndef OPENSSL_NO_OCSP
 #  define OPENSSL_NO_OCSP
-# endif
-# ifndef OPENSSL_NO_PADLOCKENG
-#  define OPENSSL_NO_PADLOCKENG
 # endif
 # ifndef OPENSSL_NO_PIE
 #  define OPENSSL_NO_PIE
@@ -284,9 +278,6 @@ extern "C" {
 # ifndef OPENSSL_NO_SIV
 #  define OPENSSL_NO_SIV
 # endif
-# ifndef OPENSSL_NO_SLH_DSA
-#  define OPENSSL_NO_SLH_DSA
-# endif
 # ifndef OPENSSL_NO_SM2
 #  define OPENSSL_NO_SM2
 # endif
@@ -305,14 +296,14 @@ extern "C" {
 # ifndef OPENSSL_NO_SSL_TRACE
 #  define OPENSSL_NO_SSL_TRACE
 # endif
-# ifndef OPENSSL_NO_SSL3
-#  define OPENSSL_NO_SSL3
-# endif
-# ifndef OPENSSL_NO_SSL3_METHOD
-#  define OPENSSL_NO_SSL3_METHOD
-# endif
 # ifndef OPENSSL_NO_SSLKEYLOG
 #  define OPENSSL_NO_SSLKEYLOG
+# endif
+# ifndef OPENSSL_NO_STATIC_ENGINE
+#  define OPENSSL_NO_STATIC_ENGINE
+# endif
+# ifndef OPENSSL_NO_STATIC_VCRUNTIME
+#  define OPENSSL_NO_STATIC_VCRUNTIME
 # endif
 # ifndef OPENSSL_NO_STDIO
 #  define OPENSSL_NO_STDIO
@@ -329,9 +320,6 @@ extern "C" {
 # ifndef OPENSSL_NO_TLS_DEPRECATED_EC
 #  define OPENSSL_NO_TLS_DEPRECATED_EC
 # endif
-# ifndef OPENSSL_NO_TLS1_3
-#  define OPENSSL_NO_TLS1_3
-# endif
 # ifndef OPENSSL_NO_TRACE
 #  define OPENSSL_NO_TRACE
 # endif
@@ -346,6 +334,9 @@ extern "C" {
 # endif
 # ifndef OPENSSL_NO_UNIT_TEST
 #  define OPENSSL_NO_UNIT_TEST
+# endif
+# ifndef OPENSSL_NO_UNIT_TESTS
+#  define OPENSSL_NO_UNIT_TESTS
 # endif
 # ifndef OPENSSL_NO_UNSTABLE_QLOG
 #  define OPENSSL_NO_UNSTABLE_QLOG
@@ -374,9 +365,6 @@ extern "C" {
 # ifndef OPENSSL_NO_ZSTD_DYNAMIC
 #  define OPENSSL_NO_ZSTD_DYNAMIC
 # endif
-# ifndef OPENSSL_NO_DYNAMIC_ENGINE
-#  define OPENSSL_NO_DYNAMIC_ENGINE
-# endif
 
 /* clang-format on */
 
@@ -386,7 +374,10 @@ extern "C" {
 /* clang-format on */
 
 /*
- * The following are cipher-specific, but are part of the public API.
+ * The UEFI build supports both 32-bit and 64-bit builds from a single run
+ * of the Configure script.  To allow this, they define THIRTY_TWO_BIT and
+ * SIXTY_FOUR_BIT appropriately for their builds, and we should not touch
+ * them in that case.
  */
 #if !defined(OPENSSL_SYS_UEFI)
     /* clang-format off */
@@ -404,6 +395,9 @@ extern "C" {
 /* clang-format on */
 #endif
 
+/*
+ * The following are cipher-specific, but are part of the public API.
+ */
 /* clang-format off */
 # define RC4_INT unsigned int
 /* clang-format on */

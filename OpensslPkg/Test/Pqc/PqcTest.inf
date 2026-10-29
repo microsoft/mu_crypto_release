@@ -1,0 +1,31 @@
+## @file
+# Test the production UEFI provider and CMS verification path.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = PqcTest
+  FILE_GUID      = 745B5039-82CC-4880-BEF7-FBDF6C3D26F2
+  MODULE_TYPE    = HOST_APPLICATION
+  VERSION_STRING = 1.0
+
+[Sources]
+  PqcTest.c
+  PqcFixtures.h
+
+[Packages]
+  CryptoPkg/CryptoPkg.dec
+  MdePkg/MdePkg.dec
+  OpensslPkg/OpensslPkg.dec
+  UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
+
+[LibraryClasses]
+  BaseCryptLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  OpensslLib
+  UnitTestLib

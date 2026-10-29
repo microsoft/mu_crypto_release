@@ -30,7 +30,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-chacha',
         'no-cmac',
         'no-cmp',
-        'no-cms',
         'no-ct',
         'no-deprecated',
         'no-des',
@@ -53,8 +52,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-module',
         'no-md4',
         'no-mdc2',
-        'no-ml-dsa',
-        'no-ml-kem',
         'no-multiblock',
         'no-nextprotoneg',
         'no-pic',
@@ -75,7 +72,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-shared',
         'no-siphash',
         'no-siv',
-        'no-slh-dsa',
         'no-sm2',
         'no-sm4',
         'no-sock',
@@ -87,7 +83,6 @@ def openssl_configure(openssldir, target, ec = True):
         'no-static-engine',
         'no-stdio',
         'no-threads',
-        'no-tls1_3',
         'no-ts',
         'no-ui-console',
         'no-whirlpool',
@@ -142,6 +137,8 @@ def copy_generated_file(src, dst):
     src_file = []
     with open(src, 'r') as fsrc:
         src_file = fsrc.readlines()
+    while src_file and not src_file[-1].strip():
+        src_file.pop()
     with open(dst, 'w') as fdst:
         for lines in range(len(src_file)):
             s = src_file[lines]
@@ -162,7 +159,7 @@ def generate_files(openssldir, opensslgendir, asm, filelist):
             if 'IA32-MSFT' in asm:
                 filename = filename.replace('.S', '.nasm')
             elif 'X64-MSFT' in asm:
-                filename = filename.replace('.s', '.nasm')
+                filename = filename.replace('.S', '.nasm').replace('.s', '.nasm')
             dst = os.path.join(opensslgendir, asm, filename)
         else:
             dst = os.path.join(opensslgendir, filename)
@@ -170,10 +167,11 @@ def generate_files(openssldir, opensslgendir, asm, filelist):
         copy_generated_file(src, dst)
 
 def generate_include_files(openssldir, opensslgendir, asm, cfg):
-    """ Generate openssl include files """
+    """ Generate openssl include files and .inc templates """
     print('# generate include files')
     filelist = cfg['unified_info']['generate'].keys()
-    filelist = list(filter(lambda f: 'include' in f, filelist))
+    filelist = list(filter(lambda f: ('include' in f or f.endswith(('.h', '.inc')))
+                           and not f.endswith('buildinf.h'), filelist))
     generate_files(openssldir, opensslgendir, asm, filelist)
 
 def generate_library_files(openssldir, opensslgendir, asm, cfg, obj):
@@ -225,6 +223,8 @@ def asm_filter_fn(filename):
         '/ec/',
         'ECP_NISTZ256_ASM',
         'X25519_ASM',
+        '/sm3/',
+        'OPENSSL_SM3_ASM',
     ]
     for item in exclude:
         if item in filename:
@@ -263,6 +263,10 @@ def sources_filter_fn(filename):
         'defltprov.c',
         'baseprov.c',
         'provider_predefined.c',
+        # Replaced by OpensslStub/EncB64Avx2.c: the upstream file includes
+        # <immintrin.h>, which breaks the UEFI/MSVC build (CRT header size_t
+        # redefinition) because OpenSSL is compiled with _WIN64/_MSC_VER undefined.
+        'enc_b64_avx2.c',
         'ecp_nistz256.c',
         'x86_64-gcc.c',
         'armcap.c',
@@ -338,7 +342,7 @@ def update_MSFT_asm_format(asm, filelist):
             filelist[file_index] = filelist[file_index].replace('.S', '.nasm')
     elif 'X64-MSFT' in asm:
         for file_index in range(len(filelist)):
-            filelist[file_index] = filelist[file_index].replace('.s', '.nasm')
+            filelist[file_index] = filelist[file_index].replace('.S', '.nasm').replace('.s', '.nasm')
 
 def main():
     # prepare
@@ -401,7 +405,7 @@ def main():
 
     update_inf('OpensslLibFull.inf',
                libcrypto_sources(cfg) + libssl_sources(cfg),
-               defines)
+               defines=defines)
 
     # noaccel - ec disabled
     openssl_configure(openssldir, 'UEFI', ec = False);

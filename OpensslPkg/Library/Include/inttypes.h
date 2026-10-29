@@ -7,3 +7,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include <CrtLibSupport.h>
+
+#define PRIX32  "X"
+#define PRId64  "lld"
+#define PRIu64  "llu"

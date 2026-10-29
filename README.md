@@ -5,13 +5,38 @@
 [![Host-Based Unit Tests](https://github.com/microsoft/mu_crypto_release/actions/workflows/host-based-test-runner.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/host-based-test-runner.yml)
 [![CodeQL](https://github.com/microsoft/mu_crypto_release/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/codeql.yml)
 [![Coverage](https://github.com/microsoft/mu_crypto_release/actions/workflows/coverage.yml/badge.svg?branch=main)](https://github.com/microsoft/mu_crypto_release/actions/workflows/coverage.yml)
-[![OpenSSL](https://img.shields.io/badge/OpenSSL-3.5.8-blue)](https://github.com/openssl/openssl/releases/tag/openssl-3.5.8)
+[![OpenSSL](https://img.shields.io/badge/OpenSSL-4.1.0-blue)](https://github.com/openssl/openssl/releases/tag/openssl-4.1.0)
 [![Mbed TLS](https://img.shields.io/badge/Mbed_TLS-3.6.5-blue)](https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.5)
 
 This repository hosts the cryptographic library packages for [Project Mu](https://microsoft.github.io/mu/).
 It decomposes the monolithic [CryptoPkg](https://github.com/tianocore/edk2/tree/master/CryptoPkg) into
 independent, backend-specific packages so that each crypto implementation can be built, tested, and
 maintained separately.
+
+## OpenSSL Version
+
+OpensslPkg pins the OpenSSL 4.1.0 release. CMS, ML-DSA, ML-KEM, SLH-DSA,
+and TLS 1.3 are enabled in the UEFI OpenSSL provider. `Pkcs7Verify` uses
+CMS verification while retaining its existing trust and detached-content
+contract; `AuthenticodeVerify` converts legacy inline PKCS#7 content to
+detached form for verification.
+
+The provider exposes all three ML-DSA and ML-KEM parameter sets and all twelve
+SLH-DSA variants. TlsLib accepts TLS 1.3 AES-GCM cipher suites and the
+X25519MLKEM768, SecP256r1MLKEM768, and SecP384r1MLKEM1024 hybrid groups.
+Explicit cipher lists configure both protocol families: requesting only
+TLS 1.2 suites disables TLS 1.3 suites, and vice versa. Unsupported suites
+are filtered without enabling an unrequested cipher family.
+
+This enables library/provider operations, not new OneCrypto public services,
+composite signatures, or a platform Secure Boot enrollment policy.
+
+OpenSSL 4.1 is an interim, non-LTS dependency. A subsequent update is planned
+for OpenSSL 4.2 when it is released.
+
+Generated headers, assembly, and INF source lists must be regenerated together
+using `python OpensslPkg/Library/OpensslLib/configure.py` after changing the
+OpenSSL revision or configuration.
 
 ## Repository Structure
 
@@ -53,6 +78,35 @@ stuart_ci_build -c .pytool/CISettings.py -p <Pkg> -t NOOPT -d HostUnitTestCompil
 
 > **Note:** MbedTlsPkg host-based tests are currently disabled due to known test
 > failures. See the TODO in `host-based-test-runner.yml` for details.
+
+The OpenSSL host test DSC also includes `PqcTest` (CMS verification and
+negative cases, ML-KEM round trips, and SLH-DSA registration) and `Tls13Test`
+(cipher-list policy, TLS versions, and supported groups). These link the UEFI
+provider, not the system OpenSSL provider. TLS configuration tests do not
+replace a handshake against an independent TLS server.
+
+CMS fixtures are public certificates and signatures generated with an
+independent native OpenSSL 4.1+ executable:
+
+```bash
+python OpensslPkg/Test/Pqc/GenerateFixtures.py --openssl /path/to/openssl
+```
+
+Fixture private keys are temporary and are not retained. The UEFI library
+continues to omit OpenSSL encoder support; enabling verification does not
+enable certificate issuance or private-key export.
+
+On Linux, exercise the built UEFI TLS client against an independent native
+OpenSSL 4.1+ server (eight TLS 1.3 cipher/group combinations and two TLS 1.2
+controls):
+
+```bash
+python OpensslPkg/Test/Tls13/RunInterop.py --openssl /path/to/openssl \
+  --client Build/OpensslPkg/HostTest/NOOPT_GCC/X64/Tls13Test
+```
+
+This uses temporary, self-signed certificates with client certificate-trust
+checks disabled. It validates protocol/cipher/group negotiation, not PKI policy.
 
 ## OneCryptoPkg
 

@@ -1,4 +1,4 @@
-#include "arm_arch.h"
+#include "arch/arm_arch.h"
 
 .text
 .arch   armv8-a+crypto
@@ -115,6 +115,16 @@ _armv8_sve_probe:
 _armv8_sve2_probe:
         AARCH64_VALID_CALL_TARGET
 .long   0x04e03400      // xar z0.d,z0.d,z0.d
+        ret
+
+
+.globl  _armv8_sve_get_vl_bytes
+.def _armv8_sve_get_vl_bytes
+   .type 32
+.endef
+_armv8_sve_get_vl_bytes:
+        AARCH64_VALID_CALL_TARGET
+.long   0x0420e3e0      // cntb x0
         ret
 
 
@@ -307,4 +317,3 @@ Loop_single_byte_rndrrs:
 .rndrrs_done:
         mov     x0,x2
         ret
-
