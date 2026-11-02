@@ -7,7 +7,7 @@
 **/
 
 #include <openssl/types.h>
-#include "crypto/arm_arch.h"
+#include "arch/arm_arch.h"
 
 #include <Library/BaseLib.h>
 

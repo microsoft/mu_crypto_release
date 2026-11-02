@@ -3,6 +3,7 @@
   Cryptographic Library.
 
 Copyright (c) 2009 - 2017, Intel Corporation. All rights reserved.<BR>
+Copyright (c) Microsoft Corporation.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -650,4 +651,423 @@ printf (
   )
 {
   return 0;
+}
+
+//
+// BasePrintLib uses different vararg types, hexadecimal case, string and newline
+// semantics. Only use it to convert bounded integer digits, not C format strings.
+// No allocations: these entry points are also used after ExitBootServices().
+//
+STATIC
+BOOLEAN
+CrtPrintWrite (
+  OUT CHAR8        *Buffer,
+  IN  UINTN        Size,
+  IN OUT UINTN     *Count,
+  IN  CONST CHAR8  *Text,
+  IN  CHAR8        Pad,
+  IN  UINTN        Length
+  )
+{
+  UINTN  CopyLength;
+
+  if (Length > (UINTN)INT_MAX - *Count) {
+    return FALSE;
+  }
+
+  if ((Size != 0) && (*Count < Size - 1)) {
+    CopyLength = MIN (Length, Size - 1 - *Count);
+    if (Text == NULL) {
+      SetMem (Buffer + *Count, CopyLength, (UINT8)Pad);
+    } else {
+      CopyMem (Buffer + *Count, Text, CopyLength);
+    }
+  }
+
+  *Count += Length;
+  return TRUE;
+}
+
+STATIC
+BOOLEAN
+CrtPrintNumber (
+  IN OUT CONST CHAR8  **Format,
+  OUT UINTN           *Number
+  )
+{
+  *Number = 0;
+  while ((**Format >= '0') && (**Format <= '9')) {
+    if (*Number > ((UINTN)INT_MAX - (**Format - '0')) / 10) {
+      return FALSE;
+    }
+
+    *Number = *Number * 10 + (**Format - '0');
+    (*Format)++;
+  }
+
+  return TRUE;
+}
+
+typedef enum {
+  CrtInt,
+  CrtChar,
+  CrtShort,
+  CrtLong,
+  CrtLongLong,
+  CrtIntMax,
+  CrtSize,
+  CrtPtrDiff
+} CRT_PRINT_LENGTH;
+
+/**
+  Allocation-free C integer/string formatter for OpenSSL.
+
+  Supports d/i/u/o/x/X, c/s/p, %%, standard flags, width, precision and
+  hh/h/l/ll/j/z/t integer modifiers. A NULL %s prints "<NULL>" (the historical
+  OpenSSL fallback). Floating point remains unsupported, matching OpenSSL 3.5's
+  UEFI formatter. Wide characters, %n and positional arguments also return -1,
+  as do malformed/overflowing formats. No limit is placed on format length.
+**/
+int
+vsnprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  va_list     args
+  )
+{
+  va_list           Marker;
+  UINTN             Count;
+  UINTN             Width;
+  UINTN             Precision;
+  UINTN             Length;
+  UINTN             Zeros;
+  UINTN             Padding;
+  UINTN             PrefixLength;
+  UINTN             Index;
+  INTN              Star;
+  UINT64            Value;
+  INT64             SignedValue;
+  UINT32            Remainder;
+  BOOLEAN           Left;
+  BOOLEAN           Plus;
+  BOOLEAN           Blank;
+  BOOLEAN           Alternate;
+  BOOLEAN           Zero;
+  BOOLEAN           HasPrecision;
+  BOOLEAN           Signed;
+  CHAR8             Conversion;
+  CHAR8             Digits[32];
+  CHAR8             Prefix[2];
+  CONST CHAR8       *Text;
+  CRT_PRINT_LENGTH  Modifier;
+
+  if ((fmt == NULL) || ((size != 0) && (buf == NULL))) {
+    return -1;
+  }
+
+  Count = 0;
+  va_copy (Marker, args);
+  while (*fmt != '\0') {
+    Text = fmt;
+    while ((*fmt != '\0') && (*fmt != '%')) {
+      fmt++;
+    }
+
+    if (!CrtPrintWrite (buf, size, &Count, Text, 0, (UINTN)(fmt - Text))) {
+      goto Error;
+    }
+
+    if (*fmt == '\0') {
+      break;
+    }
+
+    fmt++;
+    if (*fmt == '%') {
+      if (!CrtPrintWrite (buf, size, &Count, fmt++, 0, 1)) {
+        goto Error;
+      }
+
+      continue;
+    }
+
+    Left = Plus = Blank = Alternate = Zero = FALSE;
+    for ( ; ; fmt++) {
+      if (*fmt == '-') {
+        Left = TRUE;
+      } else if (*fmt == '+') {
+        Plus = TRUE;
+      } else if (*fmt == ' ') {
+        Blank = TRUE;
+      } else if (*fmt == '#') {
+        Alternate = TRUE;
+      } else if (*fmt == '0') {
+        Zero = TRUE;
+      } else {
+        break;
+      }
+    }
+
+    if (*fmt == '*') {
+      fmt++;
+      Star  = va_arg (Marker, int);
+      Left  = Left || (Star < 0);
+      Width = (Star < 0) ? (UINTN)(-(Star + 1)) + 1 : (UINTN)Star;
+      if (Width > INT_MAX) {
+        goto Error;
+      }
+    } else if (!CrtPrintNumber (&fmt, &Width)) {
+      goto Error;
+    }
+
+    HasPrecision = (*fmt == '.');
+    Precision    = 0;
+    if (HasPrecision) {
+      fmt++;
+      if (*fmt == '*') {
+        fmt++;
+        Star         = va_arg (Marker, int);
+        HasPrecision = (Star >= 0);
+        Precision    = HasPrecision ? (UINTN)Star : 0;
+      } else if (!CrtPrintNumber (&fmt, &Precision)) {
+        goto Error;
+      }
+    }
+
+    Modifier = CrtInt;
+    if (*fmt == 'h') {
+      Modifier = CrtShort;
+      if (*++fmt == 'h') {
+        Modifier = CrtChar;
+        fmt++;
+      }
+    } else if (*fmt == 'l') {
+      Modifier = CrtLong;
+      if (*++fmt == 'l') {
+        Modifier = CrtLongLong;
+        fmt++;
+      }
+    } else if (*fmt == 'j') {
+      Modifier = CrtIntMax;
+      fmt++;
+    } else if (*fmt == 'z') {
+      Modifier = CrtSize;
+      fmt++;
+    } else if (*fmt == 't') {
+      Modifier = CrtPtrDiff;
+      fmt++;
+    }
+
+    Conversion = *fmt;
+    if (Conversion == '\0') {
+      goto Error;
+    }
+
+    fmt++;
+    PrefixLength = Zeros = 0;
+    if ((Conversion == 's') || (Conversion == 'c')) {
+      if ((Modifier != CrtInt) || Plus || Blank || Alternate || Zero ||
+          ((Conversion == 'c') && HasPrecision))
+      {
+        goto Error;
+      }
+
+      if (Conversion == 's') {
+        Text = va_arg (Marker, CONST CHAR8 *);
+        if (Text == NULL) {
+          Text = "<NULL>";
+        }
+
+        for (Length = 0; (!HasPrecision || (Length < Precision)) && (Text[Length] != '\0'); Length++) {
+          if (Length == INT_MAX) {
+            goto Error;
+          }
+        }
+      } else {
+        Digits[0] = (CHAR8)va_arg (Marker, int);
+        Text      = Digits;
+        Length    = 1;
+      }
+    } else {
+      Signed = (Conversion == 'd') || (Conversion == 'i');
+      if (Conversion == 'p') {
+        if ((Modifier != CrtInt) || Plus || Blank || Alternate) {
+          goto Error;
+        }
+
+        Value     = (UINTN)va_arg (Marker, VOID *);
+        Alternate = TRUE;
+      } else {
+        if (!Signed && (Conversion != 'u') && (Conversion != 'o') &&
+            (Conversion != 'x') && (Conversion != 'X'))
+        {
+          goto Error;
+        }
+
+        if (Signed) {
+          switch (Modifier) {
+            case CrtLong:
+              SignedValue = va_arg (Marker, long);
+              break;
+            case CrtLongLong:
+              SignedValue = va_arg (Marker, long long);
+              break;
+            case CrtIntMax:
+              SignedValue = (sizeof (long) == sizeof (INT64)) ?
+                            va_arg (Marker, long) : va_arg (Marker, long long);
+              break;
+            case CrtSize:
+            case CrtPtrDiff:
+              SignedValue = va_arg (Marker, INTN);
+              break;
+            default:
+              SignedValue = va_arg (Marker, int);
+              if (Modifier == CrtChar) {
+                SignedValue = (signed char)SignedValue;
+              } else if (Modifier == CrtShort) {
+                SignedValue = (short)SignedValue;
+              }
+
+              break;
+          }
+
+          Value = (SignedValue < 0) ? 0 - (UINT64)SignedValue : (UINT64)SignedValue;
+          if ((SignedValue < 0) || Plus || Blank) {
+            Prefix[PrefixLength++] = (SignedValue < 0) ? '-' : (Plus ? '+' : ' ');
+          }
+        } else {
+          switch (Modifier) {
+            case CrtLong:
+              Value = va_arg (Marker, unsigned long);
+              break;
+            case CrtLongLong:
+              Value = va_arg (Marker, unsigned long long);
+              break;
+            case CrtIntMax:
+              Value = (sizeof (long) == sizeof (UINT64)) ?
+                      va_arg (Marker, unsigned long) : va_arg (Marker, unsigned long long);
+              break;
+            case CrtSize:
+            case CrtPtrDiff:
+              Value = va_arg (Marker, UINTN);
+              break;
+            case CrtChar:
+              Value = (unsigned char)va_arg (Marker, int);
+              break;
+            case CrtShort:
+              Value = (unsigned short)va_arg (Marker, int);
+              break;
+            default:
+              Value = va_arg (Marker, unsigned int);
+              break;
+          }
+        }
+      }
+
+      if (Conversion == 'o') {
+        Index = sizeof (Digits);
+        do {
+          Value           = DivU64x32Remainder (Value, 8, &Remainder);
+          Digits[--Index] = (CHAR8)('0' + Remainder);
+        } while (Value != 0);
+
+        Length = sizeof (Digits) - Index;
+        Text   = Digits + Index;
+      } else {
+        Length = AsciiSPrint (
+                   Digits,
+                   sizeof (Digits),
+                   (Signed || (Conversion == 'u')) ? "%Lu" : "%Lx",
+                   Value
+                   );
+        Text = Digits;
+        if (Conversion != 'X') {
+          for (Index = 0; Index < Length; Index++) {
+            if ((Digits[Index] >= 'A') && (Digits[Index] <= 'F')) {
+              Digits[Index] += 'a' - 'A';
+            }
+          }
+        }
+
+        if (Alternate && ((Conversion == 'p') ||
+                          (((Conversion == 'x') || (Conversion == 'X')) && (Value != 0))))
+        {
+          Prefix[PrefixLength++] = '0';
+          Prefix[PrefixLength++] = (Conversion == 'X') ? 'X' : 'x';
+        }
+      }
+
+      if (HasPrecision && (Precision == 0) && (Length == 1) && (Text[0] == '0')) {
+        Length = 0;
+      }
+
+      Zeros = (Precision > Length) ? Precision - Length : 0;
+      if ((Conversion == 'o') && Alternate && ((Length == 0) || (Text[0] != '0')) && (Zeros == 0)) {
+        Zeros = 1;
+      }
+
+      if (Zero && !Left && !HasPrecision && (Width > PrefixLength + Length)) {
+        Zeros = Width - PrefixLength - Length;
+      }
+    }
+
+    Padding = PrefixLength + Zeros + Length;
+    Padding = (Width > Padding) ? Width - Padding : 0;
+    if ((!Left && !CrtPrintWrite (buf, size, &Count, NULL, ' ', Padding)) ||
+        !CrtPrintWrite (buf, size, &Count, Prefix, 0, PrefixLength) ||
+        !CrtPrintWrite (buf, size, &Count, NULL, '0', Zeros) ||
+        !CrtPrintWrite (buf, size, &Count, Text, 0, Length) ||
+        (Left && !CrtPrintWrite (buf, size, &Count, NULL, ' ', Padding)))
+    {
+      goto Error;
+    }
+  }
+
+  if (size != 0) {
+    buf[MIN (Count, size - 1)] = '\0';
+  }
+
+  va_end (Marker);
+  return (int)Count;
+
+Error:
+  if (size != 0) {
+    buf[0] = '\0';
+  }
+
+  va_end (Marker);
+  return -1;
+}
+
+int
+snprintf (
+  char        *buf,
+  size_t      size,
+  const char  *fmt,
+  ...
+  )
+{
+  va_list  Args;
+  int      Result;
+
+  va_start (Args, fmt);
+  Result = vsnprintf (buf, size, fmt, Args);
+  va_end (Args);
+  return Result;
+}
+
+int
+sprintf (
+  char        *buf,
+  const char  *fmt,
+  ...
+  )
+{
+  va_list  Args;
+  int      Result;
+
+  va_start (Args, fmt);
+  Result = vsnprintf (buf, (UINTN)-1, fmt, Args);
+  va_end (Args);
+  return Result;
 }

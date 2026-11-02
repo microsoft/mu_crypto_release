@@ -14,6 +14,14 @@
 #include <openssl/asn1t.h>
 
 int
+ossl_statem_dtls_server_use_timer (
+  SSL_CONNECTION  *s
+  )
+{
+  return 0;
+}
+
+int
 ossl_statem_server_read_transition (
   SSL_CONNECTION  *s,
   int             mt
@@ -263,6 +271,7 @@ tls_construct_new_session_ticket (
 int
 tls_construct_cert_status_body (
   SSL_CONNECTION  *s,
+  OCSP_RESPONSE   *resp,
   WPACKET         *pkt
   )
 {
