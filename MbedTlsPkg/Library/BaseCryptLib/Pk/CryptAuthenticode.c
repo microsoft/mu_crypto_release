@@ -212,3 +212,52 @@ _Exit:
 
   return Status;
 }
+
+/**
+  Verifies a PE/COFF Authenticode Signature and, on success, would return the
+  cryptographically-verified signer certificate chain in EFI_CERT_STACK form.
+
+  The MbedTls BaseCryptLib instance cannot expose the certificate chain that
+  the verifier built, so the extended chain output is unsupported: when
+  CertChain is requested this returns EFI_UNSUPPORTED without verifying. When
+  no chain is requested it behaves exactly like AuthenticodeVerify().
+
+  See BaseCryptLib.h for the full contract.
+**/
+EFI_STATUS
+EFIAPI
+AuthenticodeVerifyEx (
+  IN  CONST UINT8  *AuthData,
+  IN  UINTN        DataSize,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertSize,
+  IN  CONST UINT8  *ImageHash,
+  IN  UINTN        HashSize,
+  OUT UINT8        **CertChain      OPTIONAL,
+  OUT UINTN        *CertChainSize   OPTIONAL
+  )
+{
+  if (CertChain != NULL) {
+    *CertChain = NULL;
+  }
+
+  if (CertChainSize != NULL) {
+    *CertChainSize = 0;
+  }
+
+  if ((AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // MbedTls cannot return the verifier-built certificate chain. Callers that
+  // only need the pass/fail verdict must pass CertChain == NULL.
+  //
+  if (CertChain != NULL) {
+    return EFI_UNSUPPORTED;
+  }
+
+  return AuthenticodeVerify (AuthData, DataSize, TrustedCert, CertSize, ImageHash, HashSize)
+         ? EFI_SUCCESS
+         : EFI_SECURITY_VIOLATION;
+}

@@ -65,8 +65,15 @@ class CommonPlatform:
         return [
             {
                 "Path": "MU_BASECORE",
+                # MU_CHANGE [TEMP][DROP] - prototyping pin. The new
+                # BaseCryptLib/OneCrypto APIs currently live only on the
+                # dev/202511/post-quantum-staging branch. Pin the commit rather
+                # than track a moving branch. Drop once these land on main.
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "1fd035c9360b923fdf39e879046031cad491a6e1"
+                "Commit": "a1a22636524aad3e49d498ffcd8883a3472e7b7d",
+                "Recurse": {
+                    "CIFile": ".pytool/CISettings.py"
+                }
             },
             {
                 "Path": "Features/MM_SUPV",

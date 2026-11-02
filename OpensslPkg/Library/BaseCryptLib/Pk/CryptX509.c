@@ -151,7 +151,11 @@ X509ConstructCertificateStackV (
     //
     Cert = VA_ARG (Args, UINT8 *);
     if (Cert == NULL) {
-      DEBUG ((DEBUG_ERROR, "[%a] X509ConstructCertificateStackV reached end of list after %Lu certs\n", gEfiCallerBaseName, (UINT64)CertIndex)); // MU_CHANGE
+      // MU_CHANGE [BEGIN] - Reaching the NULL terminator is a success path,
+      // even when no certificates were supplied (empty list).
+      DEBUG ((DEBUG_VERBOSE, "[%a] X509ConstructCertificateStackV reached end of list after %Lu certs\n", gEfiCallerBaseName, (UINT64)CertIndex));
+      Status = TRUE;
+      // MU_CHANGE [END]
       break;
     }
 
@@ -1365,6 +1369,55 @@ _Exit:
   }
 
   return Status;
+}
+
+/**
+  Determine whether the provider supports verification with a public key.
+
+  This does not authenticate the certificate or enforce enrollment policy.
+  Support for a key does not imply support for every digest/signature scheme.
+
+  @param[in]  Cert      Pointer to the DER-encoded X.509 certificate.
+  @param[in]  CertSize  Size of Cert in bytes.
+
+  @retval TRUE   The public key is valid and verification can be initialized.
+  @retval FALSE  The input is invalid or verification is not supported.
+**/
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  )
+{
+  BOOLEAN       Supported;
+  EVP_PKEY      *PublicKey;
+  EVP_PKEY_CTX  *KeyContext;
+  EVP_MD_CTX    *VerifyContext;
+  X509          *X509Cert;
+
+  if ((Cert == NULL) || (CertSize == 0)) {
+    return FALSE;
+  }
+
+  X509Cert = NULL;
+  if (!X509ConstructCertificate (Cert, CertSize, (UINT8 **)&X509Cert)) {
+    return FALSE;
+  }
+
+  PublicKey     = X509_get_pubkey (X509Cert);
+  KeyContext    = NULL;
+  VerifyContext = EVP_MD_CTX_new ();
+  Supported     = (BOOLEAN)(
+                            (PublicKey != NULL) && (VerifyContext != NULL) &&
+                            (EVP_DigestVerifyInit (VerifyContext, &KeyContext, NULL, NULL, PublicKey) == 1) &&
+                            (EVP_PKEY_public_check (KeyContext) == 1)
+                            );
+
+  EVP_MD_CTX_free (VerifyContext);
+  EVP_PKEY_free (PublicKey);
+  X509_free (X509Cert);
+  return Supported;
 }
 
 /**

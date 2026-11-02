@@ -62,6 +62,41 @@ FreePool (
   OneCryptoFreePool (Buffer);
 }
 
+/**
+  Copies a buffer to an allocated buffer of type EfiBootServicesData.
+
+  Allocates the number bytes specified by AllocationSize of type EfiBootServicesData, copies
+  AllocationSize bytes from Buffer to the newly allocated buffer, and returns a pointer to the
+  allocated buffer. If AllocationSize is 0, then a valid buffer of 0 size is returned. If there
+  is not enough memory remaining to satisfy the request, then NULL is returned.
+
+  If Buffer is NULL, then ASSERT().
+
+  @param[in]  AllocationSize  The number of bytes to allocate and zero.
+  @param[in]  Buffer          The buffer to copy to the allocated buffer.
+
+  @retval NULL    Allocation failed or OneCrypto dependencies not initialized.
+  @retval Other   A pointer to the allocated buffer.
+**/
+VOID *
+EFIAPI
+AllocateCopyPool (
+  IN UINTN       AllocationSize,
+  IN CONST VOID  *Buffer
+  )
+{
+  VOID  *Memory;
+
+  ASSERT (Buffer != NULL);
+
+  Memory = OneCryptoAllocatePool (AllocationSize);
+  if (Memory != NULL) {
+    Memory = CopyMem (Memory, Buffer, AllocationSize);
+  }
+
+  return Memory;
+}
+
 //
 // Stub functions that are not used by Crypto providers today
 //
@@ -150,34 +185,6 @@ VOID *
 EFIAPI
 AllocateReservedZeroPool (
   IN UINTN  AllocationSize
-  )
-{
-  ASSERT (FALSE);
-  return NULL;
-}
-
-/**
-  Copies a buffer to an allocated buffer of type EfiBootServicesData.
-
-  Allocates the number bytes specified by AllocationSize of type EfiBootServicesData, copies
-  AllocationSize bytes from Buffer to the newly allocated buffer, and returns a pointer to the
-  allocated buffer. If AllocationSize is 0, then a valid buffer of 0 size is returned. If there
-  is not enough memory remaining to satisfy the request, then NULL is returned.
-
-  If Buffer is NULL, then ASSERT().
-  If AllocationSize is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
-
-  @param[in]  AllocationSize  The number of bytes to allocate and zero.
-  @param[in]  Buffer          The buffer to copy to the allocated buffer.
-
-  @retval NULL   Allocation failed.
-  @retval Other  A pointer to the allocated buffer.
-**/
-VOID *
-EFIAPI
-AllocateCopyPool (
-  IN UINTN       AllocationSize,
-  IN CONST VOID  *Buffer
   )
 {
   ASSERT (FALSE);

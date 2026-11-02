@@ -12,6 +12,7 @@
 #include <openssl/crypto.h>
 #include <Library/BaseLib.h>
 #include "InternalCryptLib.h"
+#include <Guid/CryptoOpId.h>
 
 /**
   Gets the cryptographic provider version information.
@@ -61,4 +62,92 @@ GetCryptoProviderVersionString (
   *BufferSize = RequiredSize;
 
   return EFI_SUCCESS;
+}
+
+#include "CryptOpCapability.h"
+
+//
+// Dispatch GetCryptoOpCapability() requests to operation-specific handlers.
+//
+
+/**
+  Per-op handler signature. Same shape as the public GetCryptoOpCapability
+  minus the OpIdGuid parameter because dispatch already matched it.
+
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
+
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
+**/
+typedef
+EFI_STATUS
+(EFIAPI *CRYPTO_OP_HANDLER)(
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
+  );
+
+/**
+  Single row of the GUID -> handler dispatch table.
+
+  Kept separate from the typedef so the table itself stays grep-friendly
+  and easy to extend.
+**/
+typedef struct {
+  CONST EFI_GUID       *OpId;
+  CRYPTO_OP_HANDLER    Handler;
+} CRYPTO_OP_DISPATCH;
+
+//
+// Crypto operation capability dispatch table.
+//
+STATIC CONST CRYPTO_OP_DISPATCH  mCryptoOpDispatch[] = {
+  { &gCryptoOpCmsVerifyGuid,          CmsVerifyOpCapability          },
+  { &gCryptoOpCmsContentDigestGuid,   CmsContentDigestOpCapability   },
+  { &gCryptoOpAuthenticodeVerifyGuid, AuthenticodeVerifyOpCapability },
+  { &gCryptoOpAuthenticodeHashGuid,   AuthenticodeHashOpCapability   },
+};
+
+/**
+  Returns the supported algorithm OIDs for a crypto operation.
+
+  @param[in]  OpIdGuid        GUID identifying the crypto operation.
+  @param[out] Capabilities    Allocated array of supported algorithms.
+  @param[out] CapabilityCount Number of elements in Capabilities.
+
+  @retval EFI_SUCCESS            The capability array was returned.
+  @retval EFI_NOT_FOUND          OpIdGuid is not supported.
+  @retval EFI_OUT_OF_RESOURCES   The capability array could not be allocated.
+  @retval EFI_INVALID_PARAMETER  An argument is NULL.
+**/
+EFI_STATUS
+EFIAPI
+GetCryptoOpCapability (
+  IN  CONST EFI_GUID            *OpIdGuid,
+  OUT BASE_CRYPT_OP_CAPABILITY  **Capabilities,
+  OUT UINTN                     *CapabilityCount
+  )
+{
+  UINTN  Index;
+
+  if (Capabilities != NULL) {
+    *Capabilities = NULL;
+  }
+
+  if (CapabilityCount != NULL) {
+    *CapabilityCount = 0;
+  }
+
+  if ((OpIdGuid == NULL) || (Capabilities == NULL) || (CapabilityCount == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  for (Index = 0; Index < ARRAY_SIZE (mCryptoOpDispatch); Index++) {
+    if (CompareGuid (OpIdGuid, mCryptoOpDispatch[Index].OpId)) {
+      return mCryptoOpDispatch[Index].Handler (Capabilities, CapabilityCount);
+    }
+  }
+
+  return EFI_NOT_FOUND;
 }
