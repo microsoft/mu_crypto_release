@@ -21,6 +21,38 @@ maintained separately.
 | **OpensslPkg**     | BaseCryptLib, OpensslLib, TlsLib, and supporting headers backed by OpenSSL.              |
 | **MbedTlsPkg**     | BaseCryptLib, MbedTlsLib, and supporting headers backed by Mbed TLS.                     |
 
+## Crypto-operation capability reporting
+
+Use `GetCryptoOpCapability()` from `Library/BaseCryptLib.h` to query the
+algorithms a provider supports for an operation. Pass one of the operation GUIDs
+from `Guid/CryptoOpId.h`:
+
+| Operation | Reported algorithms |
+|---|---|
+| `gCryptoOpCmsVerifyGuid` | Provider signature OIDs for PKCS#7/CMS verification |
+| `gCryptoOpCmsContentDigestGuid` | Provider fixed-output content-digest OIDs |
+| `gCryptoOpAuthenticodeVerifyGuid` | Provider signature OIDs for Authenticode verification |
+| `gCryptoOpAuthenticodeHashGuid` | Available SHA-1/256/384/512 image-hash digest OIDs |
+
+On success, iterate the returned `BASE_CRYPT_OP_CAPABILITY` array using
+`CapabilityCount`. Each entry's `AlgorithmOid` is a NUL-terminated ASCII
+dotted-decimal object identifier (OID); `AlgorithmOidSize` includes the NUL.
+The array is unordered. Free it once with `FreePool()`; do not modify or
+separately free its strings.
+
+An empty supported set returns `EFI_SUCCESS` with a NULL array and zero count.
+`EFI_NOT_FOUND` means the provider does not implement the requested operation.
+`EFI_UNSUPPORTED` means capability reporting is unavailable. Errors clear both
+outputs.
+
+Reporting is implemented by the full OpenSSL BaseCryptLib and exposed through
+OneCrypto protocol **1.1**. Reduced OpenSSL and MbedTLS instances do not support
+reporting. Consumers using older OneCrypto binaries must handle `EFI_UNSUPPORTED`.
+
+Reported algorithms do not establish certificate trust, authorize an algorithm,
+or guarantee that a particular signature/digest combination will verify.
+Querying capabilities does not enable algorithms or change verification policy.
+
 ## CI Setup
 
 ```bash
