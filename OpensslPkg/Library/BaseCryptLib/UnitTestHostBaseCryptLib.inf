@@ -23,6 +23,12 @@
 
 [Sources]
   InternalCryptLib.h
+  CryptOpCapability.h  # MU_CHANGE - Internal File
+  Info/CryptOpCapability.c  # MU_CHANGE
+  Pk/CryptOpCapabilityCommon.c  # MU_CHANGE
+  Pk/CryptCmsOpCapability.c  # MU_CHANGE
+  Pk/CryptAuthenticodeOpCapability.c  # MU_CHANGE
+  Pk/CryptAuthenticodeHashCapability.c  # MU_CHANGE
   Hash/CryptMd5.c
   Hash/CryptSha1.c
   Hash/CryptSha256.c
@@ -84,3 +90,9 @@
   GCC:*_CLANGPDB_*_CC_FLAGS = -std=c99 -Wno-error=incompatible-pointer-types -Wno-macro-redefined
 
   XCODE:*_*_*_CC_FLAGS = -std=c99
+
+[Guids]
+  gCryptoOpCmsVerifyGuid            ## CONSUMES ## MU_CHANGE
+  gCryptoOpCmsContentDigestGuid     ## CONSUMES ## MU_CHANGE
+  gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES ## MU_CHANGE
+  gCryptoOpAuthenticodeHashGuid     ## CONSUMES ## MU_CHANGE
