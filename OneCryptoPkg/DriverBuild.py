@@ -66,7 +66,7 @@ class CommonPlatform:
             {
                 "Path": "MU_BASECORE",
                 "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "1fd035c9360b923fdf39e879046031cad491a6e1"
+                "Commit": "1d8e419e532c7eb851f9a98c1e9873015ab9d148"
             },
             {
                 "Path": "Features/MM_SUPV",
