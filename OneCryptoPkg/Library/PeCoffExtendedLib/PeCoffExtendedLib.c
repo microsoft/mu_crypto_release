@@ -137,6 +137,7 @@ GetExportDirectoryInPeCoffImage (
   @param[in] ExportDirectory    A pointer to the Export Directory structure.
 **/
 VOID
+EFIAPI
 PrintExportedFunctions (
   IN  INTERNAL_IMAGE_CONTEXT     *Image,
   IN EFI_IMAGE_EXPORT_DIRECTORY  *ExportDirectory
@@ -172,6 +173,7 @@ PrintExportedFunctions (
   @retval EFI_NOT_FOUND         The function is not found.
 **/
 EFI_STATUS
+EFIAPI
 FindExportedFunction (
   IN  INTERNAL_IMAGE_CONTEXT      *Image,
   IN  EFI_IMAGE_EXPORT_DIRECTORY  *ExportDirectory,
