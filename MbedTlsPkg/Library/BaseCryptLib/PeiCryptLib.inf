@@ -35,6 +35,7 @@
 
 [Sources]
   InternalCryptLib.h
+  Info/CryptOpCapabilityNull.c
   Hash/CryptMd5.c
   Hash/CryptSha1.c
   Hash/CryptSha256.c
