@@ -46,6 +46,12 @@
   Cipher/CryptAeadAesGcm.c
   Setup/BaseCryptInit.c       # MU_CHANGE
   Info/CryptInfo.c            # MU_CHANGE
+  Info/CryptOpCapability.c    # MU_CHANGE
+  CryptOpCapability.h        # MU_CHANGE - Internal File
+  Pk/CryptOpCapabilityCommon.c  # MU_CHANGE
+  Pk/CryptCmsOpCapability.c  # MU_CHANGE
+  Pk/CryptAuthenticodeOpCapability.c  # MU_CHANGE
+  Pk/CryptAuthenticodeHashCapability.c  # MU_CHANGE
   Pk/CryptRsaBasic.c
   Pk/CryptRsaExt.c
   Pk/CryptPkcs1Oaep.c
@@ -107,6 +113,12 @@
 
 [Protocols]
   # gEfiMpServiceProtocolGuid # MU_CHANGE
+
+[Guids]
+  gCryptoOpCmsVerifyGuid            ## CONSUMES ## MU_CHANGE
+  gCryptoOpCmsContentDigestGuid     ## CONSUMES ## MU_CHANGE
+  gCryptoOpAuthenticodeVerifyGuid   ## CONSUMES ## MU_CHANGE
+  gCryptoOpAuthenticodeHashGuid     ## CONSUMES ## MU_CHANGE
 
 #
 # Remove these [BuildOptions] after this library is cleaned up
