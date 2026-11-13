@@ -13,6 +13,41 @@ It decomposes the monolithic [CryptoPkg](https://github.com/tianocore/edk2/tree/
 independent, backend-specific packages so that each crypto implementation can be built, tested, and
 maintained separately.
 
+## OpenSSL Provider Configuration
+
+The table summarizes existing and post-quantum provider/library capabilities,
+not additional OneCrypto services or platform security policy. EC-dependent
+entries require `OpensslLibFull` or `OpensslLibFullAccel`; they are omitted from
+the no-EC library instances. Availability is not a recommendation to use legacy
+algorithms or protocols.
+
+| Feature | Enabled configuration |
+|---------|-----------------------|
+| Digests | MD5, SHA-1, SHA-224/256/384/512, SHA3-256/512, SHAKE-128/256, SM3 |
+| Symmetric encryption | AES-128/192/256 in ECB, CBC, CTR, and GCM modes; AES-128/256-CBC-HMAC-SHA256 where supported by the implementation |
+| Message authentication | HMAC |
+| Key derivation | HKDF, PBKDF2, SSKDF, SSHKDF, TLS 1 PRF, TLS 1.3 KDF |
+| Random generation | CTR-DRBG, HASH-DRBG |
+| Classical signatures | RSA, ECDSA |
+| Classical key exchange | DH, ECDH, X25519, X448 |
+| RSA encryption | Enabled |
+| CMS verification | Enabled through `Pkcs7Verify` and `AuthenticodeVerify` |
+| ML-DSA | ML-DSA-44, ML-DSA-65, ML-DSA-87 |
+| ML-KEM | ML-KEM-512, ML-KEM-768, ML-KEM-1024 |
+| SLH-DSA | Disabled to reduce binary size |
+| TlsLib version selection | TLS 1.0, 1.1, 1.2, and 1.3; negotiation is subject to security and cipher policy |
+| TLS 1.3 cipher suites | TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384 |
+| Classical groups accepted by `TlsSetEcCurve` | P-256, P-384, P-521, X25519, X448 |
+| Hybrid groups accepted by `TlsSetEcCurve` | X25519MLKEM768, SecP256r1MLKEM768, SecP384r1MLKEM1024 |
+
+Explicit TLS cipher lists replace suites across both protocol families:
+requesting only TLS 1.2 suites disables TLS 1.3 suites, and vice versa.
+Unsupported suites are filtered without enabling an unrequested cipher family.
+
+Generated headers, assembly, and INF source lists must be regenerated together
+using `python OpensslPkg/Library/OpensslLib/configure.py` after changing the
+OpenSSL revision or configuration.
+
 ## Repository Structure
 
 | Package            | Description                                                                              |
