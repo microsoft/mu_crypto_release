@@ -72,6 +72,8 @@
         "IgnoreGuidValue": [],
         "IgnoreFoldersAndFiles": [
             "**/Integration/**",  # Contains the binary DSC INFs only used for post-build binary integration
+            # Downloaded binaries intentionally reuse source-module GUIDs.
+            "MU_BASECORE/CryptoPkg/Binaries/onecrypto-bin_extdep/**",
         ]
     },
     "LibraryClassCheck": {
