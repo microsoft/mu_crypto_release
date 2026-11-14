@@ -333,6 +333,7 @@ CryptoInit (
   // ========================================================================================================
 
   CryptoProtocol->GetCryptoProviderVersionString = GetCryptoProviderVersionString;
+  CryptoProtocol->GetCryptoOpCapability          = GetCryptoOpCapability;
 }
 
 /**
