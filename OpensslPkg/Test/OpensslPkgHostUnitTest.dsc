@@ -31,6 +31,7 @@
 
 [Components]
   OpensslPkg/Test/CrtWrapper/CrtWrapperTest.inf
+  OpensslPkg/Test/CryptoOpCapability/CryptoOpCapabilityTest.inf  # MU_CHANGE
 
   #
   # Build HOST_APPLICATION that tests BaseCryptLib (OpenSSL implementation)

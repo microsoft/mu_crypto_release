@@ -1,0 +1,33 @@
+## @file
+# OpenSSL-specific crypto-operation capability tests.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = CryptoOpCapabilityTest
+  FILE_GUID      = 834E893C-0638-4B4D-A51F-87104BAEA92C
+  MODULE_TYPE    = HOST_APPLICATION
+  VERSION_STRING = 1.0
+
+[Sources]
+  CryptoOpCapabilityTest.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  OpensslPkg/OpensslPkg.dec
+  UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
+
+[LibraryClasses]
+  BaseCryptLib
+  BaseLib
+  MemoryAllocationLib
+  OpensslLib
+  UnitTestLib
+
+[Guids]
+  gCryptoOpCmsVerifyGuid
+  gCryptoOpAuthenticodeVerifyGuid
