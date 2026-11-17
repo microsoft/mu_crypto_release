@@ -65,8 +65,10 @@ class CommonPlatform:
         return [
             {
                 "Path": "MU_BASECORE",
-                "Url": "https://github.com/microsoft/mu_basecore.git",
-                "Commit": "1d8e419e532c7eb851f9a98c1e9873015ab9d148"  # MU_CHANGE
+                # Temporary pin for mu_basecore#2019. Before merging this PR,
+                # restore the microsoft/mu_basecore URL and pin the merged revision.
+                "Url": "https://github.com/Flickdm/mu_basecore.git",
+                "Commit": "a45e05083990b74ebbc7e22bd21099aa63eadeff"  # MU_CHANGE
             },
             {
                 "Path": "Features/MM_SUPV",
