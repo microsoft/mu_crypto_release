@@ -969,11 +969,17 @@ WrapPkcs7Data (
   BOOLEAN  Wrapped;
   UINT8    *SignedData;
 
+  if ((P7Data == NULL) || (P7Length == 0) ||
+      (WrapFlag == NULL) || (WrapData == NULL) || (WrapDataSize == NULL))
+  {
+    return FALSE;
+  }
+
   //
   // Check whether input P7Data is a wrapped ContentInfo structure or not.
   //
   Wrapped = FALSE;
-  if ((P7Data[4] == MBEDTLS_ASN1_OID) && (P7Data[5] == sizeof (MBEDTLS_OID_PKCS7_SIGNED_DATA) - 1)) {
+  if ((P7Length >= 17) && (P7Data[4] == MBEDTLS_ASN1_OID) && (P7Data[5] == sizeof (MBEDTLS_OID_PKCS7_SIGNED_DATA) - 1)) {
     if (CompareMem (P7Data + 6, MBEDTLS_OID_PKCS7_SIGNED_DATA, sizeof (MBEDTLS_OID_PKCS7_SIGNED_DATA) - 1) == 0) {
       if ((P7Data[15] == (MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC)) && (P7Data[16] == 0x82)) {
         Wrapped = TRUE;
@@ -985,6 +991,10 @@ WrapPkcs7Data (
     *WrapData     = (UINT8 *)P7Data;
     *WrapDataSize = P7Length;
   } else {
+    if (P7Length > MAX_UINT16 - 15) {
+      return FALSE;
+    }
+
     //
     // Wrap PKCS#7 signeddata to a ContentInfo structure - add a header in 19 bytes.
     //
@@ -1397,4 +1407,14 @@ CmsVerify (
   }
 
   return Pkcs7Verify (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength);
+}
+
+UINTN
+EFIAPI
+CmsGetSignerInfoNum (
+  IN CONST UINT8  *P7Data,
+  IN UINTN        P7Length
+  )
+{
+  return 0;
 }

@@ -652,8 +652,17 @@ GetTrustAnchorX509FromAuthData (
   TRUST_ANCHOR_CACHE  *Cache;
   UINT8               *Output;
 
+  if (TrustAnchorX509 != NULL) {
+    *TrustAnchorX509 = NULL;
+  }
+
+  if (TrustAnchorX509Size != NULL) {
+    *TrustAnchorX509Size = 0;
+  }
+
   if ((TbsCertHash == NULL) || (TbsCertHashSize == 0) ||
       (AuthData == NULL) || (AuthDataSize == 0) ||
+      (AuthDataSize > MAX_UINTN - (UINTN)AuthData) ||
       (TrustAnchorX509 == NULL) || (TrustAnchorX509Size == NULL))
   {
     return EFI_INVALID_PARAMETER;

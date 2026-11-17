@@ -333,20 +333,17 @@ CryptoInit (
   // ========================================================================================================
 
   CryptoProtocol->GetCryptoProviderVersionString = GetCryptoProviderVersionString;
+
+  // Append-only protocol 1.1 services; rebuild providers and consumers together.
   CryptoProtocol->GetCryptoOpCapability          = GetCryptoOpCapability; // MU_CHANGE
   CryptoProtocol->GetTrustAnchorX509FromAuthData = GetTrustAnchorX509FromAuthData;
   CryptoProtocol->FreeTrustAnchorX509Cache       = FreeTrustAnchorX509Cache;
-  CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
   CryptoProtocol->AuthenticodeVerifyEx           = AuthenticodeVerifyEx;
+  CryptoProtocol->GetAuthenticodeHashAlgorithm   = GetAuthenticodeHashAlgorithm;
   CryptoProtocol->HashAllByGuid                  = HashAllByGuid;
-
-  // v2.0 CMS functions
-  // v1.2 functions
-  CryptoProtocol->CmsGetSignerInfoNum = CmsGetSignerInfoNum;
-  CryptoProtocol->CmsVerify           = CmsVerify;
-
-  // v2.0 X509 functions
-  CryptoProtocol->X509IsPublicKeySupported = X509IsPublicKeySupported;
+  CryptoProtocol->CmsVerify                      = CmsVerify;
+  CryptoProtocol->CmsGetSignerInfoNum            = CmsGetSignerInfoNum;
+  CryptoProtocol->X509IsPublicKeySupported       = X509IsPublicKeySupported;
 }
 
 /**

@@ -12,7 +12,7 @@
 #define AUTH_ASN1_TAG_OID         0x06
 #define AUTH_ASN1_TAG_SEQUENCE    0x30
 #define AUTH_ASN1_TAG_SET         0x31
-#define AUTH_ASN1_TAG_CTX_CONS_0   0xA0
+#define AUTH_ASN1_TAG_CTX_CONS_0  0xA0
 
 STATIC CONST UINT8  mAuthPkcs7SignedDataOid[] = {
   0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02
@@ -162,7 +162,9 @@ GetAuthenticodeHashAlgorithm (
   UINTN        OidLen;
   UINTN        Index;
 
-  if ((AuthData == NULL) || (AuthDataSize == 0) || (HashType == NULL)) {
+  if ((AuthData == NULL) || (AuthDataSize == 0) || (HashType == NULL) ||
+      (AuthDataSize > MAX_UINTN - (UINTN)AuthData))
+  {
     return EFI_INVALID_PARAMETER;
   }
 

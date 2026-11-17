@@ -245,7 +245,9 @@ AuthenticodeVerifyEx (
     *CertChainSize = 0;
   }
 
-  if ((AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL)) {
+  if (((CertChain == NULL) != (CertChainSize == NULL)) ||
+      (AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL))
+  {
     return EFI_INVALID_PARAMETER;
   }
 

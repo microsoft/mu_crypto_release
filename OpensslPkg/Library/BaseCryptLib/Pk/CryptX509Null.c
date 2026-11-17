@@ -9,6 +9,17 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "InternalCryptLib.h"
 
+BOOLEAN
+EFIAPI
+X509IsPublicKeySupported (
+  IN CONST UINT8  *Cert,
+  IN UINTN        CertSize
+  )
+{
+  ASSERT (FALSE);
+  return FALSE;
+}
+
 /**
   Construct a X509 object from DER-encoded certificate data.
 

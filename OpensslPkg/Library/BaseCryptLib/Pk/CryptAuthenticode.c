@@ -93,6 +93,7 @@ AuthenticodeExpectedDigestNid (
   @return  Length of the produced DER bytes, or 0 on error.
 
 **/
+#ifndef OPENSSL_NO_CMS
 STATIC
 INT32
 SerializePkcs7AsDetached (
@@ -136,6 +137,8 @@ SerializePkcs7AsDetached (
 
   return (INT32)DerLen;
 }
+
+#endif
 
 /**
   Verifies the validity of a PE/COFF Authenticode Signature as described in "Windows
@@ -203,8 +206,11 @@ AuthenticodeVerifyWorker (
   CONST ASN1_OBJECT        *DigestAlgoOid;
   CONST ASN1_OCTET_STRING  *DigestOctet;
   int                      ExpectedDigestNid;
-  UINT8                    *DetachedDer;
-  INT32                    DetachedDerLen;
+
+ #ifndef OPENSSL_NO_CMS
+  UINT8  *DetachedDer;
+  INT32  DetachedDerLen;
+ #endif
 
   //
   // Check input parameters.
@@ -217,11 +223,13 @@ AuthenticodeVerifyWorker (
     return FALSE;
   }
 
-  Status         = FALSE;
-  Pkcs7          = NULL;
-  DigestInfo     = NULL;
+  Status     = FALSE;
+  Pkcs7      = NULL;
+  DigestInfo = NULL;
+ #ifndef OPENSSL_NO_CMS
   DetachedDer    = NULL;
   DetachedDerLen = 0;
+ #endif
 
   //
   // Retrieve & Parse PKCS#7 Data (DER encoding) from Authenticode Signature
@@ -392,6 +400,9 @@ AuthenticodeVerifyWorker (
   // CmsVerify additionally returns the verified signer chain when requested
   // (CertChain != NULL), avoiding a second chain-building pass.
   //
+ #ifdef OPENSSL_NO_CMS
+  Status = Pkcs7Verify (AuthData, DataSize, TrustedCert, CertSize, SpcIndirectDataContent, ContentSize);
+ #else
   DetachedDerLen = SerializePkcs7AsDetached (Pkcs7, &DetachedDer);
   if ((DetachedDerLen <= 0) || (DetachedDer == NULL)) {
     goto _Exit;
@@ -407,13 +418,16 @@ AuthenticodeVerifyWorker (
                       CertChain,
                       CertChainSize
                       );
+ #endif
 
 _Exit:
   //
   // Release Resources
   //
   X509_SIG_free (DigestInfo);
+ #ifndef OPENSSL_NO_CMS
   OPENSSL_free (DetachedDer);
+ #endif
   PKCS7_free (Pkcs7);
 
   return Status;
@@ -471,7 +485,9 @@ AuthenticodeVerifyEx (
   OUT UINTN        *CertChainSize   OPTIONAL
   )
 {
+ #ifndef OPENSSL_NO_CMS
   BOOLEAN  Valid;
+ #endif
 
   if (CertChain != NULL) {
     *CertChain = NULL;
@@ -481,10 +497,15 @@ AuthenticodeVerifyEx (
     *CertChainSize = 0;
   }
 
-  if ((AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL)) {
+  if (((CertChain == NULL) != (CertChainSize == NULL)) ||
+      (AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL))
+  {
     return EFI_INVALID_PARAMETER;
   }
 
+ #ifdef OPENSSL_NO_CMS
+  return EFI_UNSUPPORTED;
+ #else
   Valid = AuthenticodeVerifyWorker (
             AuthData,
             DataSize,
@@ -497,4 +518,5 @@ AuthenticodeVerifyEx (
             );
 
   return Valid ? EFI_SUCCESS : EFI_SECURITY_VIOLATION;
+ #endif
 }

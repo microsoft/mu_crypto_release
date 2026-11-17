@@ -61,11 +61,17 @@ WrapPkcs7Data (
   BOOLEAN  Wrapped;
   UINT8    *SignedData;
 
+  if ((P7Data == NULL) || (P7Length == 0) ||
+      (WrapFlag == NULL) || (WrapData == NULL) || (WrapDataSize == NULL))
+  {
+    return FALSE;
+  }
+
   //
   // Check whether input P7Data is a wrapped ContentInfo structure or not.
   //
   Wrapped = FALSE;
-  if ((P7Data[4] == 0x06) && (P7Data[5] == 0x09)) {
+  if ((P7Length >= 17) && (P7Data[4] == 0x06) && (P7Data[5] == 0x09)) {
     if (CompareMem (P7Data + 6, mOidValue, sizeof (mOidValue)) == 0) {
       if ((P7Data[15] == 0xA0) && (P7Data[16] == 0x82)) {
         Wrapped = TRUE;
@@ -77,6 +83,10 @@ WrapPkcs7Data (
     *WrapData     = (UINT8 *)P7Data;
     *WrapDataSize = P7Length;
   } else {
+    if (P7Length > MAX_UINT16 - 15) {
+      return FALSE;
+    }
+
     //
     // Wrap PKCS#7 signeddata to a ContentInfo structure - add a header in 19 bytes.
     //
@@ -766,6 +776,7 @@ _Error:
 // The ex_data *index* below is process-global and immutable once allocated
 // (the standard OpenSSL idiom); it is not per-call state.
 //
+#ifndef OPENSSL_NO_CMS
 typedef struct {
   STACK_OF (X509)  *Chain;   // captured verified chain (signer..anchor), owned
 } CMS_CHAIN_CAPTURE;
@@ -850,6 +861,10 @@ SerializeSignerChain (
       return EFI_INVALID_PARAMETER;
     }
 
+    if ((UINTN)DerLen > MAX_UINTN - sizeof (UINT32) - TotalSize) {
+      return EFI_OUT_OF_RESOURCES;
+    }
+
     TotalSize += sizeof (UINT32) + (UINTN)DerLen;
   }
 
@@ -883,6 +898,8 @@ SerializeSignerChain (
   *CertStackSize = TotalSize;
   return EFI_SUCCESS;
 }
+
+#endif
 
 /**
   Verifies a PKCS#7/CMS SignedData structure and, when requested, returns
@@ -924,9 +941,15 @@ SerializeSignerChain (
   @retval  FALSE Invalid PKCS#7/CMS signed data.
 
 **/
+#ifdef OPENSSL_NO_CMS
+STATIC
+BOOLEAN
+Pkcs7VerifyLegacy (
+#else
 BOOLEAN
 EFIAPI
 CmsVerify (
+#endif
   IN  CONST UINT8  *P7Data,
   IN  UINTN        P7Length,
   IN  CONST UINT8  *TrustedCert,
@@ -937,7 +960,11 @@ CmsVerify (
   OUT UINTN        *SignerChainSize   OPTIONAL
   )
 {
+ #ifdef OPENSSL_NO_CMS
+  PKCS7              *Pkcs7;
+ #else
   CMS_ContentInfo    *Cms;
+ #endif
   BIO                *DataBio;
   BOOLEAN            Status;
   X509               *Cert;
@@ -946,10 +973,12 @@ CmsVerify (
   CONST UINT8        *Temp;
   UINTN              SignedDataSize;
   BOOLEAN            Wrapped;
+ #ifndef OPENSSL_NO_CMS
   int                ChainCount;
   int                ChainIndex;
   BOOLEAN            WantChain;
   CMS_CHAIN_CAPTURE  Capture;
+ #endif
 
   if (SignerChain != NULL) {
     *SignerChain = NULL;
@@ -965,19 +994,27 @@ CmsVerify (
   // X509_STORE_CTX_get1_chain() and trims it - so Pkcs7Verify() and other
   // verdict-only callers pay nothing for it.
   //
+ #ifndef OPENSSL_NO_CMS
   WantChain     = (BOOLEAN)((SignerChain != NULL) && (SignerChainSize != NULL));
   Capture.Chain = NULL;
+ #endif
 
   //
   // Check input parameters.
   //
-  if ((P7Data == NULL) || (TrustedCert == NULL) || (InData == NULL) ||
+  if (((SignerChain == NULL) != (SignerChainSize == NULL)) ||
+      (P7Data == NULL) || (TrustedCert == NULL) || (InData == NULL) ||
+      (P7Length == 0) || (CertLength == 0) ||
       (P7Length > INT_MAX) || (CertLength > INT_MAX) || (DataLength > INT_MAX))
   {
     return FALSE;
   }
 
-  Cms       = NULL;
+ #ifdef OPENSSL_NO_CMS
+  Pkcs7 = NULL;
+ #else
+  Cms = NULL;
+ #endif
   DataBio   = NULL;
   Cert      = NULL;
   CertStore = NULL;
@@ -1063,6 +1100,7 @@ CmsVerify (
   // context and an observe-only callback that records the chain OpenSSL
   // builds. It does not change the verification result.
   //
+ #ifndef OPENSSL_NO_CMS
   if (WantChain) {
     if (mChainCaptureIndex < 0) {
       mChainCaptureIndex = X509_STORE_get_ex_new_index (0, NULL, NULL, NULL, NULL);
@@ -1074,6 +1112,17 @@ CmsVerify (
     }
   }
 
+ #endif
+
+ #ifdef OPENSSL_NO_CMS
+  // Keep the existing PKCS#7 backend until the generated library enables CMS.
+  Temp  = SignedData;
+  Pkcs7 = d2i_PKCS7 (NULL, &Temp, (int)SignedDataSize);
+  if ((Pkcs7 == NULL) || !PKCS7_type_is_signed (Pkcs7)) {
+    goto _Exit;
+  }
+
+ #else
   //
   // Parse the signed data as CMS ContentInfo. CMS is the successor to PKCS#7
   // and is backward-compatible at the ASN.1 level. Using CMS_verify provides
@@ -1097,6 +1146,8 @@ CmsVerify (
     goto _Exit;
   }
 
+ #endif
+
   //
   // Pkcs7Verify rejected NULL InData at function entry: this routine treats
   // the supplied (InData, DataLength) as the detached content that the
@@ -1112,6 +1163,9 @@ CmsVerify (
   //
   // Verify the CMS signed data structure.
   //
+ #ifdef OPENSSL_NO_CMS
+  Status = (BOOLEAN)PKCS7_verify (Pkcs7, NULL, CertStore, DataBio, NULL, PKCS7_BINARY);
+ #else
   Status = (BOOLEAN)CMS_verify (
                       Cms,
                       NULL,
@@ -1167,6 +1221,8 @@ CmsVerify (
     SerializeSignerChain (Capture.Chain, SignerChain, SignerChainSize);
   }
 
+ #endif
+
 _Exit:
   //
   // Release Resources
@@ -1174,11 +1230,15 @@ _Exit:
   BIO_free (DataBio);
   X509_free (Cert);
   X509_STORE_free (CertStore);
+ #ifdef OPENSSL_NO_CMS
+  PKCS7_free (Pkcs7);
+ #else
   CMS_ContentInfo_free (Cms);
-
   if (Capture.Chain != NULL) {
     sk_X509_pop_free (Capture.Chain, X509_free);
   }
+
+ #endif
 
   if (!Wrapped) {
     OPENSSL_free (SignedData);
@@ -1186,6 +1246,33 @@ _Exit:
 
   return Status;
 }
+
+#ifdef OPENSSL_NO_CMS
+BOOLEAN
+EFIAPI
+CmsVerify (
+  IN  CONST UINT8  *P7Data,
+  IN  UINTN        P7Length,
+  IN  CONST UINT8  *TrustedCert,
+  IN  UINTN        CertLength,
+  IN  CONST UINT8  *InData,
+  IN  UINTN        DataLength,
+  OUT UINT8        **SignerChain      OPTIONAL,
+  OUT UINTN        *SignerChainSize   OPTIONAL
+  )
+{
+  if (SignerChain != NULL) {
+    *SignerChain = NULL;
+  }
+
+  if (SignerChainSize != NULL) {
+    *SignerChainSize = 0;
+  }
+
+  return FALSE;
+}
+
+#endif
 
 /**
   Get the number of SignerInfo structures in a PKCS#7/CMS SignedData structure.
@@ -1203,6 +1290,9 @@ CmsGetSignerInfoNum (
   IN  UINTN        P7Length
   )
 {
+ #ifdef OPENSSL_NO_CMS
+  return 0;
+ #else
   CMS_ContentInfo  *Cms;
 
   STACK_OF (CMS_SignerInfo)   *SignerInfos;
@@ -1240,7 +1330,7 @@ CmsGetSignerInfoNum (
   }
 
   SignerInfos = CMS_get0_SignerInfos (Cms);
-  if (SignerInfos != NULL) {
+  if ((SignerInfos != NULL) && (sk_CMS_SignerInfo_num (SignerInfos) > 0)) {
     SignerInfoNum = (UINTN)sk_CMS_SignerInfo_num (SignerInfos);
   }
 
@@ -1251,6 +1341,7 @@ Exit:
   }
 
   return SignerInfoNum;
+ #endif
 }
 
 /**
@@ -1285,13 +1376,17 @@ Exit:
 BOOLEAN
 EFIAPI
 Pkcs7Verify (
-  IN  CONST UINT8  *P7Data,
-  IN  UINTN        P7Length,
-  IN  CONST UINT8  *TrustedCert,
-  IN  UINTN        CertLength,
-  IN  CONST UINT8  *InData,
-  IN  UINTN        DataLength
-  )
+             IN  CONST UINT8  *P7Data,
+             IN  UINTN        P7Length,
+             IN  CONST UINT8  *TrustedCert,
+             IN  UINTN        CertLength,
+             IN  CONST UINT8  *InData,
+             IN  UINTN        DataLength
+             )
 {
+ #ifdef OPENSSL_NO_CMS
+  return Pkcs7VerifyLegacy (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, NULL, NULL);
+ #else
   return CmsVerify (P7Data, P7Length, TrustedCert, CertLength, InData, DataLength, NULL, NULL);
+ #endif
 }

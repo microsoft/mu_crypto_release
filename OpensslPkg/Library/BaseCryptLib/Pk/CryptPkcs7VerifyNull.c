@@ -181,6 +181,25 @@ CmsVerify (
   OUT UINTN        *SignerChainSize   OPTIONAL
   )
 {
+  if (SignerChain != NULL) {
+    *SignerChain = NULL;
+  }
+
+  if (SignerChainSize != NULL) {
+    *SignerChainSize = 0;
+  }
+
   ASSERT (FALSE);
   return FALSE;
+}
+
+UINTN
+EFIAPI
+CmsGetSignerInfoNum (
+  IN CONST UINT8  *P7Data,
+  IN UINTN        P7Length
+  )
+{
+  ASSERT (FALSE);
+  return 0;
 }

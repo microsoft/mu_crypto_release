@@ -28,6 +28,14 @@ GetTrustAnchorX509FromAuthData (
   OUT UINTN        *TrustAnchorX509Size
   )
 {
+  if (TrustAnchorX509 != NULL) {
+    *TrustAnchorX509 = NULL;
+  }
+
+  if (TrustAnchorX509Size != NULL) {
+    *TrustAnchorX509Size = 0;
+  }
+
   ASSERT (FALSE);
   return EFI_UNSUPPORTED;
 }
@@ -41,5 +49,7 @@ FreeTrustAnchorX509Cache (
   IN  VOID  *CacheHandle  OPTIONAL
   )
 {
-  ASSERT (FALSE);
+  if (CacheHandle != NULL) {
+    ASSERT (FALSE);
+  }
 }
