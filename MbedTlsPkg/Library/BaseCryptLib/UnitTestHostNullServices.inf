@@ -8,7 +8,7 @@
   BASE_NAME      = MbedTlsNullCryptoServices
   FILE_GUID      = FCB0F9B8-5FB1-4EC9-B5CE-CB3BB638DDE4
   MODULE_TYPE    = BASE
-  LIBRARY_CLASS  = BaseCryptLib
+  LIBRARY_CLASS  = BaseCryptLib|HOST_APPLICATION
 
 [Sources]
   Hash/CryptHashAllNull.c
