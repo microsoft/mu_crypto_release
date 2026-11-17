@@ -91,8 +91,12 @@ digest algorithm. It returns generic `gEfiHashAlgorithmSha*Guid` values from
 Trust-anchor lookup matches a supplied TBS-certificate digest; it does not
 authenticate the enclosing message or authorize the certificate.
 
-The optional CMS/Authenticode chain outputs must be supplied together. They
-are reset to `NULL`/zero on failure or unsupported paths. A returned chain is
+`CmsVerify` requires its optional chain outputs to be supplied together.
+`AuthenticodeVerifyEx` instead accepts independently optional outputs: supplying
+only one still verifies without capturing a chain, and clears that output to
+`NULL` or zero. MbedTLS returns `EFI_UNSUPPORTED` for an Authenticode chain
+request only when both outputs are supplied. Provided outputs are also cleared
+on failure or unsupported paths. A returned chain is
 the signer-to-anchor path captured from successful verification, serialized as
 an `EFI_CERT_STACK`; the caller releases it with `FreePool`. Capture is
 best-effort: a successful verification can still return no chain if capture or

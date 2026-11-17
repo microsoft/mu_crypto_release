@@ -497,9 +497,7 @@ AuthenticodeVerifyEx (
     *CertChainSize = 0;
   }
 
-  if (((CertChain == NULL) != (CertChainSize == NULL)) ||
-      (AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL))
-  {
+  if ((AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL)) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -513,8 +511,8 @@ AuthenticodeVerifyEx (
             CertSize,
             ImageHash,
             HashSize,
-            CertChain,
-            CertChainSize
+            (CertChainSize != NULL) ? CertChain : NULL,
+            (CertChain != NULL) ? CertChainSize : NULL
             );
 
   return Valid ? EFI_SUCCESS : EFI_SECURITY_VIOLATION;

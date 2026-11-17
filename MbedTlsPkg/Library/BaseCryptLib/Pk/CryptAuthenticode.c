@@ -219,8 +219,8 @@ _Exit:
 
   The MbedTls BaseCryptLib instance cannot expose the certificate chain that
   the verifier built, so the extended chain output is unsupported: when
-  CertChain is requested this returns EFI_UNSUPPORTED without verifying. When
-  no chain is requested it behaves exactly like AuthenticodeVerify().
+  both chain outputs are supplied this returns EFI_UNSUPPORTED without
+  verifying. Otherwise it behaves exactly like AuthenticodeVerify().
 
   See BaseCryptLib.h for the full contract.
 **/
@@ -245,17 +245,14 @@ AuthenticodeVerifyEx (
     *CertChainSize = 0;
   }
 
-  if (((CertChain == NULL) != (CertChainSize == NULL)) ||
-      (AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL))
-  {
+  if ((AuthData == NULL) || (TrustedCert == NULL) || (ImageHash == NULL)) {
     return EFI_INVALID_PARAMETER;
   }
 
   //
-  // MbedTls cannot return the verifier-built certificate chain. Callers that
-  // only need the pass/fail verdict must pass CertChain == NULL.
+  // A chain is requested only when both independently optional outputs exist.
   //
-  if (CertChain != NULL) {
+  if ((CertChain != NULL) && (CertChainSize != NULL)) {
     return EFI_UNSUPPORTED;
   }
 

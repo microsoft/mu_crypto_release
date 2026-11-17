@@ -72,6 +72,18 @@ TestNullServices (
     );
   UT_ASSERT_TRUE (Chain == NULL);
   UT_ASSERT_EQUAL (Size, 0);
+  Chain = Data;
+  UT_ASSERT_STATUS_EQUAL (
+    AuthenticodeVerifyEx (Data, sizeof (Data), Data, sizeof (Data), Data, sizeof (Data), &Chain, NULL),
+    EFI_UNSUPPORTED
+    );
+  UT_ASSERT_TRUE (Chain == NULL);
+  Size = sizeof (Data);
+  UT_ASSERT_STATUS_EQUAL (
+    AuthenticodeVerifyEx (Data, sizeof (Data), Data, sizeof (Data), Data, sizeof (Data), NULL, &Size),
+    EFI_UNSUPPORTED
+    );
+  UT_ASSERT_EQUAL (Size, 0);
   return UNIT_TEST_PASSED;
 }
 
@@ -278,6 +290,20 @@ TestCmsServices (
       )
     );
   UT_ASSERT_TRUE (Chain == NULL);
+  ChainSize = sizeof (mCmsCert);
+  UT_ASSERT_FALSE (
+    CmsVerify (
+      mCmsData,
+      sizeof (mCmsData),
+      mCmsCert,
+      sizeof (mCmsCert),
+      mCmsMessage,
+      sizeof (mCmsMessage),
+      NULL,
+      &ChainSize
+      )
+    );
+  UT_ASSERT_EQUAL (ChainSize, 0);
   for (Index = 0; Index < 17; Index++) {
     UT_ASSERT_EQUAL (CmsGetSignerInfoNum (mCmsData, Index), 0);
   }
@@ -319,10 +345,10 @@ TestAuthenticodeServicePolicy (
   EFI_STATUS  Status;
   UINT8       *Chain;
   UINTN       ChainSize;
+  UINTN       Index;
 
  #if !defined (SERVICE_MBEDTLS) && !defined (OPENSSL_NO_CMS)
   UINTN   Offset;
-  UINTN   Index;
   UINT32  CertSize;
  #endif
 
@@ -361,6 +387,34 @@ TestAuthenticodeServicePolicy (
   UT_ASSERT_EQUAL (Offset, ChainSize);
   FreePool (Chain);
  #endif
+
+  for (Index = 0; Index < 3; Index++) {
+    Chain     = mCmsCert;
+    ChainSize = sizeof (mCmsCert);
+    Status    = AuthenticodeVerifyEx (
+                  AuthenticodeWithSha256,
+                  AuthenticodeWithSha256Size,
+                  TestRootCert2,
+                  TestRootCert2Size,
+                  PeSha256Hash,
+                  SHA256_DIGEST_SIZE,
+                  (Index == 1) ? &Chain : NULL,
+                  (Index == 2) ? &ChainSize : NULL
+                  );
+ #if !defined (SERVICE_MBEDTLS) && defined (OPENSSL_NO_CMS)
+    UT_ASSERT_STATUS_EQUAL (Status, EFI_UNSUPPORTED);
+ #else
+    UT_ASSERT_STATUS_EQUAL (Status, EFI_SUCCESS);
+ #endif
+    if (Index == 1) {
+      UT_ASSERT_TRUE (Chain == NULL);
+    }
+
+    if (Index == 2) {
+      UT_ASSERT_EQUAL (ChainSize, 0);
+    }
+  }
+
   return UNIT_TEST_PASSED;
 }
 
