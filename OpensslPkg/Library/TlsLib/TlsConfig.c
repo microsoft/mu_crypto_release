@@ -37,6 +37,69 @@ STATIC CONST TLS_ALGO_TO_NAME  TlsSignatureAlgoToName[] = {
   { TlsSignatureAlgoEcdsa,     "ECDSA" },
 };
 
+// MU_CHANGE [BEGIN]
+
+/**
+  Intersect version policy with the connection's selected cipher families.
+**/
+STATIC
+EFI_STATUS
+TlsSetVersionRange (
+  IN TLS_CONNECTION  *TlsConn,
+  IN INT32           MinVersion,
+  IN INT32           MaxVersion
+  )
+{
+  STACK_OF (SSL_CIPHER)  *Ciphers;
+  CONST SSL_CIPHER  *Cipher;
+  INT32             Index;
+  INT32             EffectiveMin;
+  INT32             EffectiveMax;
+  BOOLEAN           HasLegacy;
+  BOOLEAN           HasTls13;
+
+  HasLegacy = FALSE;
+  HasTls13  = FALSE;
+  Ciphers   = SSL_get_ciphers (TlsConn->Ssl);
+  for (Index = 0; Index < sk_SSL_CIPHER_num (Ciphers); Index++) {
+    Cipher = sk_SSL_CIPHER_value (Ciphers, Index);
+    if (AsciiStrCmp (SSL_CIPHER_get_version (Cipher), "TLSv1.3") == 0) {
+      HasTls13 = TRUE;
+    } else {
+      HasLegacy = TRUE;
+    }
+  }
+
+  EffectiveMin = MinVersion;
+  EffectiveMax = MaxVersion;
+  if (!HasLegacy && (EffectiveMin < TLS1_3_VERSION)) {
+    EffectiveMin = TLS1_3_VERSION;
+  }
+
+  if (!HasTls13 && ((EffectiveMax == 0) || (EffectiveMax > TLS1_2_VERSION))) {
+    EffectiveMax = TLS1_2_VERSION;
+  }
+
+  if ((!HasLegacy && !HasTls13) ||
+      ((EffectiveMax != 0) && (EffectiveMin > EffectiveMax)))
+  {
+    DEBUG ((DEBUG_ERROR, "%a: selected ciphers conflict with TLS version policy\n", __func__));
+    return EFI_UNSUPPORTED;
+  }
+
+  if ((SSL_set_min_proto_version (TlsConn->Ssl, EffectiveMin) != 1) ||
+      (SSL_set_max_proto_version (TlsConn->Ssl, EffectiveMax) != 1))
+  {
+    return EFI_UNSUPPORTED;
+  }
+
+  TlsConn->MinProtoVersion = MinVersion;
+  TlsConn->MaxProtoVersion = MaxVersion;
+  return EFI_SUCCESS;
+}
+
+// MU_CHANGE [END]
+
 /**
   Set a new TLS/SSL method for a particular TLS object.
 
@@ -72,36 +135,13 @@ TlsSetVersion (
   //
   // Bound TLS method to the particular specified version.
   //
+  // MU_CHANGE [BEGIN]
   switch (ProtoVersion) {
     case TLS1_VERSION:
-      //
-      // TLS 1.0
-      //
-      SSL_set_min_proto_version (TlsConn->Ssl, TLS1_VERSION);
-      SSL_set_max_proto_version (TlsConn->Ssl, TLS1_VERSION);
-      break;
     case TLS1_1_VERSION:
-      //
-      // TLS 1.1
-      //
-      SSL_set_min_proto_version (TlsConn->Ssl, TLS1_1_VERSION);
-      SSL_set_max_proto_version (TlsConn->Ssl, TLS1_1_VERSION);
-      break;
     case TLS1_2_VERSION:
-      //
-      // TLS 1.2
-      //
-      SSL_set_min_proto_version (TlsConn->Ssl, TLS1_2_VERSION);
-      SSL_set_max_proto_version (TlsConn->Ssl, TLS1_2_VERSION);
-      break;
     case TLS1_3_VERSION:
-      if ((SSL_set_min_proto_version (TlsConn->Ssl, TLS1_3_VERSION) != 1) ||
-          (SSL_set_max_proto_version (TlsConn->Ssl, TLS1_3_VERSION) != 1))
-      {
-        return EFI_UNSUPPORTED;
-      }
-
-      break;
+      return TlsSetVersionRange (TlsConn, ProtoVersion, ProtoVersion);
     default:
       //
       // Unsupported Protocol Version
@@ -109,7 +149,7 @@ TlsSetVersion (
       return EFI_UNSUPPORTED;
   }
 
-  return EFI_SUCCESS;
+  // MU_CHANGE [END]
 }
 
 /**
@@ -377,7 +417,7 @@ TlsSetCipherList (
     goto FreeCipherString;
   }
 
-  Status = EFI_SUCCESS;
+  Status = TlsSetVersionRange (TlsConn, TlsConn->MinProtoVersion, TlsConn->MaxProtoVersion); // MU_CHANGE
 
 FreeCipherString:
   FreePool (CipherString);

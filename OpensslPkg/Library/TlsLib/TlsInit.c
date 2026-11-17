@@ -186,6 +186,9 @@ TlsNew (
   }
 
   // MU_CHANGE [BEGIN]
+  TlsConn->MinProtoVersion = SSL_get_min_proto_version (TlsConn->Ssl);
+  TlsConn->MaxProtoVersion = SSL_get_max_proto_version (TlsConn->Ssl);
+
   //
   // Require at least 112 bits of security. This allows, for example, RSA/DH/DSA
   // keys of 2048 bits or greater and ECC keys of 224 bits or greater. Weaker
