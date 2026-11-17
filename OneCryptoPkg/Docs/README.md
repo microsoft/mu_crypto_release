@@ -70,14 +70,15 @@ Neither staging's 2.0 layout nor the removed `GetAuthenticodeHash` and
 | Hash-algorithm discovery / `HashAllByGuid` | Supported | Supported |
 | `AuthenticodeVerifyEx` | Requires CMS-enabled generated OpenSSL library | Verdict only; chain requests return `EFI_UNSUPPORTED` |
 | `CmsVerify` | Requires CMS-enabled generated OpenSSL library | Delegates verdict-only calls to `Pkcs7Verify`; chain requests return `FALSE` |
-| `CmsGetSignerInfoNum` | Requires CMS-enabled generated OpenSSL library | Returns zero (unsupported) |
+| `CmsGetSignerInfoNum` | Supported; uses the PKCS#7 decoder when CMS is disabled | Returns zero (unsupported) |
 | `X509IsPublicKeySupported` | Validates the public key and initializes verification | Supports parsed RSA/ECDSA public keys |
 
 Production `main` currently generates OpenSSL with `OPENSSL_NO_CMS` in both
 `configuration-ec.h` and `configuration-noec.h`, and omits CMS sources from its
 generated INFs. In that configuration `CmsVerify` returns `FALSE`,
-`CmsGetSignerInfoNum` returns zero, and `AuthenticodeVerifyEx` returns
-`EFI_UNSUPPORTED` after parameter validation. Existing `Pkcs7Verify` and
+`CmsGetSignerInfoNum` counts records using the existing PKCS#7 decoder, and
+`AuthenticodeVerifyEx` returns `EFI_UNSUPPORTED` after parameter validation.
+Existing `Pkcs7Verify` and
 `AuthenticodeVerify` continue using PKCS#7 verification. Open
 [#302](https://github.com/microsoft/mu_crypto_release/pull/302) separately enables
 CMS/PQC/TLS; this service port does not enable those features or import its

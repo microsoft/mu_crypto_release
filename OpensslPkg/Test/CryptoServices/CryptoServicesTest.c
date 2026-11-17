@@ -17,6 +17,11 @@
 #ifndef SERVICE_NULL
   #include "CmsTestData.h"
   #include "../X509PublicKeySupported/TestData.h"
+extern UINT8        AuthenticodeWithSha256[];
+extern UINT8        TestRootCert2[];
+extern UINT8        PeSha256Hash[];
+extern CONST UINTN  AuthenticodeWithSha256Size;
+extern CONST UINTN  TestRootCert2Size;
   #ifndef SERVICE_MBEDTLS
     #include <openssl/opensslconf.h>
   #endif
@@ -206,7 +211,7 @@ TestCmsServices (
       )
     );
  #elif defined (OPENSSL_NO_CMS)
-  UT_ASSERT_EQUAL (CmsGetSignerInfoNum (mCmsData, sizeof (mCmsData)), 0);
+  UT_ASSERT_EQUAL (CmsGetSignerInfoNum (mCmsData, sizeof (mCmsData)), 1);
   UT_ASSERT_FALSE (
     CmsVerify (
       mCmsData,
@@ -307,6 +312,61 @@ TestCmsServices (
 STATIC
 UNIT_TEST_STATUS
 EFIAPI
+TestAuthenticodeServicePolicy (
+  IN UNIT_TEST_CONTEXT  Context
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       *Chain;
+  UINTN       ChainSize;
+
+ #if !defined (SERVICE_MBEDTLS) && !defined (OPENSSL_NO_CMS)
+  UINTN   Offset;
+  UINTN   Index;
+  UINT32  CertSize;
+ #endif
+
+  Chain     = mCmsCert;
+  ChainSize = sizeof (mCmsCert);
+  Status    = AuthenticodeVerifyEx (
+                AuthenticodeWithSha256,
+                AuthenticodeWithSha256Size,
+                TestRootCert2,
+                TestRootCert2Size,
+                PeSha256Hash,
+                SHA256_DIGEST_SIZE,
+                &Chain,
+                &ChainSize
+                );
+ #if defined (SERVICE_MBEDTLS) || defined (OPENSSL_NO_CMS)
+  UT_ASSERT_STATUS_EQUAL (Status, EFI_UNSUPPORTED);
+  UT_ASSERT_TRUE (Chain == NULL);
+  UT_ASSERT_EQUAL (ChainSize, 0);
+ #else
+  UT_ASSERT_STATUS_EQUAL (Status, EFI_SUCCESS);
+  UT_ASSERT_NOT_NULL (Chain);
+  UT_ASSERT_TRUE (ChainSize > 0);
+  UT_ASSERT_TRUE (Chain[0] >= 2);
+  Offset = 1;
+  for (Index = 0; Index < Chain[0]; Index++) {
+    UT_ASSERT_TRUE (Offset <= ChainSize);
+    UT_ASSERT_TRUE (sizeof (UINT32) <= ChainSize - Offset);
+    CertSize = ReadUnaligned32 ((CONST UINT32 *)(Chain + Offset));
+    Offset  += sizeof (UINT32);
+    UT_ASSERT_TRUE (CertSize <= ChainSize - Offset);
+    UT_ASSERT_TRUE (X509IsPublicKeySupported (Chain + Offset, CertSize));
+    Offset += CertSize;
+  }
+
+  UT_ASSERT_EQUAL (Offset, ChainSize);
+  FreePool (Chain);
+ #endif
+  return UNIT_TEST_PASSED;
+}
+
+STATIC
+UNIT_TEST_STATUS
+EFIAPI
 TestPublicKeyCapability (
   IN UNIT_TEST_CONTEXT  Context
   )
@@ -357,6 +417,10 @@ main (
 
     if (!EFI_ERROR (Status)) {
       Status = AddTestCase (Suite, "Valid and invalid RSA public-key capability", "X509", TestPublicKeyCapability, NULL, NULL, NULL);
+    }
+
+    if (!EFI_ERROR (Status)) {
+      Status = AddTestCase (Suite, "Authenticode follows the configured verification policy", "Authenticode", TestAuthenticodeServicePolicy, NULL, NULL, NULL);
     }
 
  #endif

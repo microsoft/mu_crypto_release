@@ -1277,11 +1277,14 @@ CmsGetSignerInfoNum (
   )
 {
  #ifdef OPENSSL_NO_CMS
-  return 0;
+  PKCS7  *Pkcs7;
+
+  STACK_OF (PKCS7_SIGNER_INFO)  *SignerInfos;
  #else
   CMS_ContentInfo  *Cms;
 
-  STACK_OF (CMS_SignerInfo)   *SignerInfos;
+  STACK_OF (CMS_SignerInfo)  *SignerInfos;
+ #endif
   UINT8        *SignedData;
   CONST UINT8  *Temp;
   UINTN        SignedDataSize;
@@ -1292,7 +1295,11 @@ CmsGetSignerInfoNum (
     return 0;
   }
 
-  Cms           = NULL;
+ #ifdef OPENSSL_NO_CMS
+  Pkcs7 = NULL;
+ #else
+  Cms = NULL;
+ #endif
   SignerInfos   = NULL;
   SignedData    = NULL;
   SignerInfoNum = 0;
@@ -1306,7 +1313,20 @@ CmsGetSignerInfoNum (
   }
 
   Temp = SignedData;
-  Cms  = d2i_CMS_ContentInfo (NULL, (CONST unsigned char **)&Temp, (long)SignedDataSize);
+ #ifdef OPENSSL_NO_CMS
+  // Counting signer records does not require CMS verification support.
+  Pkcs7 = d2i_PKCS7 (NULL, &Temp, (long)SignedDataSize);
+  if ((Pkcs7 == NULL) || !PKCS7_type_is_signed (Pkcs7)) {
+    goto Exit;
+  }
+
+  SignerInfos = PKCS7_get_signer_info (Pkcs7);
+  if ((SignerInfos != NULL) && (sk_PKCS7_SIGNER_INFO_num (SignerInfos) > 0)) {
+    SignerInfoNum = (UINTN)sk_PKCS7_SIGNER_INFO_num (SignerInfos);
+  }
+
+ #else
+  Cms = d2i_CMS_ContentInfo (NULL, (CONST unsigned char **)&Temp, (long)SignedDataSize);
   if (Cms == NULL) {
     goto Exit;
   }
@@ -1320,14 +1340,19 @@ CmsGetSignerInfoNum (
     SignerInfoNum = (UINTN)sk_CMS_SignerInfo_num (SignerInfos);
   }
 
+ #endif
+
 Exit:
+ #ifdef OPENSSL_NO_CMS
+  PKCS7_free (Pkcs7);
+ #else
   CMS_ContentInfo_free (Cms);
+ #endif
   if (!Wrapped) {
     OPENSSL_free (SignedData);
   }
 
   return SignerInfoNum;
- #endif
 }
 
 /**
