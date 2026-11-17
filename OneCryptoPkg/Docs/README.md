@@ -48,6 +48,77 @@ To consume OneCryptoPkg in a platform:
    [mu_tiano_platforms](https://github.com/microsoft/mu_tiano_platforms) —
    see PR [#1278](https://github.com/microsoft/mu_tiano_platforms/pull/1278).
 
+## Protocol 1.1 provider services
+
+The protocol retains the complete 1.0 prefix and the already-published
+`GetCryptoOpCapability` slot. The service tail is appended in this order:
+`GetTrustAnchorX509FromAuthData`, `FreeTrustAnchorX509Cache`,
+`AuthenticodeVerifyEx`, `GetAuthenticodeHashAlgorithm`, `HashAllByGuid`,
+`CmsVerify`, `CmsGetSignerInfoNum`, `X509IsPublicKeySupported`.
+All new services require **major 1, minor >= 1**.
+
+**Rebuild and deploy matching providers and consumers together.** The expanded
+1.1 structure has no size field. An earlier, shorter provider that already
+advertises 1.1 cannot safely be detected by probing its new function pointers.
+The minor-version check is not sufficient to make that old binary compatible.
+Neither staging's 2.0 layout nor the removed `GetAuthenticodeHash` and
+`X509GetTbsCertHash` services are part of this contract.
+
+| Service | OpenSSL full provider | MbedTLS full provider |
+|---------|-----------------------|-----------------------|
+| Trust-anchor lookup/cache | Supported | Supported |
+| Hash-algorithm discovery / `HashAllByGuid` | Supported | Supported |
+| `AuthenticodeVerifyEx` | Requires CMS-enabled generated OpenSSL library | Verdict only; chain requests return `EFI_UNSUPPORTED` |
+| `CmsVerify` | Requires CMS-enabled generated OpenSSL library | Delegates verdict-only calls to `Pkcs7Verify`; chain requests return `FALSE` |
+| `CmsGetSignerInfoNum` | Requires CMS-enabled generated OpenSSL library | Returns zero (unsupported) |
+| `X509IsPublicKeySupported` | Validates the public key and initializes verification | Supports parsed RSA/ECDSA public keys |
+
+Production `main` currently generates OpenSSL with `OPENSSL_NO_CMS` in both
+`configuration-ec.h` and `configuration-noec.h`, and omits CMS sources from its
+generated INFs. In that configuration `CmsVerify` returns `FALSE`,
+`CmsGetSignerInfoNum` returns zero, and `AuthenticodeVerifyEx` returns
+`EFI_UNSUPPORTED` after parameter validation. Existing `Pkcs7Verify` and
+`AuthenticodeVerify` continue using PKCS#7 verification. Open
+[#302](https://github.com/microsoft/mu_crypto_release/pull/302) separately enables
+CMS/PQC/TLS; this service port does not enable those features or import its
+generated-source/configuration changes.
+
+`GetAuthenticodeHashAlgorithm` discovers, but does not authenticate, the image
+digest algorithm. It returns generic `gEfiHashAlgorithmSha*Guid` values from
+`Protocol/Hash.h`, not certificate signature GUIDs. Pass that GUID to
+`HashAllByGuid` to hash an ordinary buffer, not to compute a PE/COFF image hash.
+Trust-anchor lookup matches a supplied TBS-certificate digest; it does not
+authenticate the enclosing message or authorize the certificate.
+
+The optional CMS/Authenticode chain outputs must be supplied together. They
+are reset to `NULL`/zero on failure or unsupported paths. A returned chain is
+the signer-to-anchor path captured from successful verification, serialized as
+an `EFI_CERT_STACK`; the caller releases it with `FreePool`. Capture is
+best-effort: a successful verification can still return no chain if capture or
+allocation fails. Callers requiring revocation checks must handle that case,
+not substitute an unverified list from `Pkcs7GetSigners`.
+Trust-anchor results are also caller-owned copies released with `FreePool`;
+release an optional lookup cache with `FreeTrustAnchorX509Cache`.
+Public-key capability is not certificate authentication or enrollment policy.
+
+Phase-reduced instances use their existing unsupported stubs for unavailable
+operations; all new symbols are defined, including count (zero), public-key
+capability (`FALSE`), and CMS verification (`FALSE`). SEC/null instances
+provide no crypto operations. Stub instances retain the usual debug assertions.
+
+### Host regression coverage
+
+`OpensslPkg/Test/OpensslPkgHostUnitTest.dsc` and
+`MbedTlsPkg/Test/MbedTlsPkgHostUnitTest.dsc` include focused `CryptoServicesTest`
+and null-service executables. Their normal output directories are separate:
+`Build/OpensslPkg/HostTest` and `Build/MbedTlsPkg/HostTest`.
+Coverage includes generic GUID selection, malformed/truncated ASN.1,
+trust-anchor cache ownership, invalid RSA public exponents, CMS-disabled and
+MbedTLS unsupported behavior, and null/reduced symbol availability. With a
+CMS-enabled OpenSSL build, the same CMS test checks the verified chain and
+rejects altered content. These tests require the matching production
+`MU_BASECORE` service headers; do not replace them with staging ABI headers.
+
 ## Further Reading
 
 - [Architecture.md](Architecture.md) — Bin + Loader pattern, X64 vs AARCH64,

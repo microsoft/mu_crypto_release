@@ -1,0 +1,27 @@
+## @file
+# Null service implementation used for host contract tests.
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = MbedTlsNullCryptoServices
+  FILE_GUID      = FCB0F9B8-5FB1-4EC9-B5CE-CB3BB638DDE4
+  MODULE_TYPE    = BASE
+  LIBRARY_CLASS  = BaseCryptLib
+
+[Sources]
+  Hash/CryptHashAllNull.c
+  Pk/CryptAuthenticodeNull.c
+  Pk/CryptAuthenticodeHashNull.c
+  Pk/CryptTrustAnchorNull.c
+  Pk/CryptPkcs7VerifyNull.c
+  Pk/CryptX509Null.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  MbedTlsPkg/MbedTlsPkg.dec
+
+[LibraryClasses]
+  DebugLib

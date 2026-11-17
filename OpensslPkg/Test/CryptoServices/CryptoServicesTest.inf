@@ -1,0 +1,34 @@
+## @file
+# Host coverage of protocol 1.1 provider services.
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = CryptoServicesTest
+  FILE_GUID      = 5D0A7E38-C37C-4AD4-8E9E-28D66A3BAE91
+  MODULE_TYPE    = HOST_APPLICATION
+  VERSION_STRING = 1.1
+
+[Sources]
+  CryptoServicesTest.c
+  CmsTestData.h
+  ../X509PublicKeySupported/TestData.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  OpensslPkg/OpensslPkg.dec
+  UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
+
+[LibraryClasses]
+  BaseCryptLib
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DebugLib
+  UnitTestLib
+
+[Guids]
+  gEfiHashAlgorithmSha256Guid
+  gEfiCertSha256Guid

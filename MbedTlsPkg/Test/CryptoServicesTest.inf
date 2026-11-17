@@ -1,0 +1,36 @@
+## @file
+# MbedTLS protocol 1.1 service host coverage.
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = MbedTlsCryptoServicesTest
+  FILE_GUID      = E6F93CE5-21C7-482F-AD54-72F6DB544002
+  MODULE_TYPE    = HOST_APPLICATION
+  VERSION_STRING = 1.1
+
+[Sources]
+  ../../OpensslPkg/Test/CryptoServices/CryptoServicesTest.c
+  ../../OpensslPkg/Test/CryptoServices/CmsTestData.h
+  ../../OpensslPkg/Test/X509PublicKeySupported/TestData.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
+
+[LibraryClasses]
+  BaseCryptLib
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DebugLib
+  UnitTestLib
+
+[Guids]
+  gEfiHashAlgorithmSha256Guid
+  gEfiCertSha256Guid
+
+[BuildOptions]
+  *_*_*_CC_FLAGS = -D SERVICE_MBEDTLS

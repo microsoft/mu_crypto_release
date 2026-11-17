@@ -39,6 +39,12 @@
   CryptoPkg/Test/UnitTest/Library/BaseCryptLib/TestBaseCryptLibHost.inf
   CryptoPkg/Test/UnitTest/Library/BaseCryptLibOnOneCrypto/CapabilityTest.inf  # MU_CHANGE
   OpensslPkg/Test/X509PublicKeySupported/X509PublicKeySupported.inf
+  OpensslPkg/Test/CryptoServices/CryptoServicesTest.inf
+  OpensslPkg/Test/CryptoServices/NullServicesTest.inf {
+    <LibraryClasses>
+      BaseCryptLib|OpensslPkg/Library/BaseCryptLib/UnitTestHostNullServices.inf
+      DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+  }
 
   #
   # TLS verification test — enumerates cipher suites and TLS capabilities

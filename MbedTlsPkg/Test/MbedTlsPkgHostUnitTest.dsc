@@ -30,6 +30,12 @@
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
 
 [Components]
+  MbedTlsPkg/Test/CryptoServicesTest.inf
+  MbedTlsPkg/Test/NullServicesTest.inf {
+    <LibraryClasses>
+      BaseCryptLib|MbedTlsPkg/Library/BaseCryptLib/UnitTestHostNullServices.inf
+      DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+  }
   #
   # Build HOST_APPLICATION that tests BaseCryptLib (MbedTLS implementation)
   #
