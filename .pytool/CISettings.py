@@ -167,10 +167,8 @@ class Settings(
         return [
             {
                 "Path": "MU_BASECORE",
-                # Temporary pin for mu_basecore#2019. Before merging this PR,
-                # restore the microsoft/mu_basecore URL and pin the merged revision.
-                "Url": "https://github.com/Flickdm/mu_basecore.git",
-                "Commit": "a45e05083990b74ebbc7e22bd21099aa63eadeff"
+                "Url": "https://github.com/microsoft/mu_basecore.git",
+                "Commit": "01490e7a29b5e29b1f13c469466b1894aa255697"
             },
             {
                 "Path": "Features/MM_SUPV",
