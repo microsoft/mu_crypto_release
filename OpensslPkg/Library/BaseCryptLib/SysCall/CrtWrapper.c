@@ -404,11 +404,90 @@ strtol (
   int         base
   )
 {
-  //
-  // Null strtol() function implementation to satisfy the linker, since there is
-  // no direct functionality logic dependency in present UEFI cases.
-  //
-  return 0;
+  const char     *Cursor;
+  const char     *Digits;
+  unsigned long  Value;
+  unsigned long  Limit;
+  unsigned long  Cutoff;
+  unsigned long  Remainder;
+  unsigned int   Digit;
+  BOOLEAN        Negative;
+  BOOLEAN        Overflow;
+
+  if (endptr != NULL) {
+    *endptr = (char *)nptr;
+  }
+
+  if ((base != 0) && ((base < 2) || (base > 36))) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  Cursor = nptr;
+  while ((*Cursor == ' ') || ((*Cursor >= '\t') && (*Cursor <= '\r'))) {
+    Cursor++;
+  }
+
+  Negative = (*Cursor == '-');
+  if ((*Cursor == '+') || Negative) {
+    Cursor++;
+  }
+
+  if (((base == 0) || (base == 16)) && (Cursor[0] == '0') &&
+      ((Cursor[1] == 'x') || (Cursor[1] == 'X')) && isxdigit (Cursor[2]))
+  {
+    base    = 16;
+    Cursor += 2;
+  } else if (base == 0) {
+    base = (*Cursor == '0') ? 8 : 10;
+  }
+
+  Digits    = Cursor;
+  Value     = 0;
+  Limit     = (unsigned long)LONG_MAX + (Negative ? 1UL : 0UL);
+  Cutoff    = Limit / (unsigned int)base;
+  Remainder = Limit % (unsigned int)base;
+  Overflow  = FALSE;
+  for ( ; *Cursor != '\0'; Cursor++) {
+    if ((*Cursor >= '0') && (*Cursor <= '9')) {
+      Digit = (unsigned int)(*Cursor - '0');
+    } else if ((*Cursor >= 'a') && (*Cursor <= 'z')) {
+      Digit = (unsigned int)(*Cursor - 'a') + 10;
+    } else if ((*Cursor >= 'A') && (*Cursor <= 'Z')) {
+      Digit = (unsigned int)(*Cursor - 'A') + 10;
+    } else {
+      break;
+    }
+
+    if (Digit >= (unsigned int)base) {
+      break;
+    }
+
+    if ((Value > Cutoff) || ((Value == Cutoff) && (Digit > Remainder))) {
+      Overflow = TRUE;
+    } else if (!Overflow) {
+      Value = (Value * (unsigned int)base) + Digit;
+    }
+  }
+
+  if (Cursor == Digits) {
+    return 0;
+  }
+
+  if (endptr != NULL) {
+    *endptr = (char *)Cursor;
+  }
+
+  if (Overflow) {
+    errno = ERANGE;
+    return Negative ? LONG_MIN : LONG_MAX;
+  }
+
+  if (Negative && (Value == (unsigned long)LONG_MAX + 1UL)) {
+    return LONG_MIN;
+  }
+
+  return Negative ? -(long)Value : (long)Value;
 }
 
 /* Convert strings to an unsigned long-integer value */

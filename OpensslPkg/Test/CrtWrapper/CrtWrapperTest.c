@@ -1,5 +1,5 @@
 /** @file
-  Exercise the real CRT wrappers, not the host libc formatting implementation.
+  Exercise the real CRT wrappers, not the host libc implementation.
 
   Copyright (c) Microsoft Corporation.
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -9,7 +9,18 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/UnitTestLib.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdarg.h>
+
+extern int  CrtTestErrno;
+
+long
+CrtTestStrtol (
+  const char  *String,
+  char        **End,
+  int         Base
+  );
 
 int
 CrtTestVsnprintf (
@@ -340,6 +351,89 @@ Bounds (
 STATIC
 UNIT_TEST_STATUS
 EFIAPI
+StringToLong (
+  IN UNIT_TEST_CONTEXT  Context
+  )
+{
+  CONST struct {
+    CONST CHAR8    *String;
+    int            Base;
+    long           Value;
+    UINTN          Consumed;
+  } Cases[] = {
+    { "32",              10, 32,   2 },
+    { " \t\n\r\v\f-32!", 10, -32,  9 },
+    { "+0",              10, 0,    2 },
+    { "077tail",         0,  63,   3 },
+    { "-0x20!",          0,  -32,  5 },
+    { "0X20",            16, 32,   4 },
+    { "10102",           2,  10,   4 },
+    { "zZ!",             36, 1295, 2 },
+    { "0x",              0,  0,    1 },
+    { "",                10, 0,    0 },
+    { " +!",             10, 0,    0 }
+  };
+  CHAR8  *End;
+  UINTN  Index;
+
+  for (Index = 0; Index < ARRAY_SIZE (Cases); Index++) {
+    CrtTestErrno = 0;
+    UT_ASSERT_EQUAL (CrtTestStrtol (Cases[Index].String, &End, Cases[Index].Base), Cases[Index].Value);
+    UT_ASSERT_EQUAL (End - Cases[Index].String, Cases[Index].Consumed);
+    UT_ASSERT_EQUAL (CrtTestErrno, 0);
+  }
+
+  UT_ASSERT_EQUAL (CrtTestStrtol ("32", NULL, 10), 32);
+  return UNIT_TEST_PASSED;
+}
+
+STATIC
+UNIT_TEST_STATUS
+EFIAPI
+StringToLongBounds (
+  IN UNIT_TEST_CONTEXT  Context
+  )
+{
+  CHAR8        Buffer[64];
+  CHAR8        *End;
+  CONST CHAR8  *String;
+
+  CrtTestSnprintf (Buffer, sizeof (Buffer), "%ld", LONG_MAX);
+  CrtTestErrno = 0;
+  UT_ASSERT_EQUAL (CrtTestStrtol (Buffer, &End, 10), LONG_MAX);
+  UT_ASSERT_EQUAL (*End, '\0');
+  UT_ASSERT_EQUAL (CrtTestErrno, 0);
+  CrtTestSnprintf (Buffer, sizeof (Buffer), "%ld", LONG_MIN);
+  UT_ASSERT_EQUAL (CrtTestStrtol (Buffer, &End, 10), LONG_MIN);
+  UT_ASSERT_EQUAL (*End, '\0');
+  UT_ASSERT_EQUAL (CrtTestErrno, 0);
+
+  String       = "999999999999999999999999999999!";
+  CrtTestErrno = 0;
+  UT_ASSERT_EQUAL (CrtTestStrtol (String, &End, 10), LONG_MAX);
+  UT_ASSERT_EQUAL (*End, '!');
+  UT_ASSERT_EQUAL (CrtTestErrno, ERANGE);
+  String       = "-999999999999999999999999999999!";
+  CrtTestErrno = 0;
+  UT_ASSERT_EQUAL (CrtTestStrtol (String, &End, 10), LONG_MIN);
+  UT_ASSERT_EQUAL (*End, '!');
+  UT_ASSERT_EQUAL (CrtTestErrno, ERANGE);
+
+  String       = "32";
+  CrtTestErrno = 0;
+  UT_ASSERT_EQUAL (CrtTestStrtol (String, &End, 1), 0);
+  UT_ASSERT_TRUE (End == String);
+  UT_ASSERT_EQUAL (CrtTestErrno, EINVAL);
+  CrtTestErrno = 0;
+  UT_ASSERT_EQUAL (CrtTestStrtol (String, &End, 37), 0);
+  UT_ASSERT_TRUE (End == String);
+  UT_ASSERT_EQUAL (CrtTestErrno, EINVAL);
+  return UNIT_TEST_PASSED;
+}
+
+STATIC
+UNIT_TEST_STATUS
+EFIAPI
 Invalid (
   IN UNIT_TEST_CONTEXT  Context
   )
@@ -385,13 +479,15 @@ main (
     return 1;
   }
 
-  Status = CreateUnitTestSuite (&Suite, Framework, "C99 formatting", "CRT", NULL, NULL);
+  Status = CreateUnitTestSuite (&Suite, Framework, "C runtime wrappers", "CRT", NULL, NULL);
   if (!EFI_ERROR (Status)) {
     AddTestCase (Suite, "ASCII, NULL, precision, percent and sprintf", "Strings", Strings, NULL, NULL, NULL);
     AddTestCase (Suite, "Integer flags, modifiers and exact output", "Integers", Integers, NULL, NULL, NULL);
     AddTestCase (Suite, "Truncation, zero size and long formats", "Bounds", Bounds, NULL, NULL, NULL);
     AddTestCase (Suite, "Unsupported, malformed and overflowing formats", "Invalid", Invalid, NULL, NULL, NULL);
     AddTestCase (Suite, "Native libc reference across flags and output sizes", "NativeReference", NativeReference, NULL, NULL, NULL);
+    AddTestCase (Suite, "Signed conversion, bases and end pointers", "StringToLong", StringToLong, NULL, NULL, NULL);
+    AddTestCase (Suite, "Signed conversion limits, overflow and invalid bases", "StringToLongBounds", StringToLongBounds, NULL, NULL, NULL);
     Status = RunAllTestSuites (Framework);
   }
 

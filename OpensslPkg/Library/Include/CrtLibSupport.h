@@ -73,16 +73,21 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 //
 // Definitions for global constants used by CRT library routines
 //
-#define EINVAL        22              /* Invalid argument */
-#define EAFNOSUPPORT  47              /* Address family not supported by protocol family */
-#define INT_MAX       0x7FFFFFFF      /* Maximum (signed) int value */
-#define INT_MIN       (-INT_MAX-1)    /* Minimum (signed) int value */
-#define LONG_MAX      0X7FFFFFFFL     /* max value for a long */
-#define LONG_MIN      (-LONG_MAX-1)   /* min value for a long */
-#define UINT_MAX      0xFFFFFFFF      /* Maximum unsigned int value */
-#define ULONG_MAX     0xFFFFFFFF      /* Maximum unsigned long value */
-#define CHAR_BIT      8               /* Number of bits in a char */
-#define SIZE_MAX      0xFFFFFFFF      /* Maximum unsigned size_t */
+#define EINVAL        22                  /* Invalid argument */
+#define ERANGE        34                  /* Result out of range */
+#define EAFNOSUPPORT  47                  /* Address family not supported by protocol family */
+#define INT_MAX       0x7FFFFFFF          /* Maximum (signed) int value */
+#define INT_MIN       (-INT_MAX-1)        /* Minimum (signed) int value */
+#ifdef __LONG_MAX__
+#define LONG_MAX  __LONG_MAX__         /* max value for a long */
+#else
+#define LONG_MAX  0X7FFFFFFFL          /* max value for a long */
+#endif
+#define LONG_MIN   (-LONG_MAX-1)          /* min value for a long */
+#define UINT_MAX   0xFFFFFFFF             /* Maximum unsigned int value */
+#define ULONG_MAX  0xFFFFFFFF             /* Maximum unsigned long value */
+#define CHAR_BIT   8                      /* Number of bits in a char */
+#define SIZE_MAX   0xFFFFFFFF             /* Maximum unsigned size_t */
 
 #define INT32_MIN   INT_MIN
 #define INT32_MAX   INT_MAX
