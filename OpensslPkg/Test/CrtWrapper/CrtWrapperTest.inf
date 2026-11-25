@@ -1,5 +1,5 @@
 ## @file
-# Native tests of the production OpenSSL CRT formatter.
+# Native tests of the production OpenSSL CRT wrappers.
 #
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: BSD-2-Clause-Patent
